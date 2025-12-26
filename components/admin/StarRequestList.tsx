@@ -48,9 +48,9 @@ export default function StarRequestList({
     setProcessingId(requestId);
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from("star_transactions")
-        .update({
+        .update as any)({
           status: "approved",
           reviewed_by: parentId,
           reviewed_at: new Date().toISOString(),
@@ -78,9 +78,9 @@ export default function StarRequestList({
     setProcessingId(showRejectModal);
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from("star_transactions")
-        .update({
+        .update as any)({
           status: "rejected",
           parent_response: rejectReason,
           reviewed_by: parentId,

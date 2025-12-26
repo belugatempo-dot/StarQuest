@@ -73,9 +73,9 @@ export default function QuickRecordForm({
     try {
       const starsToRecord = selectedQuestData?.stars || customStars;
 
-      const { error: insertError } = await supabase
+      const { error: insertError } = await (supabase
         .from("star_transactions")
-        .insert({
+        .insert as any)({
           family_id: familyId,
           child_id: selectedChild,
           quest_id: selectedQuest || null,

@@ -76,7 +76,7 @@ export default function AddChildModal({
       }
 
       // Insert into users table
-      const { error: insertError } = await supabase.from("users").insert({
+      const { error: insertError } = await (supabase.from("users").insert as any)({
         id: authData.user.id,
         family_id: familyId,
         name: name,

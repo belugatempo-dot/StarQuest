@@ -1,12 +1,15 @@
 "use client";
 
-// Placeholder component for Quest Management
-// TODO: Implement full quest CRUD functionality
-
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import type { Quest } from "@/types/quest";
+import { groupQuests } from "@/types/quest";
+import QuestFormModal from "./QuestFormModal";
 
 interface QuestManagementProps {
-  quests: any[];
+  quests: Quest[];
   locale: string;
   familyId: string;
 }
@@ -17,23 +20,252 @@ export default function QuestManagement({
   familyId,
 }: QuestManagementProps) {
   const t = useTranslations();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(["duties", "family", "self", "others", "violations"])
+  );
+
+  const questGroups = groupQuests(quests);
+
+  const toggleGroup = (key: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  const handleToggleActive = async (quest: Quest) => {
+    try {
+      const { error } = await (supabase
+        .from("quests")
+        .update as any)({ is_active: !quest.is_active })
+        .eq("id", quest.id);
+
+      if (error) throw error;
+
+      router.refresh();
+    } catch (err: any) {
+      console.error("Error toggling quest:", err);
+      alert(t("quests.toggleError"));
+    }
+  };
+
+  const handleDelete = async (quest: Quest) => {
+    const questName =
+      locale === "zh-CN" ? quest.name_zh || quest.name_en : quest.name_en;
+
+    if (!confirm(t("quests.confirmDelete", { name: questName }))) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("quests").delete().eq("id", quest.id);
+
+      if (error) throw error;
+
+      router.refresh();
+    } catch (err: any) {
+      console.error("Error deleting quest:", err);
+      alert(t("quests.deleteError"));
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-      <div className="text-6xl mb-4">🚧</div>
-      <h3 className="text-xl font-semibold text-gray-700 mb-2">
-        {locale === "zh-CN" ? "任务管理功能开发中" : "Quest Management Coming Soon"}
-      </h3>
-      <p className="text-gray-500 mb-4">
-        {locale === "zh-CN"
-          ? "完整的任务管理功能（创建、编辑、删除）即将推出。"
-          : "Full quest management (create, edit, delete) is coming soon."}
-      </p>
-      <p className="text-sm text-gray-400">
-        {locale === "zh-CN"
-          ? `当前有 ${quests.length} 个任务模板`
-          : `Currently ${quests.length} quest templates`}
-      </p>
+    <div className="space-y-6">
+      {/* Header with Add Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-600">
+            {locale === "zh-CN"
+              ? `共 ${quests.length} 个任务模板`
+              : `${quests.length} quest templates`}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition font-semibold"
+        >
+          <span>➕</span>
+          <span>{t("quests.addQuest")}</span>
+        </button>
+      </div>
+
+      {/* Quest Groups */}
+      {questGroups.length > 0 ? (
+        <div className="space-y-4">
+          {questGroups.map((group) => {
+            const isExpanded = expandedGroups.has(group.key);
+
+            return (
+              <div
+                key={group.key}
+                className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-gray-100"
+              >
+                {/* Group Header */}
+                <button
+                  onClick={() => toggleGroup(group.key)}
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-3xl">{group.icon}</span>
+                    <div className="text-left">
+                      <h3 className="text-xl font-bold">
+                        {locale === "zh-CN" ? group.title_zh : group.title_en}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {group.quests.length}{" "}
+                        {locale === "zh-CN" ? "个任务" : "quests"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-2xl text-gray-400">
+                    {isExpanded ? "▼" : "▶"}
+                  </span>
+                </button>
+
+                {/* Group Content */}
+                {isExpanded && (
+                  <div className="px-6 pb-6">
+                    <div className="space-y-3">
+                      {group.quests.map((quest) => {
+                        const questName =
+                          locale === "zh-CN"
+                            ? quest.name_zh || quest.name_en
+                            : quest.name_en;
+
+                        return (
+                          <div
+                            key={quest.id}
+                            className={`border-2 rounded-lg p-4 ${
+                              quest.is_active
+                                ? "border-gray-200 bg-white"
+                                : "border-gray-300 bg-gray-100 opacity-60"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              {/* Quest Info */}
+                              <div className="flex items-center space-x-4 flex-1">
+                                <span className="text-3xl">{quest.icon || "📝"}</span>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-gray-900">
+                                    {questName}
+                                  </h4>
+                                  <div className="flex items-center space-x-3 mt-1">
+                                    <span
+                                      className={`text-lg font-bold ${
+                                        quest.stars > 0
+                                          ? "text-green-600"
+                                          : "text-red-600"
+                                      }`}
+                                    >
+                                      {quest.stars > 0 ? "+" : ""}
+                                      {quest.stars} ⭐
+                                    </span>
+                                    {quest.category && (
+                                      <span className="text-xs px-2 py-1 bg-gray-200 rounded">
+                                        {locale === "zh-CN"
+                                          ? t(`quests.category.${quest.category}`)
+                                          : quest.category}
+                                      </span>
+                                    )}
+                                    {!quest.is_active && (
+                                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                                        {locale === "zh-CN" ? "已停用" : "Inactive"}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Actions */}
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => setEditingQuest(quest)}
+                                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                                >
+                                  ✏️ {locale === "zh-CN" ? "编辑" : "Edit"}
+                                </button>
+                                <button
+                                  onClick={() => handleToggleActive(quest)}
+                                  className={`px-3 py-1 text-sm rounded transition ${
+                                    quest.is_active
+                                      ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                                  }`}
+                                >
+                                  {quest.is_active
+                                    ? locale === "zh-CN"
+                                      ? "停用"
+                                      : "Disable"
+                                    : locale === "zh-CN"
+                                    ? "启用"
+                                    : "Enable"}
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(quest)}
+                                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition"
+                                >
+                                  🗑️ {locale === "zh-CN" ? "删除" : "Delete"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+          <p className="text-gray-500 mb-4">
+            {locale === "zh-CN" ? "还没有任务模板" : "No quest templates yet"}
+          </p>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg inline-flex items-center space-x-2 transition"
+          >
+            <span>➕</span>
+            <span>{t("quests.addFirstQuest")}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Add/Edit Modals */}
+      {showAddModal && (
+        <QuestFormModal
+          familyId={familyId}
+          locale={locale}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {editingQuest && (
+        <QuestFormModal
+          quest={editingQuest}
+          familyId={familyId}
+          locale={locale}
+          onClose={() => setEditingQuest(null)}
+          onSuccess={() => {
+            setEditingQuest(null);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

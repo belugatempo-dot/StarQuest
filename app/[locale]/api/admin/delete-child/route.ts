@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
       .from("users")
       .select("*")
       .eq("id", authUser.id)
-      .single();
+      .maybeSingle();
 
-    if (!user || user.role !== "parent") {
+    if (!user || (user as any).role !== "parent") {
       return NextResponse.json({ error: "Forbidden - Parents only" }, { status: 403 });
     }
 
@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
       .from("users")
       .select("*")
       .eq("id", childId)
-      .single();
+      .maybeSingle();
 
-    if (!child || child.family_id !== user.family_id || child.role !== "child") {
+    if (!child || (child as any).family_id !== (user as any).family_id || (child as any).role !== "child") {
       return NextResponse.json({ error: "Child not found or access denied" }, { status: 404 });
     }
 
@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
     // But we need to delete from auth.users first (requires admin API)
     // For now, we'll use a database function
 
-    const { data, error } = await supabase.rpc("admin_delete_child", {
+    const { data, error } = await (supabase.rpc as any)("admin_delete_child", {
       p_child_id: childId,
-      p_parent_id: user.id,
+      p_parent_id: (user as any).id,
     });
 
     if (error) {
