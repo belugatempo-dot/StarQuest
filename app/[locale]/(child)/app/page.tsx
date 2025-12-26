@@ -17,7 +17,7 @@ export default async function ChildDashboard({
     .from("child_balances")
     .select("*")
     .eq("child_id", user.id)
-    .single();
+    .maybeSingle();
 
   // Fetch recent transactions
   const { data: recentTransactions } = await supabase
@@ -28,8 +28,8 @@ export default async function ChildDashboard({
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const currentStars = balance?.current_stars || 0;
-  const lifetimeStars = balance?.lifetime_stars || 0;
+  const currentStars = (balance as any)?.current_stars || 0;
+  const lifetimeStars = (balance as any)?.lifetime_stars || 0;
 
   // Calculate current level
   const { data: levels } = await supabase
@@ -41,7 +41,7 @@ export default async function ChildDashboard({
   let currentLevel = levels?.[0];
   if (levels) {
     for (const level of levels) {
-      if (lifetimeStars >= level.stars_required) {
+      if (lifetimeStars >= (level as any).stars_required) {
         currentLevel = level;
       } else {
         break;
@@ -93,15 +93,15 @@ export default async function ChildDashboard({
             <h3 className="text-lg font-semibold text-gray-700">
               {t("dashboard.currentLevel")}
             </h3>
-            <span className="text-3xl">{currentLevel?.icon}</span>
+            <span className="text-3xl">{(currentLevel as any)?.icon}</span>
           </div>
           <p className="text-2xl font-bold text-secondary">
             {locale === "zh-CN"
-              ? currentLevel?.name_zh || currentLevel?.name_en
-              : currentLevel?.name_en}
+              ? (currentLevel as any)?.name_zh || (currentLevel as any)?.name_en
+              : (currentLevel as any)?.name_en}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Level {currentLevel?.level_number}
+            Level {(currentLevel as any)?.level_number}
           </p>
         </div>
       </div>
@@ -111,7 +111,7 @@ export default async function ChildDashboard({
         <h2 className="text-2xl font-bold mb-4">{t("dashboard.recentActivity")}</h2>
         {recentTransactions && recentTransactions.length > 0 ? (
           <div className="space-y-3">
-            {recentTransactions.map((transaction) => (
+            {recentTransactions.map((transaction: any) => (
               <div
                 key={transaction.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"

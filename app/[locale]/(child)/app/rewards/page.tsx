@@ -29,9 +29,9 @@ export default async function RewardsPage({
     .from("child_balances")
     .select("current_stars")
     .eq("child_id", user.id)
-    .single();
+    .maybeSingle();
 
-  const currentStars = balance?.current_stars || 0;
+  const currentStars = (balance as any)?.current_stars || 0;
 
   const t = useTranslations();
 
