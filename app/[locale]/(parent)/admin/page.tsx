@@ -111,8 +111,8 @@ export default async function AdminDashboard({
         <h2 className="text-2xl font-bold mb-4">Children Overview</h2>
         {children && children.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {children.map((child) => {
-              const balance = balances?.find((b) => b.child_id === child.id);
+            {children.map((child: any) => {
+              const balance = balances?.find((b: any) => b.child_id === child.id);
               return (
                 <div
                   key={child.id}
@@ -125,7 +125,7 @@ export default async function AdminDashboard({
                     <div>
                       <h3 className="font-semibold text-lg">{child.name}</h3>
                       <p className="text-sm text-gray-600">
-                        Level {balance?.lifetime_stars || 0}
+                        Level {(balance as any)?.lifetime_stars || 0}
                       </p>
                     </div>
                   </div>
@@ -133,13 +133,13 @@ export default async function AdminDashboard({
                     <div>
                       <p className="text-sm text-gray-600">Current Stars</p>
                       <p className="text-2xl font-bold text-primary">
-                        {balance?.current_stars || 0}
+                        {(balance as any)?.current_stars || 0}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-600">Lifetime</p>
                       <p className="text-xl font-semibold text-success">
-                        {balance?.lifetime_stars || 0}
+                        {(balance as any)?.lifetime_stars || 0}
                       </p>
                     </div>
                   </div>

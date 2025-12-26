@@ -18,14 +18,14 @@ export default async function QuestManagementPage({
     .select("*")
     .eq("family_id", user.family_id!)
     .order("category", { ascending: true })
-    .order("is_positive", { ascending: false })
+    .order("stars", { ascending: false })
     .order("created_at", { ascending: false });
 
   const t = useTranslations();
 
   // Count positive and negative quests
-  const positiveQuests = quests?.filter((q) => q.is_positive) || [];
-  const negativeQuests = quests?.filter((q) => !q.is_positive) || [];
+  const positiveQuests = quests?.filter((q: any) => q.stars > 0) || [];
+  const negativeQuests = quests?.filter((q: any) => q.stars < 0) || [];
 
   return (
     <div className="space-y-6">

@@ -55,7 +55,7 @@ export default function LoginForm() {
         .from("users")
         .select("role, family_id")
         .eq("id", data.user.id)
-        .single();
+        .maybeSingle();
 
       console.log("📊 User data:", userData);
       console.log("❌ User error:", userError);
@@ -69,7 +69,7 @@ export default function LoginForm() {
         return;
       }
 
-      if (!userData?.family_id) {
+      if (!(userData as any)?.family_id) {
         // User exists but has no family - shouldn't happen but handle it
         setError("Please complete family setup.");
         setLoading(false);
@@ -78,7 +78,7 @@ export default function LoginForm() {
 
       // Use window.location for hard navigation to ensure cookies are set
       // This forces a full page reload which properly establishes the session
-      const redirectPath = userData?.role === "parent"
+      const redirectPath = (userData as any)?.role === "parent"
         ? `/${locale}/admin`
         : `/${locale}/app`;
 

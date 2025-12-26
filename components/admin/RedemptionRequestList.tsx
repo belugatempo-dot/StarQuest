@@ -48,9 +48,9 @@ export default function RedemptionRequestList({
     setProcessingId(requestId);
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from("redemptions")
-        .update({
+        .update as any)({
           status: "approved",
           reviewed_at: new Date().toISOString(),
         })
@@ -77,9 +77,9 @@ export default function RedemptionRequestList({
     setProcessingId(showRejectModal);
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from("redemptions")
-        .update({
+        .update as any)({
           status: "rejected",
           parent_response: rejectReason,
           reviewed_at: new Date().toISOString(),

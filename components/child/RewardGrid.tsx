@@ -24,7 +24,7 @@ export default function RewardGrid({
   const t = useTranslations();
   const router = useRouter();
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string | null>("all");
 
   // Get unique categories
   const categories = ["all", ...new Set(rewards.map((r) => r.category).filter(Boolean))];

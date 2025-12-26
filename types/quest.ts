@@ -6,11 +6,19 @@ import { Database } from "./database";
 export type QuestType = "duty" | "bonus" | "violation";
 export type QuestScope = "self" | "family" | "other";
 export type QuestCategory =
+  | "health"
+  | "study"
   | "chores"
   | "hygiene"
   | "learning"
-  | "health"
   | "social"
+  | "creativity"
+  | "exercise"
+  | "reading"
+  | "music"
+  | "art"
+  | "kindness"
+  | "responsibility"
   | "other";
 
 export type Quest = Database["public"]["Tables"]["quests"]["Row"];
@@ -122,11 +130,19 @@ export const categoryLabels: Record<
   QuestCategory,
   { en: string; zh: string; icon: string }
 > = {
+  health: { en: "Health", zh: "健康", icon: "💪" },
+  study: { en: "Study", zh: "学业", icon: "✍️" },
   chores: { en: "Chores", zh: "家务", icon: "🧹" },
   hygiene: { en: "Hygiene", zh: "卫生", icon: "🧼" },
   learning: { en: "Learning", zh: "学习", icon: "📚" },
-  health: { en: "Health", zh: "健康", icon: "💪" },
   social: { en: "Social", zh: "社交", icon: "🤝" },
+  creativity: { en: "Creativity", zh: "创造力", icon: "🎨" },
+  exercise: { en: "Exercise", zh: "运动", icon: "🏃" },
+  reading: { en: "Reading", zh: "阅读", icon: "📖" },
+  music: { en: "Music", zh: "音乐", icon: "🎵" },
+  art: { en: "Art", zh: "艺术", icon: "🖼️" },
+  kindness: { en: "Kindness", zh: "善良", icon: "❤️" },
+  responsibility: { en: "Responsibility", zh: "责任", icon: "🎯" },
   other: { en: "Other", zh: "其他", icon: "📦" },
 };
 

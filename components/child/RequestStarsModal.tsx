@@ -44,17 +44,17 @@ export default function RequestStarsModal({
         .from("users")
         .select("family_id")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      if (!userData?.family_id) {
+      if (!(userData as any)?.family_id) {
         throw new Error("Family not found");
       }
 
       // Create star transaction request
-      const { error: insertError } = await supabase
+      const { error: insertError } = await (supabase
         .from("star_transactions")
-        .insert({
-          family_id: userData.family_id,
+        .insert as any)({
+          family_id: (userData as any).family_id,
           child_id: userId,
           quest_id: quest.id,
           stars: quest.stars,

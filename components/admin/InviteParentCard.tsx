@@ -22,7 +22,7 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
     setCopied(false);
 
     try {
-      const { data, error: generateError } = await supabase.rpc("create_family_invite", {
+      const { data, error: generateError } = await (supabase.rpc as any)("create_family_invite", {
         p_family_id: familyId,
       });
 

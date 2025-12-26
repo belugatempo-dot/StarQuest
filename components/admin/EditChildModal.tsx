@@ -39,9 +39,9 @@ export default function EditChildModal({
 
     try {
       // Update users table
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase
         .from("users")
-        .update({
+        .update as any)({
           name: name.trim(),
           email: email.trim() || null,
         })

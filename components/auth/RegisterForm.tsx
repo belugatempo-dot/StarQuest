@@ -48,7 +48,7 @@ export default function RegisterForm() {
 
     setIsValidating(true);
     try {
-      const { data, error: validateError } = await supabase.rpc("validate_invite_code", {
+      const { data, error: validateError } = await (supabase.rpc as any)("validate_invite_code", {
         p_invite_code: code.toUpperCase(),
       });
 
@@ -123,7 +123,7 @@ export default function RegisterForm() {
       if (isJoiningFamily) {
         // Step 2a: Join existing family with invite code
         console.log("👨‍👩‍👧 Joining family via invite code...");
-        const { data: familyId, error: joinError } = await supabase.rpc(
+        const { data: familyId, error: joinError } = await (supabase.rpc as any)(
           "join_family_with_invite",
           {
             p_invite_code: inviteCode,
@@ -145,7 +145,7 @@ export default function RegisterForm() {
       } else {
         // Step 2b: Create new family
         console.log("👨‍👩‍👧 Creating family and user record...");
-        const { data: familyId, error: familyError } = await supabase.rpc(
+        const { data: familyId, error: familyError } = await (supabase.rpc as any)(
           "create_family_with_templates",
           {
             p_family_name: familyName,
