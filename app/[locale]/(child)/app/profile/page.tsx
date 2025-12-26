@@ -16,10 +16,10 @@ export default async function ProfilePage({
     .from("child_balances")
     .select("*")
     .eq("child_id", user.id)
-    .single();
+    .maybeSingle();
 
-  const currentStars = balance?.current_stars || 0;
-  const lifetimeStars = balance?.lifetime_stars || 0;
+  const currentStars = (balance as any)?.current_stars || 0;
+  const lifetimeStars = (balance as any)?.lifetime_stars || 0;
 
   // Fetch all levels
   const { data: levels } = await supabase
@@ -34,7 +34,7 @@ export default async function ProfilePage({
 
   if (levels) {
     for (let i = 0; i < levels.length; i++) {
-      if (lifetimeStars >= levels[i].stars_required) {
+      if (lifetimeStars >= (levels[i] as any).stars_required) {
         currentLevel = levels[i];
         nextLevel = levels[i + 1] || null;
       } else {
@@ -73,15 +73,15 @@ export default async function ProfilePage({
             <h1 className="text-3xl font-bold mb-2">{user.name}</h1>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <span className="text-2xl">{currentLevel?.icon}</span>
+                <span className="text-2xl">{(currentLevel as any)?.icon}</span>
                 <span className="text-lg font-semibold">
                   {locale === "zh-CN"
-                    ? currentLevel?.name_zh || currentLevel?.name_en
-                    : currentLevel?.name_en}
+                    ? (currentLevel as any)?.name_zh || (currentLevel as any)?.name_en
+                    : (currentLevel as any)?.name_en}
                 </span>
               </div>
               <div className="px-3 py-1 bg-primary rounded-full text-sm font-semibold">
-                Level {currentLevel?.level_number}
+                Level {(currentLevel as any)?.level_number}
               </div>
             </div>
           </div>
@@ -100,11 +100,11 @@ export default async function ProfilePage({
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold">Next Level</h2>
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">{nextLevel.icon}</span>
+              <span className="text-2xl">{(nextLevel as any).icon}</span>
               <span className="font-semibold">
                 {locale === "zh-CN"
-                  ? nextLevel.name_zh || nextLevel.name_en
-                  : nextLevel.name_en}
+                  ? (nextLevel as any).name_zh || (nextLevel as any).name_en
+                  : (nextLevel as any).name_en}
               </span>
             </div>
           </div>
@@ -117,21 +117,21 @@ export default async function ProfilePage({
                 style={{
                   width: `${Math.min(
                     100,
-                    ((lifetimeStars - (currentLevel?.stars_required || 0)) /
-                      (nextLevel.stars_required -
-                        (currentLevel?.stars_required || 0))) *
+                    ((lifetimeStars - ((currentLevel as any)?.stars_required || 0)) /
+                      ((nextLevel as any).stars_required -
+                        ((currentLevel as any)?.stars_required || 0))) *
                       100
                   )}%`,
                 }}
               ></div>
             </div>
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
-              {lifetimeStars} / {nextLevel.stars_required} stars
+              {lifetimeStars} / {(nextLevel as any).stars_required} stars
             </div>
           </div>
 
           <p className="text-sm text-gray-600 mt-2 text-center">
-            {nextLevel.stars_required - lifetimeStars} more stars to go!
+            {(nextLevel as any).stars_required - lifetimeStars} more stars to go!
           </p>
         </div>
       )}
@@ -165,7 +165,7 @@ export default async function ProfilePage({
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-4">Achievement Badges</h2>
         <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-4">
-          {levels?.map((level) => {
+          {levels?.map((level: any) => {
             const achieved = lifetimeStars >= level.stars_required;
             return (
               <div
