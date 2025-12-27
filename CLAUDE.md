@@ -249,6 +249,49 @@ if (password !== confirmPassword) {
 
 **Seeding:** Happens in `create_family_with_templates` database function, NOT in code.
 
+### Quest Management (CRUD)
+
+**Component:** `components/admin/QuestManagement.tsx` with `QuestFormModal.tsx`
+
+**Features:**
+- Create/edit/delete quest templates
+- Toggle active/inactive status
+- 14 quest categories with icons (health, study, chores, hygiene, learning, social, creativity, exercise, reading, music, art, kindness, responsibility, other)
+- Star value configuration
+- Grouped display by type and scope (5 groups)
+
+**Category Labels:** Defined in `types/quest.ts` with `categoryLabels` object containing icons and bilingual labels.
+
+### Family Member Management
+
+**Page:** `app/[locale]/(parent)/admin/family/page.tsx`
+
+**Components:**
+- `FamilyMemberList.tsx` - Display parents and children
+- `AddChildModal.tsx` - Create child accounts with auto-generated passwords
+- `EditChildModal.tsx` - Update child name and email
+- `ResetPasswordModal.tsx` - Generate new passwords for children
+
+**API Routes:**
+- `api/admin/reset-child-password/route.ts`
+- `api/admin/delete-child/route.ts`
+
+**Database Functions:**
+- `admin_reset_child_password()` - SECURITY DEFINER function to update auth.users
+- `admin_delete_child()` - Cascade delete child and related data
+
+**Password Generation:**
+```typescript
+// Format: Adjective + Noun + Number (e.g., "HappyStar123")
+const adjectives = ["Happy", "Sunny", "Bright", "Lucky", "Swift"];
+const nouns = ["Star", "Moon", "Cloud", "Tiger", "Dragon"];
+```
+
+**Security:**
+- All operations require parent role
+- Family scope verification ensures parents can only manage their own family
+- SECURITY DEFINER functions for auth.users table access
+
 ### Bilingual Content
 
 **Database:** Quest/reward tables have `title_en`, `title_zh`, `description_en`, `description_zh` fields.
@@ -326,6 +369,47 @@ import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 ```
 
+### Handling Supabase Type Errors
+
+**Common Pattern:** TypeScript strict mode can cause errors with Supabase queries. Use these patterns:
+
+**Single vs MaybeSingle:**
+```typescript
+// Use .maybeSingle() when record might not exist (returns null)
+const { data: quest } = await supabase
+  .from("quests")
+  .select("*")
+  .eq("id", questId)
+  .maybeSingle();
+
+// Use .single() only when you're certain the record exists
+const { data: user } = await supabase
+  .from("users")
+  .select("*")
+  .eq("id", userId)
+  .single();
+```
+
+**RPC and Update Type Assertions:**
+```typescript
+// For database operations with type conflicts, use type assertion
+await supabase
+  .from("quests")
+  .update({
+    is_active: !quest.is_active,
+  } as any)
+  .eq("id", quest.id);
+
+// For RPC calls
+await supabase.rpc("some_function", { param: value } as any);
+```
+
+**Cookie Type Annotations:**
+```typescript
+// In server.ts and middleware.ts
+cookies().set(name as any, value as any, options as any);
+```
+
 ---
 
 ## Known Issues & Fixes
@@ -383,7 +467,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ## Development Priorities
 
-**Phase 3 (Current):** Parent features - Quick record, approval center, quest/reward/level management
+**Phase 3 (Current):** Parent features - In progress
+
+**Completed in Phase 3:**
+- ✅ Quick record stars (QuickRecordForm)
+- ✅ Approval center (star requests & redemption requests)
+- ✅ Family member management (add/edit/delete children, reset passwords)
+- ✅ Quest management (CRUD operations with QuestFormModal)
+
+**Remaining in Phase 3:**
+- ⏳ Reward management (CRUD)
+- ⏳ Level configuration
 
 **When Adding Features:**
 1. Consider quest type/scope classification
