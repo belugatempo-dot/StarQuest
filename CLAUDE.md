@@ -37,7 +37,7 @@ npm run lint
 
 ### Testing
 ```bash
-# Run all tests (88 tests as of 2025-12-25)
+# Run all tests (370 tests as of 2025-12-27)
 npm test
 
 # Watch mode for development
@@ -51,6 +51,9 @@ npm test -- LoginForm.test.tsx
 
 # Run tests matching pattern
 npm test -- --testNamePattern="email verification"
+
+# Run tests for specific pattern
+npm test -- --testPathPattern="QuestFormModal|ResetPasswordModal"
 ```
 
 **Note:** Integration tests skip actual Supabase calls when credentials are not available in test environment.
@@ -144,7 +147,7 @@ const otpType = validTypes.includes(type as EmailOtpType)
 - Invalid/expired token → Redirect to `/auth/verify-email?error=invalid_token`
 - ResendVerificationButton has 60s cooldown to prevent spam
 
-**Testing:** 27 tests cover email verification (ResendVerificationButton, callback route, LoginForm integration)
+**Testing:** Tests comprehensively cover email verification (ResendVerificationButton, callback route, LoginForm integration)
 
 ### 3. Locale-Based Routing (Next.js 15 + next-intl)
 
@@ -324,6 +327,36 @@ __tests__/
 
 **Component Testing:** Use `@testing-library/react` with `next-intl` provider wrapper
 
+**Modal Testing:** For modals with multiple buttons, use `within()` to scope queries:
+```typescript
+import { within } from "@testing-library/react";
+
+const modal = screen.getByRole('heading', { name: /modalTitle/i }).closest('div');
+const buttons = within(modal!).getAllByRole('button');
+const targetButton = buttons.find((btn) => btn.className.includes('bg-danger'));
+```
+
+**Testing HTML Required Attributes:** Components use HTML `required` attributes on inputs. Browser validation prevents submission with empty fields, so React validation code won't run:
+```typescript
+// Don't test React validation for empty required fields
+// Instead, verify the required attribute exists
+expect(input).toHaveAttribute('required');
+```
+
+**Async Loading States:** When testing loading states with promises, use manual promise resolution:
+```typescript
+let resolvePromise: (value: any) => void;
+const promise = new Promise((resolve) => { resolvePromise = resolve; });
+
+mockFetch.mockReturnValue(promise);
+// ... trigger action
+expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+// Resolve when ready
+resolvePromise!({ ok: true, json: async () => ({}) });
+await waitFor(() => { /* assert completion */ });
+```
+
 ### Global Test Mocks
 
 **Location:** `jest.setup.js` - Automatically loaded before all tests
@@ -334,6 +367,19 @@ __tests__/
 - `@/lib/supabase/client`: Complete Supabase client mock with auth and database methods
 
 **Important:** When writing new tests, these mocks are already available. Don't re-mock them in individual test files unless you need custom behavior.
+
+### Test Coverage (as of 2025-12-27)
+
+- **Total Tests:** 370 passing across 18 test suites
+- **Overall Coverage:** ~42%
+- **Auth Components:** 94.82% coverage
+- **Admin Components:** 60.15% coverage (core modals at 85-100%)
+- **Fully Tested Components:**
+  - AddChildModal, EditChildModal, FamilyMemberList (100%)
+  - LoginForm (98%), RegisterForm (92%), ResendVerificationButton (100%)
+  - StarRequestList, RedemptionRequestList (94%)
+  - QuestManagement (85%), QuestFormModal (full coverage)
+  - ResetPasswordModal (full coverage)
 
 ---
 
@@ -474,10 +520,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - ✅ Approval center (star requests & redemption requests)
 - ✅ Family member management (add/edit/delete children, reset passwords)
 - ✅ Quest management (CRUD operations with QuestFormModal)
+- ✅ Comprehensive test suite (370 tests, 42% coverage)
 
 **Remaining in Phase 3:**
 - ⏳ Reward management (CRUD)
 - ⏳ Level configuration
+- ⏳ Additional test coverage for child components
 
 **When Adding Features:**
 1. Consider quest type/scope classification
