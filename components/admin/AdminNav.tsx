@@ -27,6 +27,7 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
     { path: `/${locale}/admin/approve`, label: t("admin.approvalCenter"), icon: "✅" },
     { path: `/${locale}/admin/quests`, label: t("admin.manageQuests"), icon: "📋" },
     { path: `/${locale}/admin/rewards`, label: t("admin.manageRewards"), icon: "🎁" },
+    { path: `/${locale}/admin/levels`, label: t("admin.manageLevels"), icon: "🏆" },
     { path: `/${locale}/admin/family`, label: t("admin.familyManagement"), icon: "👥" },
   ];
 
