@@ -60,7 +60,10 @@ describe('LoginForm', () => {
     const mockChain = {
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { role: 'parent' }, error: null }),
+      maybeSingle: jest.fn().mockResolvedValue({
+        data: { role: 'parent', family_id: 'test-family-id' },
+        error: null
+      }),
     }
 
     mockFrom.mockReturnValue(mockChain)
@@ -227,6 +230,265 @@ describe('LoginForm', () => {
 
       // Resend button should NOT be present
       expect(screen.queryByRole('button', { name: /resend verification email/i })).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Role-Based Redirection', () => {
+    beforeEach(() => {
+      // Mock window.location.href
+      delete (window as any).location
+      ;(window as any).location = { href: '' }
+    })
+
+    it('redirects parent users to /admin using hard navigation', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'parent-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: { role: 'parent', family_id: 'family-123' },
+          error: null,
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'parent@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/en/admin')
+      })
+
+      // Should NOT use router.push
+      expect(mockRouter.push).not.toHaveBeenCalled()
+    })
+
+    it('redirects child users to /app using hard navigation', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'child-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: { role: 'child', family_id: 'family-123' },
+          error: null,
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'child@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/en/app')
+      })
+
+      // Should NOT use router.push
+      expect(mockRouter.push).not.toHaveBeenCalled()
+    })
+
+    it('redirects to correct locale path (Chinese)', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/login'
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'parent-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: { role: 'parent', family_id: 'family-123' },
+          error: null,
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'parent@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/zh-CN/admin')
+      })
+    })
+  })
+
+  describe('User Record Error Handling', () => {
+    it('shows error when user record not found (English)', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'orphan-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'User not found' },
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'orphan@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/user record not found/i)).toBeInTheDocument()
+        expect(screen.getByText(/complete registration →/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows error when user record not found (Chinese)', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/login'
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'orphan-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'User not found' },
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'orphan@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/找不到用户记录/i)).toBeInTheDocument()
+        expect(screen.getByText(/重新完成注册 →/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows link to registration page when user record not found', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'orphan-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'User not found' },
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'orphan@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        const registerLink = screen.getByRole('link', { name: /complete registration →/i })
+        expect(registerLink).toHaveAttribute('href', '/en/register')
+      })
+    })
+
+    it('shows error when user has no family_id', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'no-family-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: { role: 'parent', family_id: null },
+          error: null,
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'nofamily@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/please complete family setup/i)).toBeInTheDocument()
+      })
     })
   })
 })
