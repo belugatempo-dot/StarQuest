@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import RewardGrid from "@/components/child/RewardGrid";
@@ -33,7 +33,7 @@ export default async function RewardsPage({
 
   const currentStars = (balance as any)?.current_stars || 0;
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   return (
     <div className="space-y-6">

@@ -10,6 +10,7 @@
     "level": "Level",
     "balance": "Balance",
     "history": "History",
+    "activities": "Activities",
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Logout",
@@ -130,9 +131,11 @@
     }
   },
   "admin": {
-    "title": "Admin Dashboard",
+    "title": "Parent Dashboard",
+    "parentLabel": "Parent",
     "recordStars": "Record Stars",
     "approvalCenter": "Approval Center",
+    "questManagement": "Quest Management",
     "manageQuests": "Manage Quests",
     "manageRewards": "Manage Rewards",
     "manageLevels": "Manage Levels",
@@ -160,7 +163,10 @@
     "processing": "Processing...",
     "quickRecord": "Quick Record",
     "orCustom": "Or enter custom description",
-    "recordNote": "Note for child (optional)"
+    "recordNote": "Note for child (optional)",
+    "recordDate": "Record Date",
+    "activityLog": "Activity Log",
+    "viewActivity": "View Activity"
   },
   "family": {
     "title": "Family Management",
@@ -172,6 +178,7 @@
     "addChild": "Add Child",
     "addFirstChild": "Add First Child",
     "noChildren": "No children yet. Add your first child to get started!",
+    "viewDetails": "View Details",
     "editInfo": "Edit Info",
     "editChild": "Edit Child",
     "resetPassword": "Reset Password",

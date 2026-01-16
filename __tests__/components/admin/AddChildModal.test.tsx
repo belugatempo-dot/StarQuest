@@ -274,7 +274,7 @@ describe('AddChildModal', () => {
 
       await waitFor(() => {
         expect(mockSignUp).toHaveBeenCalledWith({
-          email: 'alice@child.starquest.local',
+          email: 'alice.child@example.com',
           password: 'password123',
           options: {
             data: {
@@ -333,7 +333,7 @@ describe('AddChildModal', () => {
       await waitFor(() => {
         expect(mockSignUp).toHaveBeenCalledWith(
           expect.objectContaining({
-            email: 'alicesmith@child.starquest.local',
+            email: 'alicesmith.child@example.com',
           })
         )
       })

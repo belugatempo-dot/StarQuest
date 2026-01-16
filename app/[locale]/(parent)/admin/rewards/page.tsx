@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import RewardManagement from "@/components/admin/RewardManagement";
@@ -20,7 +20,7 @@ export default async function RewardManagementPage({
     .order("stars_cost", { ascending: true })
     .order("created_at", { ascending: false });
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   // Count active and inactive rewards
   const activeRewards = rewards?.filter((r: any) => r.is_active) || [];

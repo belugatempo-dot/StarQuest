@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import QuestGrid from "@/components/child/QuestGrid";
@@ -28,7 +28,7 @@ export default async function QuestsPage({
     console.error("Error fetching quests:", error);
   }
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   return (
     <div className="space-y-6">

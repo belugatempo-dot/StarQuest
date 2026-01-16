@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Database } from "@/types/database";
+import CalendarView from "@/components/admin/CalendarView";
 
 type Transaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
   quests: {
@@ -25,12 +26,27 @@ export default function TransactionList({
   const t = useTranslations();
   const [filter, setFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
   const [showCount, setShowCount] = useState(20);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
   // Filter transactions
-  const filteredTransactions = transactions.filter((tx) => {
-    if (filter === "all") return true;
-    return tx.status === filter;
-  });
+  const filteredTransactions = useMemo(() => {
+    let filtered = transactions.filter((tx) => {
+      if (filter !== "all" && tx.status !== filter) return false;
+      return true;
+    });
+
+    // Filter by selected date
+    if (selectedDate) {
+      filtered = filtered.filter((tx) => {
+        const date = new Date(tx.created_at);
+        const txDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return txDate === selectedDate;
+      });
+    }
+
+    return filtered;
+  }, [transactions, filter, selectedDate]);
 
   // Apply show limit
   const displayedTransactions = filteredTransactions.slice(0, showCount);
@@ -78,9 +94,56 @@ export default function TransactionList({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6 border-b pb-4">
+    <div className="space-y-6">
+      {/* Main Layout: Calendar + Filters */}
+      <div className={`${viewMode === "calendar" ? 'grid lg:grid-cols-2 gap-6' : ''}`}>
+        {/* Calendar Picker - Left Side */}
+        {viewMode === "calendar" && (
+          <div className="lg:sticky lg:top-4 lg:self-start">
+            <CalendarView
+              transactions={transactions}
+              locale={locale}
+              selectedDate={selectedDate}
+              onDateSelect={(date) => setSelectedDate(date)}
+            />
+          </div>
+        )}
+
+        {/* Filters and List - Right Side or Full Width */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+      {/* View Mode Toggle and Filter Tabs */}
+      <div className="mb-6 border-b pb-4 space-y-4">
+        {/* View Mode Toggle */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-700">
+            {locale === "zh-CN" ? "查看方式" : "View Mode"}
+          </h2>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`px-4 py-2 rounded-lg transition ${
+                viewMode === "list"
+                  ? "bg-secondary text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              📋 {locale === "zh-CN" ? "列表" : "List"}
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`px-4 py-2 rounded-lg transition ${
+                viewMode === "calendar"
+                  ? "bg-secondary text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              📅 {locale === "zh-CN" ? "日历" : "Calendar"}
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex flex-wrap gap-2">
         {[
           { key: "all", label: t("history.allTransactions") },
           { key: "approved", label: t("status.approved") },
@@ -209,6 +272,9 @@ export default function TransactionList({
           </button>
         </div>
       )}
+    </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -452,4 +452,304 @@ describe("QuickRecordForm Component", () => {
       expect(submitButton).not.toBeDisabled();
     });
   });
+
+  describe("Multiplier functionality", () => {
+    it("should not show multiplier section when no quest is selected", () => {
+      renderComponent();
+
+      // Multiplier section should not be visible
+      expect(screen.queryByText(/Adjust Multiplier/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/调整倍数/)).not.toBeInTheDocument();
+    });
+
+    it("should show multiplier section when a quest is selected", () => {
+      renderComponent();
+
+      // Select a bonus quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Multiplier section should be visible
+      expect(screen.getByText(/Adjust Multiplier/i)).toBeInTheDocument();
+    });
+
+    it("should display default multiplier value of 1", () => {
+      renderComponent();
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Find multiplier input
+      const multiplierInput = screen.getByDisplayValue("1");
+      expect(multiplierInput).toBeInTheDocument();
+      expect(multiplierInput).toHaveAttribute("type", "number");
+      expect(multiplierInput).toHaveAttribute("min", "1");
+      expect(multiplierInput).toHaveAttribute("max", "10");
+    });
+
+    it("should allow changing multiplier value", () => {
+      renderComponent();
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Find and change multiplier input
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "3" } });
+
+      expect(multiplierInput).toHaveValue(3);
+    });
+
+    it("should calculate and display correct stars with multiplier for bonus quest", () => {
+      renderComponent();
+
+      // Select a bonus quest (+15 stars)
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Check base stars display - there will be multiple "+15" elements
+      const allPlusFifteen = screen.getAllByText("+15");
+      expect(allPlusFifteen.length).toBeGreaterThan(0);
+
+      // Change multiplier to 3
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "3" } });
+
+      // Should show calculated stars (15 × 3 = 45)
+      expect(screen.getByText("+45")).toBeInTheDocument();
+      expect(screen.getByText("15 × 3")).toBeInTheDocument();
+    });
+
+    it("should calculate and display correct stars with multiplier for duty quest", () => {
+      renderComponent();
+
+      // Select a duty quest (-5 stars)
+      const questCard = screen.getByText("Brush teeth").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Change multiplier to 2
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "2" } });
+
+      // Should show calculated stars (-5 × 2 = -10)
+      expect(screen.getByText("-10")).toBeInTheDocument();
+      expect(screen.getByText("-5 × 2")).toBeInTheDocument();
+    });
+
+    it("should calculate and display correct stars with multiplier for violation quest", () => {
+      renderComponent();
+
+      // Select a violation quest (-30 stars)
+      const questCard = screen.getByText("Lying").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Change multiplier to 4
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "4" } });
+
+      // Should show calculated stars (-30 × 4 = -120)
+      expect(screen.getByText("-120")).toBeInTheDocument();
+      expect(screen.getByText("-30 × 4")).toBeInTheDocument();
+    });
+
+    it("should reset multiplier to 1 when changing quest selection", () => {
+      renderComponent();
+
+      // Select first quest
+      const quest1Card = screen.getByText("Help wash dishes").closest("div");
+      if (quest1Card) {
+        fireEvent.click(quest1Card);
+      }
+
+      // Change multiplier
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "5" } });
+      expect(multiplierInput).toHaveValue(5);
+
+      // Select a different quest
+      const quest2Card = screen.getByText("Extra reading").closest("div");
+      if (quest2Card) {
+        fireEvent.click(quest2Card);
+      }
+
+      // Multiplier should reset to 1
+      const resetMultiplierInput = screen.getByDisplayValue("1");
+      expect(resetMultiplierInput).toHaveValue(1);
+    });
+
+    it("should enforce minimum multiplier value of 1", () => {
+      renderComponent();
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Try to set multiplier below 1
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "0" } });
+
+      // Should enforce minimum of 1
+      expect(multiplierInput).toHaveValue(1);
+
+      // Try negative value
+      fireEvent.change(multiplierInput, { target: { value: "-5" } });
+      expect(multiplierInput).toHaveValue(1);
+    });
+
+    it("should display helpful example text in English", () => {
+      renderComponent(mockQuests, mockChildren, "en");
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Should show example text
+      expect(screen.getByText(/10 mins over = 1×, 20 mins over = 2×/i)).toBeInTheDocument();
+    });
+
+    it("should display helpful example text in Chinese", () => {
+      renderComponent(mockQuests, mockChildren, "zh-CN");
+
+      // Select a quest
+      const questCard = screen.getByText("帮忙洗碗").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Should show Chinese example text
+      expect(screen.getByText(/超过10分钟 = 1×，超过20分钟 = 2×/)).toBeInTheDocument();
+    });
+
+    it("should show multiplier range (1-10×)", () => {
+      renderComponent();
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Should show range indicator
+      expect(screen.getByText("(1-10×)")).toBeInTheDocument();
+    });
+
+    it("should display actual stars label in English", () => {
+      renderComponent(mockQuests, mockChildren, "en");
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      expect(screen.getByText("Actual Stars:")).toBeInTheDocument();
+    });
+
+    it("should display actual stars label in Chinese", () => {
+      renderComponent(mockQuests, mockChildren, "zh-CN");
+
+      // Select a quest
+      const questCard = screen.getByText("帮忙洗碗").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      expect(screen.getByText("实际星星:")).toBeInTheDocument();
+    });
+
+    it("should handle multiplier with maximum value of 10", () => {
+      renderComponent();
+
+      // Select a quest
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Set multiplier to 10
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "10" } });
+
+      expect(multiplierInput).toHaveValue(10);
+
+      // Should show calculated stars (15 × 10 = 150)
+      expect(screen.getByText("+150")).toBeInTheDocument();
+    });
+
+    it("should handle large negative stars with multiplier", () => {
+      renderComponent();
+
+      // Select fighting quest (-40 stars)
+      const questCard = screen.getByText("Fighting").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Set multiplier to 5
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "5" } });
+
+      // Should show calculated stars (-40 × 5 = -200)
+      expect(screen.getByText("-200")).toBeInTheDocument();
+    });
+
+    it("should hide multiplier section when switching to custom description", () => {
+      renderComponent();
+
+      // Select a quest (multiplier should appear)
+      const questCard = screen.getByText("Help wash dishes").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      expect(screen.getByText(/Adjust Multiplier/i)).toBeInTheDocument();
+
+      // Enter custom description
+      const customInput = screen.getByPlaceholderText(
+        /Helped neighbor carry groceries/i
+      );
+      fireEvent.change(customInput, {
+        target: { value: "Custom activity" },
+      });
+
+      // Multiplier section should be hidden
+      expect(screen.queryByText(/Adjust Multiplier/i)).not.toBeInTheDocument();
+    });
+
+    it("should apply multiplier correctly in star calculation for duty quest", () => {
+      renderComponent();
+
+      // Select finish homework quest (-15 stars)
+      const questCard = screen.getByText("Finish homework").closest("div");
+      if (questCard) {
+        fireEvent.click(questCard);
+      }
+
+      // Set multiplier to 3
+      const multiplierInput = screen.getByDisplayValue("1");
+      fireEvent.change(multiplierInput, { target: { value: "3" } });
+
+      // Should show -45 stars
+      expect(screen.getByText("-45")).toBeInTheDocument();
+      expect(screen.getByText("-15 × 3")).toBeInTheDocument();
+    });
+  });
 });

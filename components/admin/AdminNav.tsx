@@ -24,6 +24,7 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
   const navItems = [
     { path: `/${locale}/admin`, label: t("admin.title"), icon: "🏠" },
     { path: `/${locale}/admin/record`, label: t("admin.recordStars"), icon: "⭐" },
+    { path: `/${locale}/admin/activity`, label: t("admin.activityLog"), icon: "📊" },
     { path: `/${locale}/admin/approve`, label: t("admin.approvalCenter"), icon: "✅" },
     { path: `/${locale}/admin/quests`, label: t("admin.manageQuests"), icon: "📋" },
     { path: `/${locale}/admin/rewards`, label: t("admin.manageRewards"), icon: "🎁" },
@@ -41,7 +42,7 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
             <div>
               <span className="text-xl font-bold text-primary">{t("brand.name")}</span>
               <span className="ml-2 text-xs bg-secondary text-white px-2 py-1 rounded">
-                Admin
+                {t("admin.parentLabel")}
               </span>
             </div>
           </Link>

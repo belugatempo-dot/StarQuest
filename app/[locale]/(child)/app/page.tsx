@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,7 +9,7 @@ export default async function ChildDashboard({
 }) {
   const { locale } = await params;
   const user = await requireAuth(locale);
-  const t = useTranslations();
+  const t = await getTranslations();
   const supabase = await createClient();
 
   // Fetch child balance

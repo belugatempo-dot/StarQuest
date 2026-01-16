@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import QuestManagement from "@/components/admin/QuestManagement";
@@ -21,7 +21,7 @@ export default async function QuestManagementPage({
     .order("stars", { ascending: false })
     .order("created_at", { ascending: false });
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   // Count positive and negative quests
   const positiveQuests = quests?.filter((q: any) => q.stars > 0) || [];

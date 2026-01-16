@@ -1,6 +1,6 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import InviteParentCard from "@/components/admin/InviteParentCard";
 
@@ -11,8 +11,9 @@ export default async function AdminDashboard({
 }) {
   const { locale } = await params;
   const user = await requireParent(locale);
-  const t = useTranslations();
+  const t = await getTranslations();
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Fetch pending approvals count
   const { count: pendingStarsCount } = await supabase
@@ -29,15 +30,15 @@ export default async function AdminDashboard({
 
   const totalPending = (pendingStarsCount || 0) + (pendingRedemptionsCount || 0);
 
-  // Fetch family children
-  const { data: children } = await supabase
+  // Fetch family children using admin client to bypass RLS
+  const { data: children } = await adminClient
     .from("users")
     .select("*")
     .eq("family_id", user.family_id!)
     .eq("role", "child");
 
   // Fetch children balances
-  const { data: balances } = await supabase
+  const { data: balances } = await adminClient
     .from("child_balances")
     .select("*")
     .eq("family_id", user.family_id!);
@@ -114,9 +115,10 @@ export default async function AdminDashboard({
             {children.map((child: any) => {
               const balance = balances?.find((b: any) => b.child_id === child.id);
               return (
-                <div
+                <Link
                   key={child.id}
-                  className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg"
+                  href={`/${locale}/admin/children/${child.id}`}
+                  className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg hover:shadow-lg transition cursor-pointer"
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-2xl">
@@ -143,7 +145,7 @@ export default async function AdminDashboard({
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

@@ -58,7 +58,7 @@ export default function AddChildModal({
     try {
       // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email || `${name.toLowerCase().replace(/\s+/g, "")}@child.starquest.local`,
+        email: email || `${name.toLowerCase().replace(/\s+/g, "")}.child@example.com`,
         password: password,
         options: {
           data: {

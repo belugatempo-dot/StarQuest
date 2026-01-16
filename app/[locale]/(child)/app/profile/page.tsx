@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -56,7 +56,7 @@ export default async function ProfilePage({
     .eq("child_id", user.id)
     .eq("status", "approved");
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   return (
     <div className="space-y-6">

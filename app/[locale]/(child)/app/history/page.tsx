@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import TransactionList from "@/components/child/TransactionList";
@@ -31,15 +31,17 @@ export default async function HistoryPage({
     console.error("Error fetching transactions:", error);
   }
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold mb-2">{t("history.title")}</h1>
+        <h1 className="text-3xl font-bold mb-2">{t("common.activities")}</h1>
         <p className="text-gray-600">
-          Track all your star earnings and deductions
+          {locale === "zh-CN"
+            ? "查看所有星星的获得和扣除记录"
+            : "Track all your star earnings and deductions"}
         </p>
       </div>
 
