@@ -14,7 +14,7 @@ export default async function ActivityPage({
   const adminClient = createAdminClient();
 
   // Fetch all transactions for the family with quest and child details
-  const { data: transactions, error } = await adminClient
+  const { data: transactions, error } = (await adminClient
     .from("star_transactions")
     .select(`
       *,
@@ -30,7 +30,7 @@ export default async function ActivityPage({
       )
     `)
     .eq("family_id", user.family_id!)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
 
   if (error) {
     console.error("Error fetching transactions:", error);
