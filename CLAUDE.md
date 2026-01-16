@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**StarQuest** is a gamified family behavior tracking system built with Next.js 15 and Supabase. Parents manage quests (duties, bonuses, violations) and children earn stars by completing tasks to unlock rewards. The app features a double-dimension quest classification system (type × scope) and bilingual support (English/Chinese).
+**StarQuest** is a gamified family behavior tracking system built with Next.js 15 and Supabase. Parents manage quests (duties, bonuses, violations) and children earn stars by completing tasks to unlock rewards. The app features a double-dimension quest classification system (type × scope), star multiplier functionality, and bilingual support (English/Chinese).
 
 **Brand:** Beluga Tempo | 鲸律
 
@@ -14,6 +14,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```typescript
 import { createClient } from "@/lib/supabase/server";  // ✅ Correct
 import { createClient } from "../../lib/supabase/server";  // ❌ Avoid
+```
+
+**Production URL:** https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app
+
+---
+
+## Test-Driven Development (TDD) Principles
+
+### Core TDD Philosophy
+
+This project strictly follows **Test-Driven Development** methodology:
+
+1. **RED**: Write failing tests first
+2. **GREEN**: Write minimal code to pass tests
+3. **REFACTOR**: Improve code while keeping tests green
+4. **REPEAT**: Continuous iteration
+
+### Quality Standards
+
+✅ **All new features MUST have tests before implementation**
+✅ **Test coverage target: Maintain >50% overall, >80% for critical components**
+✅ **All PRs must pass 100% of existing tests**
+✅ **No commits to main without passing test suite**
+
+### Current Test Metrics (as of 2026-01-16)
+
+```
+✅ Test Suites: 26 passed, 26 total
+✅ Tests: 662 passed, 662 total
+⏱️  Execution Time: ~9s
+📊 Overall Coverage: 52.02%
+   - components/admin: 63.39%
+   - components/auth: 94.82%
+   - components/child: 83.13%
+   - components/ui: 100%
+```
+
+### Test Organization
+
+```
+__tests__/
+├── components/
+│   ├── admin/        # 13 files, 341 tests - Parent UI components
+│   ├── auth/         # 3 files, 96 tests - Authentication flows
+│   ├── child/        # 5 files, 152 tests - Child UI components
+│   └── ui/           # 1 file, 11 tests - Shared components
+├── integration/      # 1 file, 13 tests - End-to-end flows
+├── lib/              # 1 file, 24 tests - Utility functions
+└── types/            # 2 files, 25 tests - Type system & logic
 ```
 
 ---
@@ -35,15 +84,15 @@ npm start
 npm run lint
 ```
 
-### Testing
+### Testing Commands
 ```bash
-# Run all tests (370 tests as of 2025-12-27)
+# Run all 662 tests
 npm test
 
 # Watch mode for development
 npm run test:watch
 
-# Coverage report
+# Coverage report with detailed breakdown
 npm run test:coverage
 
 # Run specific test file
@@ -52,11 +101,29 @@ npm test -- LoginForm.test.tsx
 # Run tests matching pattern
 npm test -- --testNamePattern="email verification"
 
-# Run tests for specific pattern
+# Run tests for specific component pattern
 npm test -- --testPathPattern="QuestFormModal|ResetPasswordModal"
+
+# Run tests in verbose mode
+npm test -- --verbose
 ```
 
 **Note:** Integration tests skip actual Supabase calls when credentials are not available in test environment.
+
+### Deployment Commands
+```bash
+# Deploy to Vercel production
+vercel --prod
+
+# Deploy to Vercel preview
+vercel
+
+# Check deployment status
+vercel ls
+
+# View deployment logs
+vercel logs
+```
 
 ---
 
@@ -83,7 +150,38 @@ Quests use a **double-dimension classification**:
 - `getChildVisibleQuests()`: Filters only bonus quests for child UI
 - `getSuggestedStars()`: Recommends star values based on type/scope/category
 
-### 2. Authentication Flow & Session Management
+### 2. Star Multiplier System (NEW - 2026-01-16)
+
+**Purpose:** Allow severity-based adjustments for quest completions/violations.
+
+**Features:**
+- Multiplier range: 1× to 10×
+- Real-time calculation display
+- Auto-reset on quest change
+- Bilingual UI support
+- Works with all quest types (bonus, duty, violation)
+
+**Implementation:**
+```typescript
+// components/admin/QuickRecordForm.tsx
+const [multiplier, setMultiplier] = useState<number>(1);
+const baseStars = selectedQuestData?.stars || customStars;
+const starsToRecord = baseStars * multiplier;
+```
+
+**Use Cases:**
+- Sleep violation: 10 mins late = 1×, 20 mins = 2×, 30 mins = 3×
+- Extra effort: Did exceptionally well = 2×-3×
+- Repeated violations: Multiple occurrences = higher multiplier
+
+**Test Coverage:** 20 comprehensive tests added
+- UI rendering and state management
+- Calculation accuracy for all quest types
+- Input validation and boundary conditions
+- Bilingual support
+- Edge cases (negative stars, large multipliers)
+
+### 3. Authentication Flow & Session Management
 
 **CRITICAL ISSUE FIXED:** Login/registration must use `window.location.href` for navigation, NOT `router.push()`.
 
@@ -106,7 +204,7 @@ router.push(`/${locale}/admin`);
 - `components/auth/RegisterForm.tsx`
 - `lib/auth.ts` - Contains `requireAuth()` and `requireParent()` helpers
 
-### 2.1 Email Verification Flow
+### 4. Email Verification Flow
 
 **Architecture:** Complete email verification implemented using Supabase built-in email auth.
 
@@ -137,8 +235,11 @@ const otpType = validTypes.includes(type as EmailOtpType)
    - Template: `{{ .SiteURL }}/en/auth/callback?token_hash={{ .TokenHash }}&type=email`
 
 2. **URL Configuration** (Authentication → URL Configuration):
-   - Site URL: `http://localhost:3000` (dev) or production domain
+   - Site URL: `https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app` (production)
+   - Site URL: `http://localhost:3000` (development)
    - Redirect URLs whitelist must include:
+     - `https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app/*/auth/callback`
+     - `https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app/*/auth/confirmed`
      - `http://localhost:3000/*/auth/callback`
      - `http://localhost:3000/*/auth/confirmed`
 
@@ -149,7 +250,7 @@ const otpType = validTypes.includes(type as EmailOtpType)
 
 **Testing:** Tests comprehensively cover email verification (ResendVerificationButton, callback route, LoginForm integration)
 
-### 3. Locale-Based Routing (Next.js 15 + next-intl)
+### 5. Locale-Based Routing (Next.js 15 + next-intl)
 
 **Structure:** All routes prefixed with locale: `/[locale]/(group)/path`
 
@@ -182,7 +283,7 @@ export async function middleware(request: NextRequest) {
 }
 ```
 
-### 4. Route Groups Architecture
+### 6. Route Groups Architecture
 
 ```
 app/[locale]/
@@ -197,7 +298,7 @@ app/[locale]/
 - Parent routes use `requireParent(locale)` → redirects non-parents to `/app`
 - Child routes use `requireAuth(locale)` → redirects unauthenticated to `/login`
 
-### 5. Database Schema Key Points
+### 7. Database Schema Key Points
 
 **Family-Scoped Data:** All tables (except `families`) have `family_id` with RLS policies ensuring data isolation.
 
@@ -213,7 +314,7 @@ app/[locale]/
 
 **Critical Fix Applied:** Functions check for existing users before INSERT to prevent duplicate key errors.
 
-### 6. Component Organization
+### 8. Component Organization
 
 **Shared UI:** `components/ui/` - Reusable components (LanguageSwitcher, etc.)
 
@@ -223,6 +324,49 @@ app/[locale]/
 - `components/auth/` - Login/register forms (use hard navigation)
 
 **Pattern:** Components using Supabase must be Client Components (`"use client"`)
+
+---
+
+## Feature Implementation Status
+
+### ✅ Phase 1: Foundation (COMPLETED)
+- [x] Next.js 15 project setup with TypeScript
+- [x] Tailwind CSS configuration with custom theme
+- [x] Internationalization (English + Simplified Chinese)
+- [x] Supabase database schema and RLS policies
+- [x] Authentication system with email verification
+- [x] Basic layouts for child and parent views
+- [x] Automated testing setup (662 tests)
+
+### ✅ Phase 2: Child Features (COMPLETED)
+- [x] Child dashboard with star balance
+- [x] Quest list with filtering and categories
+- [x] Star request submission
+- [x] Reward catalog with affordability check
+- [x] Reward redemption requests
+- [x] Activity history with filtering
+- [x] Profile page with level progress and badge wall
+
+### ✅ Phase 3: Parent Features (COMPLETED - 2026-01-16)
+- [x] Parent dashboard with statistics
+- [x] Quick record stars with multiplier (1-10×)
+- [x] Approval center (star requests & redemption requests)
+- [x] Quest management (CRUD with 14 categories)
+- [x] Reward management (CRUD with 5 categories)
+- [x] Level configuration management
+- [x] Family member management (add/edit/delete children)
+- [x] Password reset for children
+- [x] Activity log with calendar view
+- [x] Transaction editing capabilities
+
+### 🚧 Phase 4: Advanced Features (IN PROGRESS)
+- [ ] Advanced statistics and reports
+- [ ] Family settings page
+- [ ] Email notifications
+- [ ] Weekly email reports
+- [ ] Invite system for additional parents
+- [ ] PWA support for offline access
+- [ ] Data export functionality
 
 ---
 
@@ -265,15 +409,48 @@ if (password !== confirmPassword) {
 
 **Category Labels:** Defined in `types/quest.ts` with `categoryLabels` object containing icons and bilingual labels.
 
+**Test Coverage:** 85% (QuestManagement), 100% (QuestFormModal)
+
+### Reward Management (CRUD)
+
+**Component:** `components/admin/RewardManagement.tsx` with `RewardFormModal.tsx`
+
+**Features:**
+- Create/edit/delete rewards
+- Toggle active/inactive status
+- 5 reward categories (screen_time, toys, activities, treats, other)
+- Stars cost configuration
+- Description and icon customization
+- Category filtering
+
+**Test Coverage:** 94.64% (RewardManagement), 92.15% (RewardFormModal)
+- 84 comprehensive tests across both components
+- Full CRUD operations tested
+- Bilingual support validated
+- Error handling and edge cases covered
+
+### Level Management
+
+**Component:** `components/admin/LevelManagement.tsx` with `LevelFormModal.tsx`
+
+**Features:**
+- Create/edit/delete levels
+- Configure star requirements
+- Set level icons and badges
+- Bilingual name/description support
+- Sort order management
+
+**Test Coverage:** 100% (LevelManagement), 89.18% (LevelFormModal)
+
 ### Family Member Management
 
 **Page:** `app/[locale]/(parent)/admin/family/page.tsx`
 
 **Components:**
-- `FamilyMemberList.tsx` - Display parents and children
-- `AddChildModal.tsx` - Create child accounts with auto-generated passwords
-- `EditChildModal.tsx` - Update child name and email
-- `ResetPasswordModal.tsx` - Generate new passwords for children
+- `FamilyMemberList.tsx` - Display parents and children (100% coverage)
+- `AddChildModal.tsx` - Create child accounts with auto-generated passwords (100% coverage)
+- `EditChildModal.tsx` - Update child name and email (92.59% coverage)
+- `ResetPasswordModal.tsx` - Generate new passwords for children (100% coverage)
 
 **API Routes:**
 - `api/admin/reset-child-password/route.ts`
@@ -295,6 +472,32 @@ const nouns = ["Star", "Moon", "Cloud", "Tiger", "Dragon"];
 - Family scope verification ensures parents can only manage their own family
 - SECURITY DEFINER functions for auth.users table access
 
+### Quick Record Form with Multiplier
+
+**Component:** `components/admin/QuickRecordForm.tsx`
+
+**Features:**
+- Select child (auto-select if only one)
+- Select from grouped quests (Bonus/Duty/Violation)
+- Custom quest description with manual star input
+- **Multiplier adjustment (1-10×)** for severity-based penalties/rewards
+- Parent note (optional)
+- Date selection for backdated records
+- Real-time calculation display
+
+**Multiplier Functionality:**
+- Shows only when a quest is selected
+- Default value: 1×
+- Range: 1-10
+- Auto-resets when changing quests
+- Real-time calculation: `base stars × multiplier = actual stars`
+- Bilingual helper text with examples
+
+**Test Coverage:** 57.44% with 37 tests including:
+- 17 original tests for core functionality
+- 20 new tests for multiplier feature
+- All edge cases and boundary conditions covered
+
 ### Bilingual Content
 
 **Database:** Quest/reward tables have `title_en`, `title_zh`, `description_en`, `description_zh` fields.
@@ -307,16 +510,25 @@ const nouns = ["Star", "Moon", "Cloud", "Tiger", "Dragon"];
 
 ## Testing Strategy
 
+### Test-First Development
+
+**ALWAYS follow this pattern:**
+1. Write test describing desired behavior
+2. Run test → see it fail (RED)
+3. Write minimal code to pass test (GREEN)
+4. Refactor while keeping tests green
+5. Commit only when all tests pass
+
 ### Test Structure
 ```
 __tests__/
 ├── types/              # Type system tests (quest grouping, filtering)
 ├── components/
-│   ├── auth/          # Login/register form tests
-│   ├── child/         # Child UI component tests
-│   └── admin/         # Parent UI component tests
-├── integration/       # Registration flow tests
-└── lib/               # Utility function tests
+│   ├── auth/          # Login/register form tests (96 tests, 94.82% coverage)
+│   ├── child/         # Child UI component tests (152 tests, 83.13% coverage)
+│   └── admin/         # Parent UI component tests (341 tests, 63.39% coverage)
+├── integration/       # Registration flow tests (13 tests)
+└── lib/               # Utility function tests (24 tests)
 ```
 
 ### Key Test Patterns
@@ -368,18 +580,51 @@ await waitFor(() => { /* assert completion */ });
 
 **Important:** When writing new tests, these mocks are already available. Don't re-mock them in individual test files unless you need custom behavior.
 
-### Test Coverage (as of 2025-12-27)
+### Test Coverage Requirements
 
-- **Total Tests:** 370 passing across 18 test suites
-- **Overall Coverage:** ~42%
-- **Auth Components:** 94.82% coverage
-- **Admin Components:** 60.15% coverage (core modals at 85-100%)
-- **Fully Tested Components:**
-  - AddChildModal, EditChildModal, FamilyMemberList (100%)
-  - LoginForm (98%), RegisterForm (92%), ResendVerificationButton (100%)
-  - StarRequestList, RedemptionRequestList (94%)
-  - QuestManagement (85%), QuestFormModal (full coverage)
-  - ResetPasswordModal (full coverage)
+**Minimum Standards:**
+- New features: Write tests BEFORE implementation
+- Critical components (auth, payment, data modification): >85% coverage
+- UI components: >70% coverage
+- Utility functions: >90% coverage
+- Overall project: >50% coverage
+
+**Current Coverage Champions:**
+- AddChildModal: 100%
+- FamilyMemberList: 100%
+- QuestFormModal: 100%
+- LevelManagement: 100%
+- LanguageSwitcher: 100%
+- LoginForm: 98%
+- RewardManagement: 94.64%
+
+### Running Tests
+
+```bash
+# Full test suite (should take <10s)
+npm test
+
+# Watch mode during development
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+
+# Specific test file
+npm test -- QuickRecordForm.test.tsx
+
+# Verbose output
+npm test -- --verbose
+
+# Update snapshots (use sparingly)
+npm test -- -u
+```
+
+**CI/CD Integration:**
+- All tests run automatically on push
+- PRs blocked if tests fail
+- Coverage reports generated on each run
+- Deployment only occurs if tests pass
 
 ---
 
@@ -450,11 +695,130 @@ await supabase
 await supabase.rpc("some_function", { param: value } as any);
 ```
 
+**Complex Query Type Assertions:**
+```typescript
+// For complex queries with joins that TypeScript can't infer
+const { data: transactions } = (await supabase
+  .from("star_transactions")
+  .select(`
+    *,
+    quests (name_en, name_zh),
+    children:users (name, avatar_url)
+  `)
+  .eq("family_id", familyId)) as { data: any[] | null; error: any };
+```
+
 **Cookie Type Annotations:**
 ```typescript
 // In server.ts and middleware.ts
 cookies().set(name as any, value as any, options as any);
 ```
+
+---
+
+## Deployment
+
+### Vercel Configuration
+
+**File:** `vercel.json`
+```json
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["hkg1"]
+}
+```
+
+**Environment Variables (Vercel Dashboard):**
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon/public key
+
+**Setting Environment Variables:**
+```bash
+# Add production environment variable
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+
+# Add preview environment variable
+vercel env add NEXT_PUBLIC_SUPABASE_URL preview
+
+# List all environment variables
+vercel env ls
+
+# Pull environment variables to .env.local
+vercel env pull
+```
+
+### Deployment Commands
+
+```bash
+# Deploy to production
+vercel --prod
+
+# Deploy to preview
+vercel
+
+# View deployment logs
+vercel logs
+
+# List deployments
+vercel ls
+
+# Remove old deployments
+vercel rm [deployment-url]
+```
+
+### Pre-Deployment Checklist
+
+✅ **Before deploying:**
+1. Run full test suite: `npm test` (all 662 tests must pass)
+2. Build locally: `npm run build` (must complete without errors)
+3. Check environment variables in Vercel dashboard
+4. Update Supabase redirect URLs (see below)
+5. Commit all changes to git
+6. Tag release: `git tag v1.x.x`
+
+### Supabase Configuration for Production
+
+**IMPORTANT:** After deployment, update Supabase settings:
+
+1. **Navigate to:** Supabase Dashboard → Authentication → URL Configuration
+
+2. **Site URL:**
+   ```
+   https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app
+   ```
+
+3. **Redirect URLs (Add these patterns):**
+   ```
+   https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app/*/auth/callback
+   https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app/*/auth/confirmed
+   https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app/*/auth/verify-email
+   ```
+
+4. **Email Templates:** Verify template URLs use production domain:
+   ```
+   {{ .SiteURL }}/en/auth/callback?token_hash={{ .TokenHash }}&type=email
+   ```
+
+5. **Test Registration Flow:**
+   - Register new account
+   - Check email verification works
+   - Verify login after confirmation
+
+### Post-Deployment Verification
+
+After deployment, verify:
+- [ ] Homepage loads correctly
+- [ ] Language switcher works (EN/中文)
+- [ ] Registration flow completes
+- [ ] Email verification link works
+- [ ] Login redirects properly
+- [ ] Parent dashboard accessible
+- [ ] Child dashboard accessible
+- [ ] Database queries work
+- [ ] No console errors in browser
 
 ---
 
@@ -476,6 +840,11 @@ cookies().set(name as any, value as any, options as any);
 **Cause:** Function tried to INSERT user that already existed
 **Fix:** Migration `20250102000002_fix_create_family_function.sql` adds existence checks
 
+### Issue: Build Failure on Activity Page
+**Symptom:** TypeScript error - `Property 'stars' does not exist on type 'never'`
+**Cause:** Supabase type inference issue with complex queries
+**Fix:** Add type assertion `as { data: any[] | null; error: any }`
+
 ---
 
 ## Documentation Files
@@ -486,6 +855,7 @@ cookies().set(name as any, value as any, options as any);
 - `README.md` - Quick start guide
 
 **Technical:**
+- `CLAUDE.md` - This file - Development guide
 - `REGISTRATION_TESTING_REPORT.md` - Password confirmation testing
 - `LOGIN_FIX_REPORT.md` - Login loop fix (bilingual)
 - `REGISTRATION_TEST_PLAN.md` - Manual test scenarios
@@ -508,36 +878,149 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 1. Create Supabase project
 2. Run migrations in order from `supabase/migrations/`
 3. Or use `COMPLETE_SCHEMA.sql` for fresh setup
+4. Configure authentication settings (see Deployment section)
+5. Update redirect URLs for production
 
 ---
 
-## Development Priorities
+## Development Workflow
 
-**Phase 3 (Current):** Parent features - In progress
+### Starting New Feature
 
-**Completed in Phase 3:**
-- ✅ Quick record stars (QuickRecordForm)
-- ✅ Approval center (star requests & redemption requests)
-- ✅ Family member management (add/edit/delete children, reset passwords)
-- ✅ Quest management (CRUD operations with QuestFormModal)
-- ✅ Comprehensive test suite (370 tests, 42% coverage)
+1. **Create feature branch:**
+   ```bash
+   git checkout -b feature/feature-name
+   ```
 
-**Remaining in Phase 3:**
-- ⏳ Reward management (CRUD)
-- ⏳ Level configuration
-- ⏳ Additional test coverage for child components
+2. **Write tests first (TDD):**
+   ```bash
+   # Create test file
+   touch __tests__/components/MyComponent.test.tsx
 
-**When Adding Features:**
-1. Consider quest type/scope classification
-2. Respect parent vs child visibility rules
-3. Maintain bilingual support
-4. Write tests before implementation
-5. Use hard navigation for post-auth redirects
-6. Ensure family-scoped queries
+   # Write failing tests
+   npm run test:watch -- MyComponent.test.tsx
+   ```
+
+3. **Implement feature:**
+   - Write minimal code to pass tests
+   - Keep tests running in watch mode
+   - Refactor when all tests green
+
+4. **Verify coverage:**
+   ```bash
+   npm run test:coverage
+   ```
+
+5. **Commit and push:**
+   ```bash
+   git add .
+   git commit -m "feat: add feature with tests
+
+   ✨ New Features:
+   - Feature description
+
+   🧪 Testing:
+   - X comprehensive tests added
+   - Coverage: Y%
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+   git push origin feature/feature-name
+   ```
+
+### Code Review Checklist
+
+Before marking PR as ready:
+- [ ] All tests pass (npm test)
+- [ ] Test coverage meets standards
+- [ ] Build succeeds (npm run build)
+- [ ] No console errors or warnings
+- [ ] TypeScript types correct
+- [ ] Bilingual support (if UI change)
+- [ ] Documentation updated
+- [ ] Commit messages follow convention
+
+---
+
+## Best Practices
+
+### TDD Workflow
+1. **RED:** Write test that fails
+2. **GREEN:** Write code to pass test
+3. **REFACTOR:** Improve code
+4. **COMMIT:** Only when tests pass
+
+### Testing Best Practices
+- Test behavior, not implementation
+- Use descriptive test names
+- One assertion per test (when possible)
+- Mock external dependencies
+- Test edge cases and error states
+- Keep tests fast (<10s total)
+
+### Code Quality
+- Follow existing patterns
+- Use TypeScript strictly
+- Handle errors gracefully
+- Write self-documenting code
+- Keep functions small and focused
+- Avoid premature optimization
+
+### Component Guidelines
+- Client components: Use `"use client"` directive
+- Server components: Default (no directive)
+- Shared logic: Extract to utilities
+- Styles: Use Tailwind classes
+- Icons: Emoji or SVG
+- Loading states: Always provide feedback
+
+---
+
+## When Adding Features
+
+**ALWAYS consider:**
+1. ✅ Write tests FIRST (TDD principle)
+2. ✅ Quest type/scope classification
+3. ✅ Parent vs child visibility rules
+4. ✅ Bilingual support (EN + 中文)
+5. ✅ Family-scoped queries (RLS)
+6. ✅ Hard navigation for post-auth redirects
+7. ✅ Type safety (TypeScript)
+8. ✅ Error handling and loading states
+9. ✅ Test coverage >70% for new code
+10. ✅ Documentation updates
 
 **When Fixing Bugs:**
-1. Check if it's related to session management (use hard navigation)
-2. Verify locale handling in i18n config
-3. Confirm RLS policies for new queries
-4. Test with both English and Chinese locales
-5. Run full test suite before marking complete
+1. ✅ Write test that reproduces bug
+2. ✅ Fix bug (test should pass)
+3. ✅ Check if related to session management
+4. ✅ Verify locale handling
+5. ✅ Confirm RLS policies
+6. ✅ Test with both locales
+7. ✅ Run full test suite
+8. ✅ Update documentation if needed
+
+---
+
+## Support & Resources
+
+**Documentation:**
+- Next.js 15: https://nextjs.org/docs
+- Supabase: https://supabase.com/docs
+- next-intl: https://next-intl-docs.vercel.app/
+- Jest: https://jestjs.io/docs/getting-started
+- Testing Library: https://testing-library.com/docs/react-testing-library/intro/
+
+**Project Specific:**
+- Architecture decisions: See `PRODUCT_DOCUMENTATION.md`
+- Database schema: See `supabase/migrations/COMPLETE_SCHEMA.sql`
+- Test patterns: See `__tests__/README.md` (if exists)
+- Known issues: See "Known Issues & Fixes" section above
+
+---
+
+**Last Updated:** 2026-01-16
+**Version:** 3.0 (Phase 3 Complete - Production Ready)
+**Test Suite:** 662 tests passing (100%)
+**Deployment:** Vercel Production
+**Made with ❤️ by Beluga Tempo | 鲸律**
