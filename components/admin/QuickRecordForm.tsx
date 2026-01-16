@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -32,7 +32,11 @@ export default function QuickRecordForm({
   const [selectedQuest, setSelectedQuest] = useState<string>("");
   const [customDescription, setCustomDescription] = useState("");
   const [customStars, setCustomStars] = useState<number>(0);
+  const [multiplier, setMultiplier] = useState<number>(1);
   const [parentNote, setParentNote] = useState("");
+  const [recordDate, setRecordDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -45,6 +49,13 @@ export default function QuickRecordForm({
 
   const selectedQuestData = quests.find((q) => q.id === selectedQuest);
   const isCustom = !selectedQuest && customDescription;
+
+  // Auto-select child if there's only one
+  useEffect(() => {
+    if (children.length === 1 && !selectedChild) {
+      setSelectedChild(children[0].id);
+    }
+  }, [children, selectedChild]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +82,12 @@ export default function QuickRecordForm({
     }
 
     try {
-      const starsToRecord = selectedQuestData?.stars || customStars;
+      // Calculate stars with multiplier
+      const baseStars = selectedQuestData?.stars || customStars;
+      const starsToRecord = baseStars * multiplier;
+
+      // Create timestamp from selected date at current time
+      const selectedDateTime = new Date(recordDate + "T" + new Date().toTimeString().split(" ")[0]);
 
       const { error: insertError } = await (supabase
         .from("star_transactions")
@@ -86,7 +102,8 @@ export default function QuickRecordForm({
           parent_response: parentNote || null,
           created_by: parentId,
           reviewed_by: parentId,
-          reviewed_at: new Date().toISOString(),
+          created_at: selectedDateTime.toISOString(),
+          reviewed_at: selectedDateTime.toISOString(),
         });
 
       if (insertError) throw insertError;
@@ -99,7 +116,9 @@ export default function QuickRecordForm({
       setSelectedQuest("");
       setCustomDescription("");
       setCustomStars(0);
+      setMultiplier(1);
       setParentNote("");
+      setRecordDate(new Date().toISOString().split("T")[0]);
 
       // Refresh page data
       router.refresh();
@@ -137,9 +156,9 @@ export default function QuickRecordForm({
       )}
 
       {/* Select Child */}
-      <div>
+      <div className={`${!selectedChild && children.length > 1 ? 'ring-2 ring-red-300 rounded-lg p-4' : ''}`}>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t("admin.selectChild")} *
+          {t("admin.selectChild")} {children.length > 1 ? '*' : ''}
         </label>
         {children.length === 0 ? (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
@@ -174,6 +193,21 @@ export default function QuickRecordForm({
         )}
       </div>
 
+      {/* Record Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t("admin.recordDate")} *
+        </label>
+        <input
+          type="date"
+          value={recordDate}
+          onChange={(e) => setRecordDate(e.target.value)}
+          max={new Date().toISOString().split("T")[0]}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          required
+        />
+      </div>
+
       {/* Bonus Quests - Did Good */}
       {bonusQuests.length > 0 && (
         <div>
@@ -189,6 +223,7 @@ export default function QuickRecordForm({
                   setSelectedQuest(quest.id);
                   setCustomDescription("");
                   setCustomStars(0);
+                  setMultiplier(1);
                 }}
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedQuest === quest.id
@@ -226,6 +261,7 @@ export default function QuickRecordForm({
                   setSelectedQuest(quest.id);
                   setCustomDescription("");
                   setCustomStars(0);
+                  setMultiplier(1);
                 }}
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedQuest === quest.id
@@ -263,6 +299,7 @@ export default function QuickRecordForm({
                   setSelectedQuest(quest.id);
                   setCustomDescription("");
                   setCustomStars(0);
+                  setMultiplier(1);
                 }}
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedQuest === quest.id
@@ -281,6 +318,54 @@ export default function QuickRecordForm({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Multiplier for selected quest */}
+      {selectedQuestData && (
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            {locale === "zh-CN" ? "调整倍数 / 程度" : "Adjust Multiplier / Severity"}
+          </label>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">
+                  {locale === "zh-CN" ? "倍数:" : "Multiplier:"}
+                </span>
+                <input
+                  type="number"
+                  value={multiplier}
+                  onChange={(e) => setMultiplier(Math.max(1, parseInt(e.target.value) || 1))}
+                  min="1"
+                  max="10"
+                  step="1"
+                  className="w-20 px-3 py-2 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-bold"
+                />
+                <span className="text-sm text-gray-500">
+                  (1-10×)
+                </span>
+              </div>
+              <div className="mt-2 text-xs text-gray-600">
+                {locale === "zh-CN"
+                  ? "💡 例如：超过10分钟 = 1×，超过20分钟 = 2×，以此类推"
+                  : "💡 Example: 10 mins over = 1×, 20 mins over = 2×, etc."}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-gray-600 mb-1">
+                {locale === "zh-CN" ? "实际星星:" : "Actual Stars:"}
+              </div>
+              <div className={`text-3xl font-bold ${
+                (selectedQuestData.stars || 0) >= 0 ? 'text-success' : 'text-danger'
+              }`}>
+                {selectedQuestData.stars >= 0 ? '+' : ''}{selectedQuestData.stars * multiplier}
+              </div>
+              <div className="text-xs text-gray-500">
+                {selectedQuestData.stars} × {multiplier}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -333,13 +418,25 @@ export default function QuickRecordForm({
       </div>
 
       {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={loading || !selectedChild || (!selectedQuest && !customDescription)}
-        className="w-full bg-secondary text-white py-3 px-6 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? t("admin.processing") : t("admin.recordStars")}
-      </button>
+      <div className="space-y-2">
+        {!selectedChild && (
+          <div className="text-sm text-red-600 text-center">
+            ⚠️ {locale === "zh-CN" ? "请先选择一个孩子" : "Please select a child first"}
+          </div>
+        )}
+        {selectedChild && !selectedQuest && !customDescription && (
+          <div className="text-sm text-red-600 text-center">
+            ⚠️ {locale === "zh-CN" ? "请选择一个任务或输入自定义描述" : "Please select a quest or enter custom description"}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={loading || !selectedChild || (!selectedQuest && !customDescription)}
+          className="w-full bg-secondary text-white py-3 px-6 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? t("admin.processing") : t("admin.recordStars")}
+        </button>
+      </div>
     </form>
   );
 }

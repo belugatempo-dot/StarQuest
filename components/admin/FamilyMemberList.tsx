@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@/lib/auth";
 import AddChildModal from "./AddChildModal";
@@ -158,6 +159,13 @@ export default function FamilyMemberList({
 
                 {/* Actions */}
                 <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-200">
+                  <Link
+                    href={`/${locale}/admin/children/${child.id}`}
+                    className="text-sm text-primary hover:text-primary/80 font-semibold text-left flex items-center space-x-2"
+                  >
+                    <span>📊</span>
+                    <span>{t("family.viewDetails")}</span>
+                  </Link>
                   <button
                     onClick={() => setEditingChild(child)}
                     className="text-sm text-blue-600 hover:text-blue-800 text-left flex items-center space-x-2"

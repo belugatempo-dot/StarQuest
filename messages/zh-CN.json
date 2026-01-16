@@ -10,6 +10,7 @@
     "level": "等级",
     "balance": "余额",
     "history": "历史",
+    "activities": "活动记录",
     "profile": "个人信息",
     "settings": "设置",
     "logout": "登出",
@@ -130,9 +131,11 @@
     }
   },
   "admin": {
-    "title": "管理后台",
+    "title": "家长中心",
+    "parentLabel": "家长",
     "recordStars": "记录星星",
     "approvalCenter": "审批中心",
+    "questManagement": "任务管理",
     "manageQuests": "管理任务",
     "manageRewards": "管理奖励",
     "manageLevels": "管理等级",
@@ -160,7 +163,10 @@
     "processing": "处理中...",
     "quickRecord": "快速记录",
     "orCustom": "或输入自定义描述",
-    "recordNote": "给孩子的备注（可选）"
+    "recordNote": "给孩子的备注（可选）",
+    "recordDate": "记录日期",
+    "activityLog": "活动记录",
+    "viewActivity": "查看记录"
   },
   "family": {
     "title": "家庭成员管理",
@@ -172,6 +178,7 @@
     "addChild": "添加孩子",
     "addFirstChild": "添加第一个孩子",
     "noChildren": "还没有孩子账号。添加第一个孩子开始吧！",
+    "viewDetails": "查看详情",
     "editInfo": "编辑信息",
     "editChild": "编辑孩子",
     "resetPassword": "重置密码",

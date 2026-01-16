@@ -1,6 +1,6 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import QuickRecordForm from "@/components/admin/QuickRecordForm";
 
 export default async function RecordStarsPage({
@@ -11,9 +11,10 @@ export default async function RecordStarsPage({
   const { locale } = await params;
   const user = await requireParent(locale);
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
-  // Fetch all children in the family
-  const { data: children } = await supabase
+  // Fetch all children in the family using admin client
+  const { data: children } = await adminClient
     .from("users")
     .select("*")
     .eq("family_id", user.family_id!)
@@ -28,7 +29,7 @@ export default async function RecordStarsPage({
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   return (
     <div className="space-y-6">

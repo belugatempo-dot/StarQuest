@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import LevelManagement from "@/components/admin/LevelManagement";
@@ -19,7 +19,7 @@ export default async function LevelConfigurationPage({
     .eq("family_id", user.family_id!)
     .order("level_number", { ascending: true });
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   // Calculate statistics
   const totalLevels = levels?.length || 0;

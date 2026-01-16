@@ -25,7 +25,7 @@ export default function ChildNav({ user, locale }: { user: User; locale: string 
     { path: `/${locale}/app`, label: t("dashboard.title"), icon: "🏠" },
     { path: `/${locale}/app/quests`, label: t("common.quests"), icon: "📋" },
     { path: `/${locale}/app/rewards`, label: t("common.rewards"), icon: "🎁" },
-    { path: `/${locale}/app/history`, label: t("common.history"), icon: "📊" },
+    { path: `/${locale}/app/history`, label: t("common.activities"), icon: "📊" },
     { path: `/${locale}/app/profile`, label: t("common.profile"), icon: "👤" },
   ];
 

@@ -1,5 +1,5 @@
 import { requireParent } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import FamilyMemberList from "@/components/admin/FamilyMemberList";
 
@@ -11,10 +11,11 @@ export default async function FamilyManagementPage({
   const { locale } = await params;
   const user = await requireParent(locale);
   const supabase = await createClient();
+  const adminClient = createAdminClient();
   const t = await getTranslations();
 
-  // Fetch all family members
-  const { data: members, error } = await supabase
+  // Fetch all family members using admin client to bypass RLS
+  const { data: members, error } = await adminClient
     .from("users")
     .select("*")
     .eq("family_id", user.family_id!)

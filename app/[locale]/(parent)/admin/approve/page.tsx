@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import ApprovalTabs from "@/components/admin/ApprovalTabs";
@@ -55,7 +55,7 @@ export default async function ApprovalCenterPage({
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
-  const t = useTranslations();
+  const t = await getTranslations();
 
   const totalPending =
     (starRequests?.length || 0) + (redemptionRequests?.length || 0);
