@@ -15,11 +15,16 @@ export async function getUser(): Promise<User | null> {
     return null;
   }
 
-  const { data: user } = await supabase
+  const { data: user, error } = await supabase
     .from("users")
     .select("*")
     .eq("id", authUser.id)
-    .single();
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
 
   return user;
 }
