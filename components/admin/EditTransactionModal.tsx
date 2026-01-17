@@ -27,7 +27,9 @@ export default function EditTransactionModal({
   const supabase = createClient();
 
   const [stars, setStars] = useState(transaction.stars);
-  const [status, setStatus] = useState(transaction.status);
+  const [status, setStatus] = useState<"pending" | "approved" | "rejected">(
+    transaction.status as "pending" | "approved" | "rejected"
+  );
   const [parentResponse, setParentResponse] = useState(transaction.parent_response || "");
   const [customDescription, setCustomDescription] = useState(
     transaction.custom_description || ""
@@ -181,7 +183,7 @@ export default function EditTransactionModal({
               </label>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={(e) => setStatus(e.target.value as "pending" | "approved" | "rejected")}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
               >
                 <option value="approved">
