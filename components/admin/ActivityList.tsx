@@ -35,7 +35,7 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
   const [filterDate, setFilterDate] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("calendar");
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -147,7 +147,35 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
   };
 
   const getDailyTotal = (transactions: Transaction[]) => {
-    return transactions.reduce((sum, t) => sum + t.stars, 0);
+    // Only count approved transactions for daily total
+    return transactions
+      .filter((t) => t.status === "approved")
+      .reduce((sum, t) => sum + t.stars, 0);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return {
+          label: locale === "zh-CN" ? "已批准" : "Approved",
+          className: "bg-green-100 text-green-700",
+        };
+      case "pending":
+        return {
+          label: locale === "zh-CN" ? "待审批" : "Pending",
+          className: "bg-yellow-100 text-yellow-700",
+        };
+      case "rejected":
+        return {
+          label: locale === "zh-CN" ? "已拒绝" : "Rejected",
+          className: "bg-red-100 text-red-700",
+        };
+      default:
+        return {
+          label: status,
+          className: "bg-gray-100 text-gray-700",
+        };
+    }
   };
 
   const clearFilters = () => {
@@ -383,6 +411,10 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                           </span>
                           <span>•</span>
                           <span>{formatDate(transaction.created_at)}</span>
+                          <span>•</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(transaction.status).className}`}>
+                            {getStatusBadge(transaction.status).label}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -495,6 +527,10 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                                   locale === "zh-CN" ? "zh-CN" : "en-US",
                                   { hour: "2-digit", minute: "2-digit" }
                                 )}
+                                {" • "}
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(transaction.status).className}`}>
+                                  {getStatusBadge(transaction.status).label}
+                                </span>
                               </p>
                               {transaction.parent_response && (
                                 <p className="text-sm text-gray-600 mt-1">
