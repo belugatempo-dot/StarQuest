@@ -27,6 +27,7 @@ export default function EditTransactionModal({
   const supabase = createClient();
 
   const [stars, setStars] = useState(transaction.stars);
+  const [status, setStatus] = useState(transaction.status);
   const [parentResponse, setParentResponse] = useState(transaction.parent_response || "");
   const [customDescription, setCustomDescription] = useState(
     transaction.custom_description || ""
@@ -34,19 +35,26 @@ export default function EditTransactionModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, approveRejected = false) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const { error: updateError } = await (supabase
-        .from("star_transactions")
-        .update as any)({
+      const updateData: any = {
         stars: stars,
         parent_response: parentResponse || null,
         custom_description: transaction.quest_id ? null : customDescription,
-      })
+      };
+
+      // If changing status (e.g., approving a rejected record)
+      if (approveRejected || status !== transaction.status) {
+        updateData.status = approveRejected ? "approved" : status;
+      }
+
+      const { error: updateError } = await (supabase
+        .from("star_transactions")
+        .update as any)(updateData)
         .eq("id", transaction.id);
 
       if (updateError) throw updateError;
@@ -166,6 +174,35 @@ export default function EditTransactionModal({
               />
             </div>
 
+            {/* Status Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {locale === "zh-CN" ? "状态" : "Status"}
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+              >
+                <option value="approved">
+                  {locale === "zh-CN" ? "已批准" : "Approved"}
+                </option>
+                <option value="pending">
+                  {locale === "zh-CN" ? "待审批" : "Pending"}
+                </option>
+                <option value="rejected">
+                  {locale === "zh-CN" ? "已拒绝" : "Rejected"}
+                </option>
+              </select>
+              {status !== transaction.status && (
+                <p className="text-xs text-blue-600 mt-1">
+                  {locale === "zh-CN"
+                    ? `状态将从"${transaction.status === "approved" ? "已批准" : transaction.status === "pending" ? "待审批" : "已拒绝"}"更改为"${status === "approved" ? "已批准" : status === "pending" ? "待审批" : "已拒绝"}"`
+                    : `Status will change from "${transaction.status}" to "${status}"`}
+                </p>
+              )}
+            </div>
+
             {/* Date (Read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -177,6 +214,31 @@ export default function EditTransactionModal({
                 )}
               </div>
             </div>
+
+            {/* Quick Approve Button for Rejected/Pending */}
+            {(transaction.status === "rejected" || transaction.status === "pending") && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700 mb-2">
+                  {locale === "zh-CN"
+                    ? "快速操作：修改后直接批准"
+                    : "Quick action: Edit and approve"}
+                </p>
+                <button
+                  type="button"
+                  onClick={(e) => handleSubmit(e, true)}
+                  disabled={loading}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 font-medium"
+                >
+                  {loading
+                    ? locale === "zh-CN"
+                      ? "处理中..."
+                      : "Processing..."
+                    : locale === "zh-CN"
+                    ? "保存并批准"
+                    : "Save & Approve"}
+                </button>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex space-x-3 pt-4">

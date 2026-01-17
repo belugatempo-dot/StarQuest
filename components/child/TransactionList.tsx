@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Database } from "@/types/database";
 import CalendarView from "@/components/admin/CalendarView";
+import ResubmitRequestModal from "./ResubmitRequestModal";
 
 type Transaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
   quests: {
@@ -28,6 +29,7 @@ export default function TransactionList({
   const [showCount, setShowCount] = useState(20);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [resubmitTransaction, setResubmitTransaction] = useState<Transaction | null>(null);
 
   // Filter transactions
   const filteredTransactions = useMemo(() => {
@@ -233,6 +235,16 @@ export default function TransactionList({
                         {t("history.waitingApproval")}
                       </p>
                     )}
+
+                    {/* Resubmit button for rejected requests from child */}
+                    {tx.status === "rejected" && tx.source === "child_request" && (
+                      <button
+                        onClick={() => setResubmitTransaction(tx)}
+                        className="mt-2 px-3 py-1 text-sm bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition font-medium"
+                      >
+                        {locale === "zh-CN" ? "修改并重新提交" : "Edit & Resubmit"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -240,7 +252,11 @@ export default function TransactionList({
                 <div className="text-right ml-4 flex-shrink-0">
                   <div
                     className={`text-2xl font-bold mb-2 ${
-                      tx.stars > 0 ? "text-success" : "text-danger"
+                      tx.status === "rejected"
+                        ? "text-gray-400 line-through"
+                        : tx.stars > 0
+                        ? "text-success"
+                        : "text-danger"
                     }`}
                   >
                     {tx.stars > 0 ? "+" : ""}
@@ -275,6 +291,15 @@ export default function TransactionList({
     </div>
         </div>
       </div>
+
+      {/* Resubmit Modal */}
+      {resubmitTransaction && (
+        <ResubmitRequestModal
+          transaction={resubmitTransaction}
+          locale={locale}
+          onClose={() => setResubmitTransaction(null)}
+        />
+      )}
     </div>
   );
 }
