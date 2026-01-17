@@ -9,16 +9,9 @@ jest.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-// Mock Supabase client
-const mockUpdate = jest.fn();
-const mockEq = jest.fn();
-const mockFrom = jest.fn();
-
-jest.mock("@/lib/supabase/client", () => ({
-  createClient: jest.fn(() => ({
-    from: mockFrom,
-  })),
-}));
+// Mock fetch
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
 describe("EditChildModal", () => {
   const mockChild: User = {
@@ -37,15 +30,9 @@ describe("EditChildModal", () => {
     jest.clearAllMocks();
 
     // Default mock setup for successful update
-    mockFrom.mockReturnValue({
-      update: mockUpdate.mockReturnThis(),
-    });
-
-    mockUpdate.mockReturnValue({
-      eq: mockEq.mockResolvedValue({
-        data: null,
-        error: null,
-      }),
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
     });
   });
 
@@ -182,7 +169,6 @@ describe("EditChildModal", () => {
       );
 
       const nameInput = screen.getByPlaceholderText("family.childNamePlaceholder");
-      const saveButton = screen.getByRole("button", { name: "common.save" });
 
       // Clear the name field
       await user.clear(nameInput);
@@ -192,7 +178,7 @@ describe("EditChildModal", () => {
 
       // Note: With HTML required attribute, browser prevents submission
       // so we can't test the React validation for empty fields
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should show error when name is only whitespace", async () => {
@@ -208,14 +194,10 @@ describe("EditChildModal", () => {
       );
 
       const nameInput = screen.getByPlaceholderText("family.childNamePlaceholder");
-      const saveButton = screen.getByRole("button", { name: "common.save" });
 
       await user.clear(nameInput);
       await user.type(nameInput, "   ");
 
-      // Click submit - this should trigger form submission
-      // The form handler will check for trimmed whitespace
-      // However, the required attribute might prevent submission
       // Let's just verify the input has whitespace
       expect(nameInput).toHaveValue("   ");
     });
@@ -240,7 +222,7 @@ describe("EditChildModal", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockUpdate).toHaveBeenCalled();
+        expect(mockFetch).toHaveBeenCalled();
       });
     });
   });
@@ -268,13 +250,20 @@ describe("EditChildModal", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockUpdate).toHaveBeenCalledWith({
-          name: "Bob",
-          email: null,
-        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/en/api/admin/update-child",
+          expect.objectContaining({
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              childId: "child-123",
+              name: "Bob",
+              email: null,
+            }),
+          })
+        );
       });
 
-      expect(mockEq).toHaveBeenCalledWith("id", "child-123");
       expect(mockOnSuccess).toHaveBeenCalled();
       expect(mockOnClose).not.toHaveBeenCalled();
     });
@@ -302,13 +291,19 @@ describe("EditChildModal", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockUpdate).toHaveBeenCalledWith({
-          name: "Charlie",
-          email: "charlie@example.com",
-        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/en/api/admin/update-child",
+          expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify({
+              childId: "child-123",
+              name: "Charlie",
+              email: "charlie@example.com",
+            }),
+          })
+        );
       });
 
-      expect(mockEq).toHaveBeenCalledWith("id", "child-123");
       expect(mockOnSuccess).toHaveBeenCalled();
     });
 
@@ -335,10 +330,16 @@ describe("EditChildModal", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockUpdate).toHaveBeenCalledWith({
-          name: "Diana",
-          email: "diana@example.com",
-        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/en/api/admin/update-child",
+          expect.objectContaining({
+            body: JSON.stringify({
+              childId: "child-123",
+              name: "Diana",
+              email: "diana@example.com",
+            }),
+          })
+        );
       });
     });
 
@@ -364,20 +365,26 @@ describe("EditChildModal", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockUpdate).toHaveBeenCalledWith({
-          name: "Eve",
-          email: null,
-        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/en/api/admin/update-child",
+          expect.objectContaining({
+            body: JSON.stringify({
+              childId: "child-123",
+              name: "Eve",
+              email: null,
+            }),
+          })
+        );
       });
     });
 
-    it("should show error when database update fails", async () => {
+    it("should show error when API call fails", async () => {
       const user = userEvent.setup();
 
-      // Mock database error
-      mockEq.mockResolvedValue({
-        data: null,
-        error: { message: "Database connection failed" },
+      // Mock API error
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: "Database connection failed" }),
       });
 
       render(
@@ -407,9 +414,9 @@ describe("EditChildModal", () => {
       const user = userEvent.setup();
 
       // Mock error without message
-      mockEq.mockResolvedValue({
-        data: null,
-        error: {},
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({}),
       });
 
       render(
@@ -434,6 +441,35 @@ describe("EditChildModal", () => {
 
       expect(mockOnSuccess).not.toHaveBeenCalled();
     });
+
+    it("should show error when fetch throws exception", async () => {
+      const user = userEvent.setup();
+
+      // Mock fetch throwing error
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
+      render(
+        <EditChildModal
+          child={mockChild}
+          locale="en"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const nameInput = screen.getByPlaceholderText("family.childNamePlaceholder");
+      const saveButton = screen.getByRole("button", { name: "common.save" });
+
+      await user.clear(nameInput);
+      await user.type(nameInput, "Frank");
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Network error")).toBeInTheDocument();
+      });
+
+      expect(mockOnSuccess).not.toHaveBeenCalled();
+    });
   });
 
   describe("Loading States", () => {
@@ -441,11 +477,11 @@ describe("EditChildModal", () => {
       const user = userEvent.setup();
 
       // Mock slow update
-      mockEq.mockImplementation(
+      mockFetch.mockImplementation(
         () =>
           new Promise((resolve) => {
             setTimeout(() => {
-              resolve({ data: null, error: null });
+              resolve({ ok: true, json: async () => ({ success: true }) });
             }, 100);
           })
       );
@@ -478,11 +514,11 @@ describe("EditChildModal", () => {
       const user = userEvent.setup();
 
       // Mock slow update
-      mockEq.mockImplementation(
+      mockFetch.mockImplementation(
         () =>
           new Promise((resolve) => {
             setTimeout(() => {
-              resolve({ data: null, error: null });
+              resolve({ ok: true, json: async () => ({ success: true }) });
             }, 100);
           })
       );
@@ -516,11 +552,11 @@ describe("EditChildModal", () => {
       const user = userEvent.setup();
 
       // Mock slow update
-      mockEq.mockImplementation(
+      mockFetch.mockImplementation(
         () =>
           new Promise((resolve) => {
             setTimeout(() => {
-              resolve({ data: null, error: null });
+              resolve({ ok: true, json: async () => ({ success: true }) });
             }, 100);
           })
       );
@@ -575,7 +611,7 @@ describe("EditChildModal", () => {
 
       // After completion, onSuccess is called and modal would close
       // So we just verify the update happened
-      expect(mockUpdate).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalled();
     });
   });
 
@@ -596,7 +632,7 @@ describe("EditChildModal", () => {
       await user.click(cancelButton);
 
       expect(mockOnClose).toHaveBeenCalled();
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should not close modal on successful update (calls onSuccess instead)", async () => {
@@ -641,13 +677,13 @@ describe("EditChildModal", () => {
       expect(errorDiv).not.toBeInTheDocument();
     });
 
-    it("should show error in red box when database update fails", async () => {
+    it("should show error in red box when API call fails", async () => {
       const user = userEvent.setup();
 
-      // Mock database error
-      mockEq.mockResolvedValue({
-        data: null,
-        error: { message: "Database error occurred" },
+      // Mock API error
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: "Database error occurred" }),
       });
 
       render(
@@ -677,9 +713,9 @@ describe("EditChildModal", () => {
       const user = userEvent.setup();
 
       // First, trigger an error
-      mockEq.mockResolvedValueOnce({
-        data: null,
-        error: { message: "First error" },
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "First error" }),
       });
 
       render(
@@ -703,9 +739,9 @@ describe("EditChildModal", () => {
       });
 
       // Now mock success
-      mockEq.mockResolvedValueOnce({
-        data: null,
-        error: null,
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
       });
 
       await user.click(saveButton);
@@ -720,7 +756,9 @@ describe("EditChildModal", () => {
   });
 
   describe("Locale Handling", () => {
-    it("should pass locale prop to component", () => {
+    it("should use correct locale in API URL", async () => {
+      const user = userEvent.setup();
+
       render(
         <EditChildModal
           child={mockChild}
@@ -730,9 +768,19 @@ describe("EditChildModal", () => {
         />
       );
 
-      // Locale is passed but not directly used in the component
-      // It's available for future use if needed
-      expect(screen.getByRole("heading", { name: "family.editChild" })).toBeInTheDocument();
+      const nameInput = screen.getByPlaceholderText("family.childNamePlaceholder");
+      const saveButton = screen.getByRole("button", { name: "common.save" });
+
+      await user.clear(nameInput);
+      await user.type(nameInput, "Test");
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/zh-CN/api/admin/update-child",
+          expect.anything()
+        );
+      });
     });
   });
 

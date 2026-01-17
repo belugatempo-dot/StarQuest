@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
 import type { User } from "@/lib/auth";
 
 interface EditChildModalProps {
@@ -19,7 +18,6 @@ export default function EditChildModal({
   onSuccess,
 }: EditChildModalProps) {
   const t = useTranslations();
-  const supabase = createClient();
 
   const [name, setName] = useState(child.name);
   const [email, setEmail] = useState(child.email || "");
@@ -38,20 +36,24 @@ export default function EditChildModal({
     setIsLoading(true);
 
     try {
-      // Update users table
-      const { error: updateError } = await (supabase
-        .from("users")
-        .update as any)({
+      // Use API route to update child (handles both users table and auth.users)
+      const response = await fetch(`/${locale}/api/admin/update-child`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          childId: child.id,
           name: name.trim(),
           email: email.trim() || null,
-        })
-        .eq("id", child.id);
+        }),
+      });
 
-      if (updateError) throw updateError;
+      const data = await response.json();
 
-      // Note: Updating auth.users email requires admin API
-      // For now we only update the users table
-      // If you need to update auth email, you'll need a server function
+      if (!response.ok) {
+        throw new Error(data.error || t("family.updateChildError"));
+      }
 
       onSuccess();
     } catch (err: any) {
