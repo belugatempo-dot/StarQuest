@@ -390,7 +390,11 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
               <div
                 key={transaction.id}
                 className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${
-                  transaction.stars > 0
+                  transaction.status === "rejected"
+                    ? "border-gray-400 bg-gray-50"
+                    : transaction.status === "pending"
+                    ? "border-yellow-500 bg-yellow-50"
+                    : transaction.stars > 0
                     ? "border-green-500"
                     : "border-red-500"
                 }`}
@@ -427,7 +431,11 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                   <div className="flex items-center space-x-3">
                     <div
                       className={`text-2xl font-bold ${
-                        transaction.stars > 0
+                        transaction.status === "rejected"
+                          ? "text-gray-400 line-through"
+                          : transaction.status === "pending"
+                          ? "text-yellow-600"
+                          : transaction.stars > 0
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -507,7 +515,11 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                       <div
                         key={transaction.id}
                         className={`p-4 rounded-lg border-2 ${
-                          transaction.stars > 0
+                          transaction.status === "rejected"
+                            ? "border-gray-300 bg-gray-50"
+                            : transaction.status === "pending"
+                            ? "border-yellow-200 bg-yellow-50"
+                            : transaction.stars > 0
                             ? "border-green-200 bg-green-50"
                             : "border-red-200 bg-red-50"
                         }`}
@@ -542,7 +554,11 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                           <div className="flex items-center space-x-2">
                             <div
                               className={`text-xl font-bold ${
-                                transaction.stars > 0
+                                transaction.status === "rejected"
+                                  ? "text-gray-400 line-through"
+                                  : transaction.status === "pending"
+                                  ? "text-yellow-600"
+                                  : transaction.stars > 0
                                   ? "text-green-600"
                                   : "text-red-600"
                               }`}
