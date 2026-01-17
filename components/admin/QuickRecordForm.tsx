@@ -34,9 +34,14 @@ export default function QuickRecordForm({
   const [customStars, setCustomStars] = useState<number>(0);
   const [multiplier, setMultiplier] = useState<number>(1);
   const [parentNote, setParentNote] = useState("");
-  const [recordDate, setRecordDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  // Use local timezone for default date (toISOString uses UTC which can show wrong date)
+  const [recordDate, setRecordDate] = useState<string>(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
