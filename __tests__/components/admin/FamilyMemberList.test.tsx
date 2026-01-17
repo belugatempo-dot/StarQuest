@@ -49,6 +49,18 @@ jest.mock('@/components/admin/EditChildModal', () => {
   }
 })
 
+jest.mock('@/components/admin/EditParentModal', () => {
+  return function MockEditParentModal({ onClose, onSuccess, parent }: any) {
+    return (
+      <div data-testid="edit-parent-modal">
+        <span data-testid="editing-parent-name">{parent.name}</span>
+        <button onClick={onClose}>Cancel</button>
+        <button onClick={onSuccess}>Save</button>
+      </div>
+    )
+  }
+})
+
 jest.mock('@/components/admin/ResetPasswordModal', () => {
   return function MockResetPasswordModal({ onClose, child }: any) {
     return (
@@ -215,9 +227,10 @@ describe('FamilyMemberList', () => {
       )
 
       // Each child should have Edit, Reset Password, and Delete buttons
-      expect(screen.getAllByText('family.editInfo').length).toBe(2)
-      expect(screen.getAllByText('family.resetPassword').length).toBe(2)
-      expect(screen.getAllByText('family.deleteChild').length).toBe(2)
+      // Plus 1 edit button for the current parent user
+      expect(screen.getAllByText('family.editInfo').length).toBe(3) // 1 parent + 2 children
+      expect(screen.getAllByText('family.resetPassword').length).toBe(2) // children only
+      expect(screen.getAllByText('family.deleteChild').length).toBe(2) // children only
     })
   })
 
@@ -344,7 +357,8 @@ describe('FamilyMemberList', () => {
       )
 
       const editButtons = screen.getAllByText('family.editInfo')
-      await user.click(editButtons[0])
+      // Index 0 is parent edit button, index 1 is first child edit button
+      await user.click(editButtons[1])
 
       expect(screen.getByTestId('edit-child-modal')).toBeInTheDocument()
       expect(screen.getByTestId('editing-child-name')).toHaveTextContent('Alice')
@@ -362,7 +376,8 @@ describe('FamilyMemberList', () => {
       )
 
       const editButtons = screen.getAllByText('family.editInfo')
-      await user.click(editButtons[0])
+      // Index 0 is parent edit button, index 1 is first child edit button
+      await user.click(editButtons[1])
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i })
       await user.click(cancelButton)
@@ -371,6 +386,72 @@ describe('FamilyMemberList', () => {
     })
 
     it('closes modal and refreshes on success', async () => {
+      const user = userEvent.setup()
+      render(
+        <FamilyMemberList
+          parents={mockParents}
+          children={mockChildren}
+          currentUser={mockParents[0]}
+          locale="en"
+        />
+      )
+
+      const editButtons = screen.getAllByText('family.editInfo')
+      // Index 0 is parent edit button, index 1 is first child edit button
+      await user.click(editButtons[1])
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockRefresh).toHaveBeenCalled()
+      })
+
+      expect(screen.queryByTestId('edit-child-modal')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Edit Parent Modal', () => {
+    it('opens edit parent modal when clicking edit button on current user parent', async () => {
+      const user = userEvent.setup()
+      render(
+        <FamilyMemberList
+          parents={mockParents}
+          children={mockChildren}
+          currentUser={mockParents[0]}
+          locale="en"
+        />
+      )
+
+      const editButtons = screen.getAllByText('family.editInfo')
+      // Index 0 is the parent edit button (for current user)
+      await user.click(editButtons[0])
+
+      expect(screen.getByTestId('edit-parent-modal')).toBeInTheDocument()
+      expect(screen.getByTestId('editing-parent-name')).toHaveTextContent('John Doe')
+    })
+
+    it('closes parent edit modal when clicking cancel', async () => {
+      const user = userEvent.setup()
+      render(
+        <FamilyMemberList
+          parents={mockParents}
+          children={mockChildren}
+          currentUser={mockParents[0]}
+          locale="en"
+        />
+      )
+
+      const editButtons = screen.getAllByText('family.editInfo')
+      await user.click(editButtons[0])
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      expect(screen.queryByTestId('edit-parent-modal')).not.toBeInTheDocument()
+    })
+
+    it('closes parent edit modal and refreshes on success', async () => {
       const user = userEvent.setup()
       render(
         <FamilyMemberList
@@ -391,7 +472,22 @@ describe('FamilyMemberList', () => {
         expect(mockRefresh).toHaveBeenCalled()
       })
 
-      expect(screen.queryByTestId('edit-child-modal')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('edit-parent-modal')).not.toBeInTheDocument()
+    })
+
+    it('does not show edit button for other parents (not current user)', () => {
+      render(
+        <FamilyMemberList
+          parents={mockParents}
+          children={mockChildren}
+          currentUser={mockParents[0]}
+          locale="en"
+        />
+      )
+
+      // Should have 3 edit buttons total: 1 for current user parent + 2 for children
+      const editButtons = screen.getAllByText('family.editInfo')
+      expect(editButtons.length).toBe(3)
     })
   })
 
@@ -668,9 +764,9 @@ describe('FamilyMemberList', () => {
         />
       )
 
-      expect(screen.getAllByText('✏️').length).toBe(2) // Edit
-      expect(screen.getAllByText('🔑').length).toBe(2) // Reset password
-      expect(screen.getAllByText('🗑️').length).toBe(2) // Delete
+      expect(screen.getAllByText('✏️').length).toBe(3) // Edit (1 for parent + 2 for children)
+      expect(screen.getAllByText('🔑').length).toBe(2) // Reset password (children only)
+      expect(screen.getAllByText('🗑️').length).toBe(2) // Delete (children only)
     })
   })
 })

@@ -484,24 +484,24 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                   key={date}
                   className="bg-white rounded-lg shadow-md overflow-hidden"
                 >
-                  {/* Date Header */}
-                  <div className="bg-gradient-to-r from-secondary/20 to-primary/20 px-6 py-4 flex items-center justify-between">
+                  {/* Date Header - Night Theme */}
+                  <div className="night-date-header px-6 py-4 flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold">
-                        📅 {formatDateShort(date)}
+                      <h3 className="text-xl font-bold text-white">
+                        ✨ {formatDateShort(date)}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-white/70">
                         {dayTransactions.length}{" "}
                         {locale === "zh-CN" ? "条记录" : "records"}
                       </p>
                     </div>
                     <div
-                      className={`text-2xl font-bold ${
+                      className={`text-2xl font-bold star-glow ${
                         dailyTotal > 0
-                          ? "text-green-600"
+                          ? "text-green-400"
                           : dailyTotal < 0
-                          ? "text-red-600"
-                          : "text-gray-600"
+                          ? "text-red-400"
+                          : "text-white/60"
                       }`}
                     >
                       {dailyTotal > 0 ? "+" : ""}

@@ -15,6 +15,18 @@ const config: Config = {
         warning: "#F59E0B", // 橙色/提醒
         danger: "#EF4444", // 红色/扣分
         background: "#F9FAFB", // 浅灰白
+        // Starry Night Theme Colors
+        night: {
+          deep: "#0f172a", // Deep Night Blue (darkest)
+          swirl: "#1e3a5f", // Swirl Blue (medium)
+          bright: "#2563eb", // Bright Blue (accents)
+          cosmic: "#312e81", // Cosmic Purple (hints)
+        },
+        star: {
+          gold: "#FFD700", // Golden Star
+          glow: "#FEF08A", // Star Glow (soft yellow)
+          warm: "#FBBF24", // Warm Star (amber)
+        },
       },
     },
   },

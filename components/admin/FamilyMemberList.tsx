@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@/lib/auth";
 import AddChildModal from "./AddChildModal";
 import EditChildModal from "./EditChildModal";
+import EditParentModal from "./EditParentModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 
 interface FamilyMemberListProps {
@@ -29,6 +30,7 @@ export default function FamilyMemberList({
 
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [editingChild, setEditingChild] = useState<User | null>(null);
+  const [editingParent, setEditingParent] = useState<User | null>(null);
   const [resettingPasswordChild, setResettingPasswordChild] = useState<User | null>(null);
   const [deletingChild, setDeletingChild] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -83,7 +85,7 @@ export default function FamilyMemberList({
           {parents.map((parent) => (
             <div
               key={parent.id}
-              className="bg-white border-2 border-indigo-200 rounded-lg p-6 shadow-sm"
+              className="bg-white border-2 border-indigo-200 rounded-lg p-6 shadow-sm hover:shadow-md transition"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
@@ -101,6 +103,18 @@ export default function FamilyMemberList({
                   </div>
                 </div>
               </div>
+              {/* Actions - only show for current user */}
+              {parent.id === currentUser.id && (
+                <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setEditingParent(parent)}
+                    className="text-sm text-blue-600 hover:text-blue-800 text-left flex items-center space-x-2"
+                  >
+                    <span>✏️</span>
+                    <span>{t("family.editInfo")}</span>
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -221,6 +235,18 @@ export default function FamilyMemberList({
           onClose={() => setEditingChild(null)}
           onSuccess={() => {
             setEditingChild(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {editingParent && (
+        <EditParentModal
+          parent={editingParent}
+          locale={locale}
+          onClose={() => setEditingParent(null)}
+          onSuccess={() => {
+            setEditingParent(null);
             router.refresh();
           }}
         />
