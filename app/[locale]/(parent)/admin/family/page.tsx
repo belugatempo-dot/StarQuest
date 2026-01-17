@@ -27,11 +27,15 @@ export default async function FamilyManagementPage({
   }
 
   // Fetch family info
-  const { data: family } = await supabase
+  const { data: family, error: familyError } = await supabase
     .from("families")
     .select("*")
     .eq("id", user.family_id!)
-    .single();
+    .maybeSingle();
+
+  if (familyError) {
+    console.error("Error fetching family:", familyError);
+  }
 
   // Separate parents and children
   const parents = members?.filter((m: any) => m.role === "parent") || [];
