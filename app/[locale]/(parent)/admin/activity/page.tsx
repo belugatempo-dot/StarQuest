@@ -38,12 +38,14 @@ export default async function ActivityPage({
 
   const t = await getTranslations();
 
-  // Calculate statistics
+  // Calculate statistics - only count approved transactions for star totals
   const totalRecords = transactions?.length || 0;
-  const positiveRecords = transactions?.filter((t) => t.stars > 0).length || 0;
-  const negativeRecords = transactions?.filter((t) => t.stars < 0).length || 0;
-  const totalStarsGiven = transactions?.reduce((sum, t) => sum + (t.stars > 0 ? t.stars : 0), 0) || 0;
-  const totalStarsDeducted = transactions?.reduce((sum, t) => sum + (t.stars < 0 ? t.stars : 0), 0) || 0;
+  const approvedTransactions = transactions?.filter((t) => t.status === 'approved') || [];
+  const positiveRecords = approvedTransactions.filter((t) => t.stars > 0).length;
+  const negativeRecords = approvedTransactions.filter((t) => t.stars < 0).length;
+  const totalStarsGiven = approvedTransactions.reduce((sum, t) => sum + (t.stars > 0 ? t.stars : 0), 0);
+  const totalStarsDeducted = approvedTransactions.reduce((sum, t) => sum + (t.stars < 0 ? t.stars : 0), 0);
+  const netStars = totalStarsGiven + totalStarsDeducted;
 
   return (
     <div className="space-y-6">
@@ -60,7 +62,7 @@ export default async function ActivityPage({
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "总记录" : "Total Records"}
@@ -90,6 +92,14 @@ export default async function ActivityPage({
             {locale === "zh-CN" ? "总星星-" : "Total Stars -"}
           </div>
           <div className="text-2xl font-bold text-red-600">{totalStarsDeducted}</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-4 border-2 border-primary">
+          <div className="text-sm text-gray-600 mb-1">
+            {locale === "zh-CN" ? "净值" : "Net Stars"}
+          </div>
+          <div className={`text-2xl font-bold ${netStars >= 0 ? "text-green-600" : "text-red-600"}`}>
+            {netStars >= 0 ? `+${netStars}` : netStars}
+          </div>
         </div>
       </div>
 
