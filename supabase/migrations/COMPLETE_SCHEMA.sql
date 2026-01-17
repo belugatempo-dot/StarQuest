@@ -317,29 +317,38 @@ BEGIN
     (p_family_id, 'Learn something new', '学会新东西', 30, 'bonus', 'self', 'learning', '💡', 1, 21),
     (p_family_id, 'Finish homework early', '提前完成作业', 10, 'bonus', 'self', 'learning', '⏰', 1, 22),
     (p_family_id, 'Practice beyond requirement', '额外练习', 15, 'bonus', 'self', 'learning', '🎯', 1, 23),
-    (p_family_id, 'Show great patience', '表现出很好的耐心', 10, 'bonus', 'self', 'social', '🧘', 2, 24);
+    (p_family_id, 'Neat handwriting', '整洁书写', 10, 'bonus', 'self', 'learning', '✍️', 3, 24),
+    (p_family_id, 'Show great patience', '表现出很好的耐心', 10, 'bonus', 'self', 'social', '🧘', 2, 25),
+    (p_family_id, 'Proactively set up plan and timetable', '主动制定计划和时间表', 25, 'bonus', 'self', 'responsibility', '📅', 2, 26),
+    (p_family_id, 'Break own swimming record', '游泳打破自己的记录', 30, 'bonus', 'self', 'exercise', '🏊', 3, 27);
 
   -- ==========================================
   -- Helping Others (帮助他人)
   -- ==========================================
   INSERT INTO quests (family_id, name_en, name_zh, stars, type, scope, category, icon, max_per_day, sort_order) VALUES
-    (p_family_id, 'Help classmates', '帮助同学', 20, 'bonus', 'other', 'social', '👫', 3, 25),
-    (p_family_id, 'Help neighbors', '帮助邻居', 20, 'bonus', 'other', 'social', '🏘️', 2, 26),
-    (p_family_id, 'Share with others', '和他人分享', 10, 'bonus', 'other', 'social', '🤝', 3, 27),
-    (p_family_id, 'Comfort someone', '安慰他人', 15, 'bonus', 'other', 'social', '💝', 2, 28),
-    (p_family_id, 'Teach others', '教别人东西', 20, 'bonus', 'other', 'social', '👨‍🏫', 2, 29);
+    (p_family_id, 'Help classmates', '帮助同学', 20, 'bonus', 'other', 'social', '👫', 3, 28),
+    (p_family_id, 'Help neighbors', '帮助邻居', 20, 'bonus', 'other', 'social', '🏘️', 2, 29),
+    (p_family_id, 'Share with others', '和他人分享', 10, 'bonus', 'other', 'social', '🤝', 3, 30),
+    (p_family_id, 'Comfort someone', '安慰他人', 15, 'bonus', 'other', 'social', '💝', 2, 31),
+    (p_family_id, 'Teach others', '教别人东西', 20, 'bonus', 'other', 'social', '👨‍🏫', 2, 32),
+    (p_family_id, 'Parent yelled at me', '家长对我大喊大叫', 20, 'bonus', 'other', 'social', '🗣️', 3, 33),
+    (p_family_id, 'Observe and learn from others in competition', '比赛时认真观察学习他人优缺点', 20, 'bonus', 'other', 'learning', '👀', 3, 34);
 
   -- ==========================================
   -- Violations (违规行为)
   -- ==========================================
   INSERT INTO quests (family_id, name_en, name_zh, stars, type, scope, category, icon, max_per_day, sort_order) VALUES
-    (p_family_id, 'Lying', '说谎', -30, 'violation', 'self', 'social', '🤥', 99, 30),
-    (p_family_id, 'Hitting / Physical aggression', '打人', -50, 'violation', 'self', 'social', '👊', 99, 31),
-    (p_family_id, 'Disrespecting elders', '不尊重长辈', -20, 'violation', 'self', 'social', '😤', 99, 32),
-    (p_family_id, 'Throwing tantrum', '发脾气大闹', -15, 'violation', 'self', 'social', '😡', 99, 33),
-    (p_family_id, 'Breaking promise', '违背承诺', -20, 'violation', 'self', 'social', '💔', 99, 34),
-    (p_family_id, 'Using bad words', '说脏话', -10, 'violation', 'self', 'social', '🤬', 99, 35),
-    (p_family_id, 'Not following rules', '不遵守规则', -15, 'violation', 'self', 'other', '⛔', 99, 36);
+    (p_family_id, 'Lying', '说谎', -30, 'violation', 'self', 'social', '🤥', 99, 35),
+    (p_family_id, 'Hitting / Physical aggression', '打人', -50, 'violation', 'self', 'social', '👊', 99, 36),
+    (p_family_id, 'Disrespecting elders', '不尊重长辈', -20, 'violation', 'self', 'social', '😤', 99, 37),
+    (p_family_id, 'Throwing tantrum', '发脾气大闹', -15, 'violation', 'self', 'social', '😡', 99, 38),
+    (p_family_id, 'Breaking promise', '违背承诺', -20, 'violation', 'self', 'social', '💔', 99, 39),
+    (p_family_id, 'Using bad words', '说脏话', -10, 'violation', 'self', 'social', '🤬', 99, 40),
+    (p_family_id, 'Yelling / Shouting', '大喊大叫', -10, 'violation', 'self', 'social', '📢', 99, 41),
+    (p_family_id, 'Not following rules', '不遵守规则', -15, 'violation', 'self', 'other', '⛔', 99, 42),
+    (p_family_id, 'Missing defined timetable', '没有按时间表执行', -15, 'violation', 'self', 'responsibility', '⏰', 99, 43),
+    (p_family_id, 'Spanking / Hitting buttocks', '打人屁股', -40, 'violation', 'self', 'social', '🍑', 99, 44),
+    (p_family_id, 'Inappropriate teasing / Harassment', '撩人/不当骚扰', -25, 'violation', 'self', 'social', '😏', 99, 45);
 
   -- ==========================================
   -- Updated Rewards (according to new pricing)

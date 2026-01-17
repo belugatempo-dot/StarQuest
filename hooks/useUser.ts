@@ -16,11 +16,15 @@ export function useUser() {
       } = await supabase.auth.getUser();
 
       if (authUser) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("users")
           .select("*")
           .eq("id", authUser.id)
-          .single();
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error fetching user:", error);
+        }
 
         setUser(data);
       }

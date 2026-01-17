@@ -67,6 +67,40 @@ __tests__/
 
 ---
 
+## Project Conventions (项目公约)
+
+### Testing Requirements
+
+**🚨 CRITICAL: Always run automated tests before declaring work complete**
+
+Before reporting that any task is complete, you MUST:
+
+1. **Run the full test suite**: `npm test`
+2. **Verify all tests pass**: Ensure 100% test success rate
+3. **Check for regressions**: No new test failures introduced
+4. **Only then declare completion**: Report results to user
+
+**Why this matters:**
+- Prevents broken code from being deployed
+- Maintains code quality and reliability
+- Catches regressions early
+- Ensures production stability
+
+**Workflow:**
+```bash
+# 1. Make code changes
+# 2. Run tests BEFORE declaring done
+npm test
+
+# 3. If tests fail, fix issues
+# 4. Re-run tests until all pass
+# 5. ONLY THEN report completion to user
+```
+
+**Exception:** When working on test files themselves, you may skip this step for the specific test file being written, but must still run related tests to ensure no regressions.
+
+---
+
 ## Development Commands
 
 ### Core Commands

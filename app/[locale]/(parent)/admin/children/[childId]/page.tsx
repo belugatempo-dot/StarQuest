@@ -21,9 +21,14 @@ export default async function ChildDetailPage({
     .eq("id", childId)
     .eq("family_id", user.family_id!)
     .eq("role", "child")
-    .single();
+    .maybeSingle();
 
-  if (childError || !child) {
+  if (childError) {
+    console.error("Error fetching child:", childError);
+    notFound();
+  }
+
+  if (!child) {
     notFound();
   }
 
