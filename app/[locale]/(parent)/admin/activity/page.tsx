@@ -49,12 +49,12 @@ export default async function ActivityPage({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-secondary/20 to-primary/20 rounded-lg p-6">
-        <h1 className="text-3xl font-bold mb-2">
-          {locale === "zh-CN" ? "活动记录" : "Activity Log"}
+      {/* Header - Starry Night Theme */}
+      <div className="night-header rounded-lg p-6 shadow-lg">
+        <h1 className="text-3xl font-bold mb-2 text-white star-glow relative z-10">
+          ✨ {locale === "zh-CN" ? "活动记录" : "Activity Log"}
         </h1>
-        <p className="text-gray-700">
+        <p className="text-white/80 relative z-10">
           {locale === "zh-CN"
             ? "查看所有记录的星星活动，按日期和类型筛选"
             : "View all recorded star activities, filter by date and type"}
@@ -63,41 +63,41 @@ export default async function ActivityPage({
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "总记录" : "Total Records"}
           </div>
           <div className="text-2xl font-bold text-gray-900">{totalRecords}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "加分记录" : "Positive"}
           </div>
           <div className="text-2xl font-bold text-green-600">{positiveRecords}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "扣分记录" : "Negative"}
           </div>
           <div className="text-2xl font-bold text-red-600">{negativeRecords}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "总星星+" : "Total Stars +"}
           </div>
           <div className="text-2xl font-bold text-green-600">+{totalStarsGiven}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "总星星-" : "Total Stars -"}
           </div>
           <div className="text-2xl font-bold text-red-600">{totalStarsDeducted}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4 border-2 border-primary">
-          <div className="text-sm text-gray-600 mb-1">
-            {locale === "zh-CN" ? "净值" : "Net Stars"}
+        <div className="net-stars-card rounded-lg shadow-lg p-4">
+          <div className="text-sm text-star-glow mb-1 relative z-10">
+            ⭐ {locale === "zh-CN" ? "净值" : "Net Stars"}
           </div>
-          <div className={`text-2xl font-bold ${netStars >= 0 ? "text-green-600" : "text-red-600"}`}>
+          <div className={`text-2xl font-bold relative z-10 star-glow ${netStars >= 0 ? "text-green-400" : "text-red-400"}`}>
             {netStars >= 0 ? `+${netStars}` : netStars}
           </div>
         </div>

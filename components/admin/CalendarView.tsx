@@ -111,39 +111,39 @@ export default function CalendarView({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="starry-bg rounded-lg shadow-lg p-6">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 relative z-10">
         <button
           onClick={previousMonth}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
         >
           ◀
         </button>
         <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-bold">{monthName}</h2>
+          <h2 className="text-2xl font-bold text-white star-glow">{monthName}</h2>
           <button
             onClick={goToToday}
-            className="px-3 py-1 text-sm bg-secondary text-white rounded-lg hover:bg-secondary/90 transition"
+            className="px-3 py-1 text-sm bg-star-gold text-night-deep font-semibold rounded-lg hover:bg-star-warm transition"
           >
             {locale === "zh-CN" ? "今天" : "Today"}
           </button>
         </div>
         <button
           onClick={nextMonth}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
         >
           ▶
         </button>
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-2 relative z-10">
         {/* Week day headers */}
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center font-semibold text-gray-600 py-2 text-sm"
+            className="text-center font-semibold text-star-glow py-2 text-sm"
           >
             {day}
           </div>
@@ -163,14 +163,14 @@ export default function CalendarView({
             <button
               key={day.dateString}
               onClick={() => onDateSelect(day.dateString)}
-              className={`aspect-square p-1 rounded-lg border-2 transition hover:shadow-md relative overflow-hidden ${
+              className={`aspect-square p-1 rounded-lg border-2 transition hover:shadow-lg relative overflow-hidden ${
                 day.isSelected
-                  ? "border-secondary bg-secondary/20 ring-2 ring-secondary"
+                  ? "border-star-gold bg-star-gold/30 ring-2 ring-star-gold shadow-[0_0_15px_rgba(255,215,0,0.4)]"
                   : day.isToday
-                  ? "border-primary bg-primary/10"
+                  ? "border-star-warm bg-star-warm/20"
                   : hasActivity
-                  ? "border-gray-300 bg-gray-50"
-                  : "border-gray-200 hover:bg-gray-50"
+                  ? "border-white/30 bg-white/10"
+                  : "border-white/10 bg-white/5 hover:bg-white/15"
               }`}
             >
               <div className="h-full flex flex-col">
@@ -178,10 +178,10 @@ export default function CalendarView({
                 <div
                   className={`text-xs font-semibold text-left ${
                     day.isSelected
-                      ? "text-secondary"
+                      ? "text-star-gold star-glow"
                       : day.isToday
-                      ? "text-primary"
-                      : "text-gray-700"
+                      ? "text-star-warm"
+                      : "text-white"
                   }`}
                 >
                   {day.date.getDate()}
@@ -193,10 +193,10 @@ export default function CalendarView({
                     {/* Activity dot indicator */}
                     <div className="flex items-center space-x-0.5">
                       {positiveCount > 0 && (
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full shadow-[0_0_4px_rgba(74,222,128,0.6)]"></div>
                       )}
                       {negativeCount > 0 && (
-                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-red-400 rounded-full shadow-[0_0_4px_rgba(248,113,113,0.6)]"></div>
                       )}
                     </div>
 
@@ -204,10 +204,10 @@ export default function CalendarView({
                     <div
                       className={`text-[10px] font-bold leading-tight ${
                         day.totalStars > 0
-                          ? "text-green-600"
+                          ? "text-green-400"
                           : day.totalStars < 0
-                          ? "text-red-600"
-                          : "text-gray-600"
+                          ? "text-red-400"
+                          : "text-gray-300"
                       }`}
                     >
                       {day.totalStars > 0 ? "+" : ""}
@@ -222,22 +222,22 @@ export default function CalendarView({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+      <div className="mt-6 pt-6 border-t border-white/20 relative z-10">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 border-2 border-primary bg-primary/10 rounded"></div>
+            <div className="w-6 h-6 border-2 border-star-warm bg-star-warm/20 rounded"></div>
             <span>{locale === "zh-CN" ? "今天" : "Today"}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 border-2 border-secondary bg-secondary/20 rounded"></div>
+            <div className="w-6 h-6 border-2 border-star-gold bg-star-gold/30 rounded shadow-[0_0_10px_rgba(255,215,0,0.3)]"></div>
             <span>{locale === "zh-CN" ? "已选择" : "Selected"}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
             <span>{locale === "zh-CN" ? "加分" : "Positive"}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
             <span>{locale === "zh-CN" ? "扣分" : "Negative"}</span>
           </div>
         </div>

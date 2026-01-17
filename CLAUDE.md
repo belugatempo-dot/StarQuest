@@ -38,16 +38,16 @@ This project strictly follows **Test-Driven Development** methodology:
 ✅ **All PRs must pass 100% of existing tests**
 ✅ **No commits to main without passing test suite**
 
-### Current Test Metrics (as of 2026-01-16)
+### Current Test Metrics (as of 2026-01-17)
 
 ```
-✅ Test Suites: 26 passed, 26 total
-✅ Tests: 662 passed, 662 total
+✅ Test Suites: 27 passed, 27 total
+✅ Tests: 700 passed, 700 total
 ⏱️  Execution Time: ~9s
-📊 Overall Coverage: 52.02%
-   - components/admin: 63.39%
-   - components/auth: 94.82%
-   - components/child: 83.13%
+📊 Overall Coverage: ~52%
+   - components/admin: ~63%
+   - components/auth: ~95%
+   - components/child: ~83%
    - components/ui: 100%
 ```
 
@@ -56,9 +56,9 @@ This project strictly follows **Test-Driven Development** methodology:
 ```
 __tests__/
 ├── components/
-│   ├── admin/        # 13 files, 341 tests - Parent UI components
+│   ├── admin/        # 14 files, ~380 tests - Parent UI components
 │   ├── auth/         # 3 files, 96 tests - Authentication flows
-│   ├── child/        # 5 files, 152 tests - Child UI components
+│   ├── child/        # 5 files, ~160 tests - Child UI components
 │   └── ui/           # 1 file, 11 tests - Shared components
 ├── integration/      # 1 file, 13 tests - End-to-end flows
 ├── lib/              # 1 file, 24 tests - Utility functions
@@ -120,7 +120,7 @@ npm run lint
 
 ### Testing Commands
 ```bash
-# Run all 662 tests
+# Run all 700 tests
 npm test
 
 # Watch mode for development
@@ -344,7 +344,10 @@ app/[locale]/
 **Database Functions:**
 - `create_family_with_templates(...)`: Creates family + 36 quest templates + 11 rewards + 7 levels
 - `initialize_family_templates(family_id)`: Seeds templates for existing family
-- Both functions are **idempotent** (check for existing data before inserting)
+- `admin_reset_child_password()`: SECURITY DEFINER function to update child passwords
+- `admin_delete_child()`: Cascade delete child and related data
+- `admin_update_child_email()`: SECURITY DEFINER function to update child email in auth.users
+- Both template functions are **idempotent** (check for existing data before inserting)
 
 **Critical Fix Applied:** Functions check for existing users before INSERT to prevent duplicate key errors.
 
@@ -370,7 +373,7 @@ app/[locale]/
 - [x] Supabase database schema and RLS policies
 - [x] Authentication system with email verification
 - [x] Basic layouts for child and parent views
-- [x] Automated testing setup (662 tests)
+- [x] Automated testing setup (700+ tests)
 
 ### ✅ Phase 2: Child Features (COMPLETED)
 - [x] Child dashboard with star balance
@@ -381,7 +384,7 @@ app/[locale]/
 - [x] Activity history with filtering
 - [x] Profile page with level progress and badge wall
 
-### ✅ Phase 3: Parent Features (COMPLETED - 2026-01-16)
+### ✅ Phase 3: Parent Features (COMPLETED - 2026-01-17)
 - [x] Parent dashboard with statistics
 - [x] Quick record stars with multiplier (1-10×)
 - [x] Approval center (star requests & redemption requests)
@@ -390,8 +393,12 @@ app/[locale]/
 - [x] Level configuration management
 - [x] Family member management (add/edit/delete children)
 - [x] Password reset for children
+- [x] Child email updates via API route
 - [x] Activity log with calendar view
 - [x] Transaction editing capabilities
+- [x] Edit & approve rejected records (parent)
+- [x] Request resubmission for rejected records (child)
+- [x] Status display in activity history (pending/approved/rejected)
 
 ### 🚧 Phase 4: Advanced Features (IN PROGRESS)
 - [ ] Advanced statistics and reports
@@ -489,10 +496,12 @@ if (password !== confirmPassword) {
 **API Routes:**
 - `api/admin/reset-child-password/route.ts`
 - `api/admin/delete-child/route.ts`
+- `api/admin/update-child/route.ts` - Update child name and email
 
 **Database Functions:**
 - `admin_reset_child_password()` - SECURITY DEFINER function to update auth.users
 - `admin_delete_child()` - Cascade delete child and related data
+- `admin_update_child_email()` - SECURITY DEFINER function to update child email in auth.users
 
 **Password Generation:**
 ```typescript
@@ -539,6 +548,42 @@ const nouns = ["Star", "Moon", "Cloud", "Tiger", "Dragon"];
 **UI:** Use `next-intl`'s `useTranslations()` hook for interface text.
 
 **Locale Switching:** `LanguageSwitcher` component in header, user preference saved in `users.locale`.
+
+### Activity History & Request Management (NEW - 2026-01-17)
+
+**Purpose:** Enable parents to edit/approve records and children to resubmit rejected requests.
+
+**Components:**
+- `EditTransactionModal.tsx` - Parent view for editing and approving records
+- `ResubmitRequestModal.tsx` - Child view for resubmitting rejected requests
+- `TransactionList.tsx` - Activity list with status indicators
+
+**Status Workflow:**
+```
+pending → approved (parent approves)
+pending → rejected (parent rejects with reason)
+rejected → pending (child resubmits with modifications)
+```
+
+**EditTransactionModal Features:**
+- View and edit star amounts
+- Modify parent notes
+- Change transaction status
+- "Save & Approve" quick action for rejected records
+- Bilingual support (EN/中文)
+
+**ResubmitRequestModal Features:**
+- Display rejection reason from parent
+- Allow star value modification (1-100 range)
+- Child note field for explanation
+- Resubmit action resets status to pending
+
+**Visual Status Indicators:**
+- Pending: Yellow/amber styling with clock icon
+- Approved: Green styling with checkmark
+- Rejected: Red/pink styling with X icon
+
+**Test Coverage:** Comprehensive tests in progress for both modals
 
 ---
 
@@ -806,7 +851,7 @@ vercel rm [deployment-url]
 ### Pre-Deployment Checklist
 
 ✅ **Before deploying:**
-1. Run full test suite: `npm test` (all 662 tests must pass)
+1. Run full test suite: `npm test` (all 700 tests must pass)
 2. Build locally: `npm run build` (must complete without errors)
 3. Check environment variables in Vercel dashboard
 4. Update Supabase redirect URLs (see below)
@@ -1053,8 +1098,8 @@ Before marking PR as ready:
 
 ---
 
-**Last Updated:** 2026-01-16
-**Version:** 3.0 (Phase 3 Complete - Production Ready)
-**Test Suite:** 662 tests passing (100%)
+**Last Updated:** 2026-01-17
+**Version:** 3.1 (Phase 3 Complete - Production Ready)
+**Test Suite:** 700 tests passing (100%)
 **Deployment:** Vercel Production
 **Made with ❤️ by Beluga Tempo | 鲸律**

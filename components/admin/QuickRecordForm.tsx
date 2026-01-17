@@ -34,17 +34,30 @@ export default function QuickRecordForm({
   const [customStars, setCustomStars] = useState<number>(0);
   const [multiplier, setMultiplier] = useState<number>(1);
   const [parentNote, setParentNote] = useState("");
-  // Use local timezone for default date (toISOString uses UTC which can show wrong date)
-  const [recordDate, setRecordDate] = useState<string>(() => {
+  // Initialize empty - will be set by useEffect on client to avoid SSR timezone issues
+  const [recordDate, setRecordDate] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Helper function to get today's date in local timezone (YYYY-MM-DD format)
+  const getLocalDateString = () => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  };
+
+  // Store max date in state to avoid SSR timezone mismatch
+  const [maxDate, setMaxDate] = useState<string>("");
+
+  // Fix SSR hydration mismatch: set correct date on client mount
+  useEffect(() => {
+    const today = getLocalDateString();
+    setRecordDate(today);
+    setMaxDate(today);
+  }, []);
 
   const getQuestName = (quest: Quest) => {
     return locale === "zh-CN"
@@ -116,14 +129,13 @@ export default function QuickRecordForm({
       // Success!
       setSuccess(true);
 
-      // Reset form
+      // Reset form (keep recordDate for consecutive entries on same day)
       setSelectedChild("");
       setSelectedQuest("");
       setCustomDescription("");
       setCustomStars(0);
       setMultiplier(1);
       setParentNote("");
-      setRecordDate(new Date().toISOString().split("T")[0]);
 
       // Refresh page data
       router.refresh();
@@ -207,7 +219,7 @@ export default function QuickRecordForm({
           type="date"
           value={recordDate}
           onChange={(e) => setRecordDate(e.target.value)}
-          max={new Date().toISOString().split("T")[0]}
+          max={maxDate || undefined}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           required
         />

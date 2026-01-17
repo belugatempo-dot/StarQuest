@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
 
     // Check if user is authenticated and is a parent
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -33,8 +34,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
 
-    // Verify child belongs to same family
-    const { data: child } = await supabase
+    // Verify child belongs to same family (use adminClient to bypass RLS)
+    const { data: child } = await adminClient
       .from("users")
       .select("*")
       .eq("id", childId)

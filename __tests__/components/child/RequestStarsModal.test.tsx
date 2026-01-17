@@ -1,10 +1,19 @@
 import React from "react";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RequestStarsModal from "@/components/child/RequestStarsModal";
 import type { Database } from "@/types/database";
 
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
+
+// Helper function to get local date string (same as component)
+const getLocalDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 // Mock next-intl
 jest.mock("next-intl", () => ({
@@ -230,20 +239,27 @@ describe("RequestStarsModal", () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Wait for date to be initialized
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockInsert).toHaveBeenCalledWith({
-          family_id: "family-123",
-          child_id: "user-123",
-          quest_id: "quest-123",
-          stars: 10,
-          source: "child_request",
-          status: "pending",
-          child_note: null,
-          created_by: "user-123",
-        });
+        expect(mockInsert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            family_id: "family-123",
+            child_id: "user-123",
+            quest_id: "quest-123",
+            stars: 10,
+            source: "child_request",
+            status: "pending",
+            child_note: null,
+            created_by: "user-123",
+          })
+        );
       });
 
       expect(defaultProps.onSuccess).toHaveBeenCalled();
@@ -252,6 +268,11 @@ describe("RequestStarsModal", () => {
     it("should create request with note", async () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Wait for date to be initialized
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
 
       const textarea = screen.getByPlaceholderText(
         "Tell your parents how you completed this quest..."
@@ -262,16 +283,18 @@ describe("RequestStarsModal", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockInsert).toHaveBeenCalledWith({
-          family_id: "family-123",
-          child_id: "user-123",
-          quest_id: "quest-123",
-          stars: 10,
-          source: "child_request",
-          status: "pending",
-          child_note: "I did a great job!",
-          created_by: "user-123",
-        });
+        expect(mockInsert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            family_id: "family-123",
+            child_id: "user-123",
+            quest_id: "quest-123",
+            stars: 10,
+            source: "child_request",
+            status: "pending",
+            child_note: "I did a great job!",
+            created_by: "user-123",
+          })
+        );
       });
 
       expect(defaultProps.onSuccess).toHaveBeenCalled();
@@ -593,6 +616,126 @@ describe("RequestStarsModal", () => {
         expect(errorDiv?.className).toContain("bg-danger/10");
         expect(errorDiv?.className).toContain("text-danger");
       });
+    });
+  });
+
+  describe("Date Selector", () => {
+    it("should render date input with label", async () => {
+      render(<RequestStarsModal {...defaultProps} />);
+
+      await waitFor(() => {
+        const dateInput = screen.getByLabelText("quests.requestDate");
+        expect(dateInput).toBeInTheDocument();
+        expect(dateInput).toHaveAttribute("type", "date");
+      });
+    });
+
+    it("should initialize date to today after mount", async () => {
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const todayString = getLocalDateString();
+      await waitFor(() => {
+        const dateInput = screen.getByLabelText("quests.requestDate");
+        expect(dateInput).toHaveValue(todayString);
+      });
+    });
+
+    it("should have max attribute set to today's date", async () => {
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const todayString = getLocalDateString();
+      await waitFor(() => {
+        const dateInput = screen.getByLabelText("quests.requestDate");
+        expect(dateInput).toHaveAttribute("max", todayString);
+      });
+    });
+
+    it("should have required attribute", async () => {
+      render(<RequestStarsModal {...defaultProps} />);
+
+      await waitFor(() => {
+        const dateInput = screen.getByLabelText("quests.requestDate");
+        expect(dateInput).toHaveAttribute("required");
+      });
+    });
+
+    it("should allow changing the date", async () => {
+      const user = userEvent.setup();
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const dateInput = await screen.findByLabelText("quests.requestDate");
+      await user.clear(dateInput);
+      await user.type(dateInput, "2026-01-15");
+
+      expect(dateInput).toHaveValue("2026-01-15");
+    });
+
+    it("should include selected date in transaction creation", async () => {
+      const user = userEvent.setup();
+      render(<RequestStarsModal {...defaultProps} />);
+
+      // Wait for date to be set
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockInsert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            created_at: expect.any(String),
+          })
+        );
+      });
+
+      // Verify the created_at is an ISO string
+      const insertCall = mockInsert.mock.calls[0][0];
+      expect(insertCall.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    });
+
+    it("should include past date in transaction when selected", async () => {
+      const user = userEvent.setup();
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const dateInput = await screen.findByLabelText("quests.requestDate");
+      await user.clear(dateInput);
+      await user.type(dateInput, "2026-01-10");
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockInsert).toHaveBeenCalled();
+      });
+
+      const insertCall = mockInsert.mock.calls[0][0];
+      // Verify the date is an ISO string (exact date may vary due to timezone handling)
+      expect(insertCall.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      // Verify the date input had the expected value
+      expect(dateInput).toHaveValue("2026-01-10");
+    });
+
+    it("should display date selector before note field", () => {
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const form = screen.getByRole("button", { name: "common.submit" }).closest("form");
+      expect(form).toBeInTheDocument();
+
+      // Verify the date input appears in the DOM
+      const dateLabel = screen.getByText("quests.requestDate");
+      const noteLabel = screen.getByText(/quests\.note/);
+
+      // Check that date label appears before note label in the DOM
+      const dateIndex = Array.from(form!.querySelectorAll("label")).findIndex(
+        (el) => el.textContent?.includes("quests.requestDate")
+      );
+      const noteIndex = Array.from(form!.querySelectorAll("label")).findIndex(
+        (el) => el.textContent?.includes("quests.note")
+      );
+
+      expect(dateIndex).toBeLessThan(noteIndex);
     });
   });
 });

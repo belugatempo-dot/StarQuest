@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
@@ -15,6 +15,15 @@ interface RequestStarsModalProps {
   onSuccess: () => void;
 }
 
+// Helper function to get local date string (YYYY-MM-DD)
+const getLocalDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function RequestStarsModal({
   quest,
   locale,
@@ -24,10 +33,19 @@ export default function RequestStarsModal({
 }: RequestStarsModalProps) {
   const t = useTranslations();
   const [note, setNote] = useState("");
+  const [requestDate, setRequestDate] = useState<string>("");
+  const [maxDate, setMaxDate] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
+
+  // Set date on client mount to avoid SSR timezone issues
+  useEffect(() => {
+    const today = getLocalDateString();
+    setRequestDate(today);
+    setMaxDate(today);
+  }, []);
 
   const getQuestName = (q: Quest) => {
     return locale === "zh-CN" ? q.name_zh || q.name_en : q.name_en;
@@ -50,6 +68,11 @@ export default function RequestStarsModal({
         throw new Error("Family not found");
       }
 
+      // Create timestamp from selected date at current time
+      const selectedDateTime = new Date(
+        requestDate + "T" + new Date().toTimeString().split(" ")[0]
+      );
+
       // Create star transaction request
       const { error: insertError } = await (supabase
         .from("star_transactions")
@@ -62,6 +85,7 @@ export default function RequestStarsModal({
           status: "pending",
           child_note: note.trim() || null,
           created_by: userId,
+          created_at: selectedDateTime.toISOString(),
         });
 
       if (insertError) throw insertError;
@@ -120,13 +144,32 @@ export default function RequestStarsModal({
             </div>
           </div>
 
+          {/* Request Date */}
+          <div>
+            <label
+              htmlFor="requestDate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {t("quests.requestDate")}
+            </label>
+            <input
+              type="date"
+              id="requestDate"
+              value={requestDate}
+              onChange={(e) => setRequestDate(e.target.value)}
+              max={maxDate || undefined}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+              required
+            />
+          </div>
+
           {/* Note */}
           <div>
             <label
               htmlFor="note"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              {t("quests.note")} (Optional)
+              {t("quests.note")} ({t("common.optional")})
             </label>
             <textarea
               id="note"
