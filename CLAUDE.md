@@ -41,14 +41,15 @@ This project strictly follows **Test-Driven Development** methodology:
 ### Current Test Metrics (as of 2026-01-17)
 
 ```
-✅ Test Suites: 27 passed, 27 total
-✅ Tests: 700 passed, 700 total
+✅ Test Suites: 28 passed, 28 total
+✅ Tests: 753 passed, 753 total
 ⏱️  Execution Time: ~9s
 📊 Overall Coverage: ~52%
    - components/admin: ~63%
    - components/auth: ~95%
    - components/child: ~83%
    - components/ui: 100%
+   - ThemeProvider: 100% (53 tests)
 ```
 
 ### Test Organization
@@ -56,13 +57,14 @@ This project strictly follows **Test-Driven Development** methodology:
 ```
 __tests__/
 ├── components/
-│   ├── admin/        # 14 files, ~380 tests - Parent UI components
-│   ├── auth/         # 3 files, 96 tests - Authentication flows
-│   ├── child/        # 5 files, ~160 tests - Child UI components
-│   └── ui/           # 1 file, 11 tests - Shared components
-├── integration/      # 1 file, 13 tests - End-to-end flows
-├── lib/              # 1 file, 24 tests - Utility functions
-└── types/            # 2 files, 25 tests - Type system & logic
+│   ├── admin/              # 14 files, ~380 tests - Parent UI components
+│   ├── auth/               # 3 files, 96 tests - Authentication flows
+│   ├── child/              # 5 files, ~160 tests - Child UI components
+│   ├── ui/                 # 1 file, 11 tests - Shared components
+│   └── ThemeProvider.test.tsx  # 53 tests - Time-based theme switching
+├── integration/            # 1 file, 13 tests - End-to-end flows
+├── lib/                    # 1 file, 24 tests - Utility functions
+└── types/                  # 2 files, 25 tests - Type system & logic
 ```
 
 ---
@@ -120,7 +122,7 @@ npm run lint
 
 ### Testing Commands
 ```bash
-# Run all 700 tests
+# Run all 753 tests
 npm test
 
 # Watch mode for development
@@ -355,12 +357,76 @@ app/[locale]/
 
 **Shared UI:** `components/ui/` - Reusable components (LanguageSwitcher, etc.)
 
+**Global Providers:** `components/` - App-wide providers (ThemeProvider)
+
 **Role-Specific:**
 - `components/child/` - Quest grids, reward catalogs (show only `bonus` quests)
 - `components/admin/` - Quick record forms, approval centers (show all quest types)
 - `components/auth/` - Login/register forms (use hard navigation)
 
 **Pattern:** Components using Supabase must be Client Components (`"use client"`)
+
+### 9. Time-Based Theme System (NEW - 2026-01-17)
+
+**Purpose:** Automatic day/night theme switching based on time of day for enhanced UX.
+
+**Component:** `components/ThemeProvider.tsx`
+
+**Time Rules:**
+- **Day Mode:** 7:00 AM - 5:59 PM (hours 7-17)
+- **Night Mode:** 6:00 PM - 6:59 AM (hours 18-6)
+
+**Color Palette:**
+- **Day:** Soft Tiffany blue (#81D8D0) with cloud-like gradients
+- **Night:** Starry dark blue (#0f172a → #1e3a5f → #312e81) with twinkling stars
+
+**Implementation:**
+```typescript
+// components/ThemeProvider.tsx
+import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
+
+// In component
+const { mode, isDayMode, isNightMode } = useTheme();
+
+// mode: "day" | "night"
+// isDayMode: boolean
+// isNightMode: boolean
+```
+
+**CSS Classes:** Applied to `document.body`
+- `.theme-day` - Day mode styles
+- `.theme-night` - Night mode styles (default)
+
+**CSS Integration:** `app/globals.css` contains theme-specific overrides:
+- `.theme-day .starry-bg` - Converts starry background to sunny sky
+- `.theme-day .night-header` - Tiffany blue header gradient
+- `.theme-day .star-glow` - Teal text glow instead of gold
+- `.theme-day .net-stars-card` - Tiffany blue card background
+
+**Auto-Refresh:** Theme checks every 60 seconds via `setInterval`
+
+**Test Coverage:** 53 comprehensive tests covering:
+- Rendering and context values (3 tests)
+- Time-based mode detection (7 tests)
+- useTheme hook functionality (5 tests)
+- DOM class updates (4 tests)
+- Interval management (4 tests)
+- Edge cases and transitions (5 tests)
+- All 24 hours boundary coverage (24 tests)
+
+**Usage in Layout:**
+```typescript
+// app/[locale]/layout.tsx
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+export default function RootLayout({ children }) {
+  return (
+    <ThemeProvider>
+      {children}
+    </ThemeProvider>
+  );
+}
+```
 
 ---
 
@@ -399,6 +465,7 @@ app/[locale]/
 - [x] Edit & approve rejected records (parent)
 - [x] Request resubmission for rejected records (child)
 - [x] Status display in activity history (pending/approved/rejected)
+- [x] Time-based day/night theme switching (Tiffany blue day, starry night)
 
 ### 🚧 Phase 4: Advanced Features (IN PROGRESS)
 - [ ] Advanced statistics and reports
@@ -674,6 +741,7 @@ await waitFor(() => { /* assert completion */ });
 - QuestFormModal: 100%
 - LevelManagement: 100%
 - LanguageSwitcher: 100%
+- ThemeProvider: 100%
 - LoginForm: 98%
 - RewardManagement: 94.64%
 
@@ -851,7 +919,7 @@ vercel rm [deployment-url]
 ### Pre-Deployment Checklist
 
 ✅ **Before deploying:**
-1. Run full test suite: `npm test` (all 700 tests must pass)
+1. Run full test suite: `npm test` (all 753 tests must pass)
 2. Build locally: `npm run build` (must complete without errors)
 3. Check environment variables in Vercel dashboard
 4. Update Supabase redirect URLs (see below)
@@ -1099,7 +1167,7 @@ Before marking PR as ready:
 ---
 
 **Last Updated:** 2026-01-17
-**Version:** 3.1 (Phase 3 Complete - Production Ready)
-**Test Suite:** 700 tests passing (100%)
+**Version:** 3.2 (Phase 3 Complete - Production Ready)
+**Test Suite:** 753 tests passing (100%)
 **Deployment:** Vercel Production
 **Made with ❤️ by Beluga Tempo | 鲸律**

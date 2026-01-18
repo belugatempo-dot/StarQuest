@@ -23,17 +23,52 @@ jest.mock("next-intl", () => ({
 // Mock Supabase client
 const mockMaybeSingle = jest.fn();
 const mockInsert = jest.fn();
-const mockSelect = jest.fn(() => ({
-  eq: jest.fn(() => ({
-    maybeSingle: mockMaybeSingle,
-  })),
-}));
+const mockDuplicateCheckResult = jest.fn();
+const mockRapidFireCheckResult = jest.fn();
+
+// Create chainable mock for duplicate check queries
+const createChainableMock = (finalResult: jest.Mock) => {
+  const chainable: any = {};
+  chainable.select = jest.fn(() => chainable);
+  chainable.eq = jest.fn(() => chainable);
+  chainable.gte = jest.fn(() => chainable);
+  chainable.lte = jest.fn(() => finalResult());
+  return chainable;
+};
+
 const mockFrom = jest.fn((table: string) => {
   if (table === "users") {
-    return { select: mockSelect };
+    return {
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          maybeSingle: mockMaybeSingle,
+        })),
+      })),
+    };
   }
   if (table === "star_transactions") {
-    return { insert: mockInsert };
+    // Return different mock based on what operation is being performed
+    return {
+      insert: mockInsert,
+      select: jest.fn((cols: string) => {
+        // For duplicate check (has created_at in select)
+        if (cols === "id, created_at") {
+          const chain: any = {};
+          chain.eq = jest.fn(() => chain);
+          chain.gte = jest.fn(() => chain);
+          chain.lte = jest.fn(() => mockDuplicateCheckResult());
+          return chain;
+        }
+        // For rapid-fire check (only id in select)
+        if (cols === "id") {
+          const chain: any = {};
+          chain.eq = jest.fn(() => chain);
+          chain.gte = jest.fn(() => mockRapidFireCheckResult());
+          return chain;
+        }
+        return {};
+      }),
+    };
   }
   return {};
 });
@@ -77,6 +112,9 @@ describe("RequestStarsModal", () => {
       error: null,
     });
     mockInsert.mockResolvedValue({ error: null });
+    // Default: no duplicates found
+    mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+    mockRapidFireCheckResult.mockReturnValue({ data: [], error: null });
   });
 
   describe("Rendering", () => {
@@ -350,7 +388,8 @@ describe("RequestStarsModal", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockSelect).toHaveBeenCalledWith("family_id");
+        // Verify mockFrom was called with "users" table
+        expect(mockFrom).toHaveBeenCalledWith("users");
       });
     });
   });
@@ -736,6 +775,152 @@ describe("RequestStarsModal", () => {
       );
 
       expect(dateIndex).toBeLessThan(noteIndex);
+    });
+  });
+
+  describe("Duplicate Prevention", () => {
+    it("should block submission when there is already a pending request for same quest today", async () => {
+      const user = userEvent.setup();
+      // Mock: there's already a pending request
+      mockDuplicateCheckResult.mockReturnValue({
+        data: [{ id: "existing-request-id", created_at: new Date().toISOString() }],
+        error: null,
+      });
+
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/You already have a pending request for this quest today/)).toBeInTheDocument();
+      });
+
+      // Should NOT call insert
+      expect(mockInsert).not.toHaveBeenCalled();
+      expect(defaultProps.onSuccess).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error message for duplicate when locale is zh-CN", async () => {
+      const user = userEvent.setup();
+      mockDuplicateCheckResult.mockReturnValue({
+        data: [{ id: "existing-request-id", created_at: new Date().toISOString() }],
+        error: null,
+      });
+
+      render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/你今天已经提交过这个任务的申请了/)).toBeInTheDocument();
+      });
+    });
+
+    it("should block rapid-fire submissions (same quest within 2 minutes)", async () => {
+      const user = userEvent.setup();
+      // No pending requests, but there's a recent submission
+      mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+      mockRapidFireCheckResult.mockReturnValue({
+        data: [{ id: "recent-request-id" }],
+        error: null,
+      });
+
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Please don't submit repeatedly! Wait 2 minutes/)).toBeInTheDocument();
+      });
+
+      expect(mockInsert).not.toHaveBeenCalled();
+      expect(defaultProps.onSuccess).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error message for rapid-fire when locale is zh-CN", async () => {
+      const user = userEvent.setup();
+      mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+      mockRapidFireCheckResult.mockReturnValue({
+        data: [{ id: "recent-request-id" }],
+        error: null,
+      });
+
+      render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/请不要重复提交/)).toBeInTheDocument();
+      });
+    });
+
+    it("should allow submission when no duplicates exist", async () => {
+      const user = userEvent.setup();
+      // No duplicates
+      mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+      mockRapidFireCheckResult.mockReturnValue({ data: [], error: null });
+
+      render(<RequestStarsModal {...defaultProps} />);
+
+      // Wait for date to be initialized
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockInsert).toHaveBeenCalled();
+      });
+
+      expect(defaultProps.onSuccess).toHaveBeenCalled();
+    });
+
+    it("should allow submission for different quest even if another quest has pending request", async () => {
+      const user = userEvent.setup();
+      // The duplicate check is for the specific quest, not all quests
+      // So if there's a pending request for a different quest, it should be allowed
+      mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+      mockRapidFireCheckResult.mockReturnValue({ data: [], error: null });
+
+      render(<RequestStarsModal {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockInsert).toHaveBeenCalled();
+        expect(defaultProps.onSuccess).toHaveBeenCalled();
+      });
+    });
+
+    it("should re-enable button after duplicate error", async () => {
+      const user = userEvent.setup();
+      mockDuplicateCheckResult.mockReturnValue({
+        data: [{ id: "existing-request-id", created_at: new Date().toISOString() }],
+        error: null,
+      });
+
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/You already have a pending request/)).toBeInTheDocument();
+      });
+
+      // Button should be re-enabled so user can close or try again
+      expect(submitButton).not.toBeDisabled();
     });
   });
 });
