@@ -113,10 +113,6 @@ export default function StarRequestList({
 
   const handleReject = async () => {
     if (!showRejectModal) return;
-    if (!rejectReason.trim()) {
-      alert("Please provide a rejection reason");
-      return;
-    }
 
     setProcessingId(showRejectModal);
 
@@ -125,7 +121,7 @@ export default function StarRequestList({
         .from("star_transactions")
         .update as any)({
           status: "rejected",
-          parent_response: rejectReason,
+          parent_response: rejectReason.trim() || null,
           reviewed_by: parentId,
           reviewed_at: new Date().toISOString(),
         })
@@ -407,7 +403,7 @@ export default function StarRequestList({
               onChange={(e) => setRejectReason(e.target.value)}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-danger focus:border-transparent resize-none mb-4"
-              placeholder="Explain why you're rejecting this request..."
+              placeholder={locale === "zh-CN" ? "（可选）说明拒绝原因..." : "(Optional) Explain why you're rejecting..."}
               autoFocus
             />
             <div className="flex gap-3">
@@ -422,7 +418,7 @@ export default function StarRequestList({
               </button>
               <button
                 onClick={handleReject}
-                disabled={!rejectReason.trim()}
+                disabled={processingId === showRejectModal}
                 className="flex-1 px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/90 disabled:opacity-50"
               >
                 {processingId ? t("admin.processing") : t("admin.reject")}

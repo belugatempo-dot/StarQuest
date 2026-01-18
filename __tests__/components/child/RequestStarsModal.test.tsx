@@ -163,13 +163,31 @@ describe("RequestStarsModal", () => {
       expect(label.tagName).toBe("TEXTAREA");
     });
 
-    it("should display note placeholder", () => {
-      render(<RequestStarsModal {...defaultProps} />);
+    it("should display note placeholder in English", () => {
+      render(<RequestStarsModal {...defaultProps} locale="en" />);
 
       const textarea = screen.getByPlaceholderText(
         "Tell your parents how you completed this quest..."
       );
       expect(textarea).toBeInTheDocument();
+    });
+
+    it("should display note placeholder in Chinese", () => {
+      render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
+
+      const textarea = screen.getByPlaceholderText(
+        "告诉爸爸妈妈你完成了什么..."
+      );
+      expect(textarea).toBeInTheDocument();
+    });
+
+    it("should mark note as required", () => {
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const textarea = screen.getByPlaceholderText(
+        "Tell your parents how you completed this quest..."
+      );
+      expect(textarea).toHaveAttribute("required");
     });
 
     it("should display info box about approval process", () => {
@@ -273,8 +291,7 @@ describe("RequestStarsModal", () => {
   });
 
   describe("Request Creation Flow", () => {
-    it("should create request without note", async () => {
-      const user = userEvent.setup();
+    it("should disable submit button when note is empty", async () => {
       render(<RequestStarsModal {...defaultProps} />);
 
       // Wait for date to be initialized
@@ -283,24 +300,31 @@ describe("RequestStarsModal", () => {
       });
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
-      await user.click(submitButton);
+      expect(submitButton).toBeDisabled();
+    });
 
+    it("should show error when submitting without note", async () => {
+      const user = userEvent.setup();
+      render(<RequestStarsModal {...defaultProps} />);
+
+      // Wait for date to be initialized
       await waitFor(() => {
-        expect(mockInsert).toHaveBeenCalledWith(
-          expect.objectContaining({
-            family_id: "family-123",
-            child_id: "user-123",
-            quest_id: "quest-123",
-            stars: 10,
-            source: "child_request",
-            status: "pending",
-            child_note: null,
-            created_by: "user-123",
-          })
-        );
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
       });
 
-      expect(defaultProps.onSuccess).toHaveBeenCalled();
+      // Type whitespace only in note (should still be treated as empty)
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "   ");
+      await user.clear(textarea);
+
+      // Force submit by typing a note and then clearing it
+      await user.type(textarea, "test");
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      expect(submitButton).not.toBeDisabled();
+
+      await user.clear(textarea);
+      expect(submitButton).toBeDisabled();
     });
 
     it("should create request with note", async () => {
@@ -359,7 +383,7 @@ describe("RequestStarsModal", () => {
       });
     });
 
-    it("should convert whitespace-only note to null", async () => {
+    it("should disable submit button when note is whitespace-only", async () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
 
@@ -369,20 +393,17 @@ describe("RequestStarsModal", () => {
       await user.type(textarea, "   ");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
-      await user.click(submitButton);
-
-      await waitFor(() => {
-        expect(mockInsert).toHaveBeenCalledWith(
-          expect.objectContaining({
-            child_note: null,
-          })
-        );
-      });
+      // Button should be disabled because whitespace-only note is not valid
+      expect(submitButton).toBeDisabled();
     });
 
     it("should fetch family_id from user before creating request", async () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -404,6 +425,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -421,6 +446,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -440,6 +469,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -455,6 +488,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -486,6 +523,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -514,6 +555,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -536,6 +581,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -573,6 +622,10 @@ describe("RequestStarsModal", () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -588,6 +641,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -608,6 +665,10 @@ describe("RequestStarsModal", () => {
       const form = screen.getByRole("button", { name: "common.submit" }).closest("form");
       expect(form).toBeInTheDocument();
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -619,6 +680,10 @@ describe("RequestStarsModal", () => {
     it("should prevent default form submission", async () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -646,6 +711,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -718,6 +787,10 @@ describe("RequestStarsModal", () => {
         expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
       });
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -741,6 +814,10 @@ describe("RequestStarsModal", () => {
       const dateInput = await screen.findByLabelText("quests.requestDate");
       await user.clear(dateInput);
       await user.type(dateInput, "2026-01-10");
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -789,6 +866,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I did this!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -810,6 +891,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("告诉爸爸妈妈你完成了什么...");
+      await user.type(textarea, "我做完了!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -828,6 +913,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I did this!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -850,6 +939,10 @@ describe("RequestStarsModal", () => {
 
       render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("告诉爸爸妈妈你完成了什么...");
+      await user.type(textarea, "我做完了!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -870,6 +963,10 @@ describe("RequestStarsModal", () => {
       await waitFor(() => {
         expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
       });
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
@@ -894,6 +991,10 @@ describe("RequestStarsModal", () => {
         expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
       });
 
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I completed this task!");
+
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);
 
@@ -911,6 +1012,10 @@ describe("RequestStarsModal", () => {
       });
 
       render(<RequestStarsModal {...defaultProps} />);
+
+      // Add required note
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I did this!");
 
       const submitButton = screen.getByRole("button", { name: "common.submit" });
       await user.click(submitButton);

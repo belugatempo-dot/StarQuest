@@ -429,7 +429,7 @@ describe('StarRequestList', () => {
       await user.click(rejectButtons[0])
 
       expect(screen.getByText('admin.rejectReason')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText(/explain why/i)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(/optional/i)).toBeInTheDocument()
     })
 
     it('closes modal when clicking cancel', async () => {
@@ -468,7 +468,7 @@ describe('StarRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Test reason')
 
       const cancelButton = screen.getByRole('button', { name: /common\.cancel/i })
@@ -477,11 +477,11 @@ describe('StarRequestList', () => {
       // Open modal again
       await user.click(rejectButtons[0])
 
-      const newTextarea = screen.getByPlaceholderText(/explain why/i)
+      const newTextarea = screen.getByPlaceholderText(/optional/i)
       expect(newTextarea).toHaveValue('')
     })
 
-    it('requires rejection reason', async () => {
+    it('allows rejection without reason (optional)', async () => {
       const user = userEvent.setup()
 
       render(
@@ -502,10 +502,31 @@ describe('StarRequestList', () => {
       const buttons = within(modal!).getAllByRole('button')
       const modalRejectButton = buttons.find((btn) => btn.className.includes('bg-danger'))
 
-      expect(modalRejectButton).toBeDisabled()
+      // Button should NOT be disabled - rejection reason is optional
+      expect(modalRejectButton).not.toBeDisabled()
     })
 
-    it('disables reject button when reason is empty', async () => {
+    it('shows optional placeholder in reject modal', async () => {
+      const user = userEvent.setup()
+      render(
+        <StarRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const rejectButtons = screen.getAllByRole('button', {
+        name: /^admin\.reject$/i,
+      })
+      await user.click(rejectButtons[0])
+
+      // Check for optional placeholder text
+      const textarea = screen.getByPlaceholderText(/optional/i)
+      expect(textarea).toBeInTheDocument()
+    })
+
+    it('enables reject button even when reason is empty', async () => {
       const user = userEvent.setup()
       render(
         <StarRequestList
@@ -525,10 +546,11 @@ describe('StarRequestList', () => {
       const buttons = within(modal!).getAllByRole('button')
       const modalRejectButton = buttons.find((btn) => btn.className.includes('bg-danger'))
 
-      expect(modalRejectButton).toBeDisabled()
+      // Button should NOT be disabled - rejection reason is optional
+      expect(modalRejectButton).not.toBeDisabled()
     })
 
-    it('enables reject button when reason is provided', async () => {
+    it('keeps reject button enabled when reason is provided', async () => {
       const user = userEvent.setup()
       render(
         <StarRequestList
@@ -543,7 +565,7 @@ describe('StarRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Not completed properly')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -568,7 +590,7 @@ describe('StarRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Task not done well')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -602,7 +624,7 @@ describe('StarRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Not good enough')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -646,7 +668,7 @@ describe('StarRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Test reason')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -674,7 +696,7 @@ describe('StarRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       expect(textarea).toBeInTheDocument()
       expect(textarea.tagName).toBe('TEXTAREA')
       expect(textarea).toHaveAttribute('rows', '4')
