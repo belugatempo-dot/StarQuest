@@ -68,6 +68,45 @@ export default function RequestStarsModal({
         throw new Error("Family not found");
       }
 
+      // ========== DUPLICATE PREVENTION ==========
+      // Check for existing pending request for the same quest on the same day
+      const startOfDay = new Date(requestDate + "T00:00:00").toISOString();
+      const endOfDay = new Date(requestDate + "T23:59:59").toISOString();
+
+      const { data: existingPending } = await supabase
+        .from("star_transactions")
+        .select("id, created_at")
+        .eq("child_id", userId)
+        .eq("quest_id", quest.id)
+        .eq("status", "pending")
+        .gte("created_at", startOfDay)
+        .lte("created_at", endOfDay);
+
+      if (existingPending && existingPending.length > 0) {
+        const errorMsg = locale === "zh-CN"
+          ? "你今天已经提交过这个任务的申请了，请等待父母审批"
+          : "You already have a pending request for this quest today. Please wait for approval.";
+        throw new Error(errorMsg);
+      }
+
+      // Check for rapid-fire submissions (same quest within last 2 minutes)
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+
+      const { data: recentRequests } = await supabase
+        .from("star_transactions")
+        .select("id")
+        .eq("child_id", userId)
+        .eq("quest_id", quest.id)
+        .gte("created_at", twoMinutesAgo);
+
+      if (recentRequests && recentRequests.length > 0) {
+        const errorMsg = locale === "zh-CN"
+          ? "请不要重复提交！请稍等2分钟后再试"
+          : "Please don't submit repeatedly! Wait 2 minutes before trying again.";
+        throw new Error(errorMsg);
+      }
+      // ========== END DUPLICATE PREVENTION ==========
+
       // Create timestamp from selected date at current time
       const selectedDateTime = new Date(
         requestDate + "T" + new Date().toTimeString().split(" ")[0]
