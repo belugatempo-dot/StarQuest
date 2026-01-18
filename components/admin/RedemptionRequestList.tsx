@@ -174,7 +174,7 @@ export default function RedemptionRequestList({
 
   // Batch reject handler
   const handleBatchReject = async () => {
-    if (selectedIds.size === 0 || !batchRejectReason.trim()) return;
+    if (selectedIds.size === 0) return;
 
     setIsBatchProcessing(true);
     try {
@@ -183,7 +183,7 @@ export default function RedemptionRequestList({
         .from("redemptions")
         .update as any)({
           status: "rejected",
-          parent_response: batchRejectReason.trim(),
+          parent_response: batchRejectReason.trim() || null,
           reviewed_at: new Date().toISOString(),
         })
         .in("id", ids);
@@ -454,7 +454,7 @@ export default function RedemptionRequestList({
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("admin.batchRejectReason")} *
+                  {t("admin.batchRejectReason")} ({locale === "zh-CN" ? "可选" : "optional"})
                 </label>
                 <textarea
                   value={batchRejectReason}
@@ -463,8 +463,8 @@ export default function RedemptionRequestList({
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   placeholder={
                     locale === "zh-CN"
-                      ? "请输入拒绝原因..."
-                      : "Enter rejection reason..."
+                      ? "（可选）输入拒绝原因..."
+                      : "(Optional) Enter rejection reason..."
                   }
                   autoFocus
                 />
@@ -481,7 +481,7 @@ export default function RedemptionRequestList({
                 </button>
                 <button
                   onClick={handleBatchReject}
-                  disabled={isBatchProcessing || !batchRejectReason.trim()}
+                  disabled={isBatchProcessing}
                   className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
                 >
                   {isBatchProcessing

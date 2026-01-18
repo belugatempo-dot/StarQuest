@@ -1102,7 +1102,7 @@ describe('StarRequestList', () => {
       expect(screen.getByText(/2 pending requests/i)).toBeInTheDocument()
     })
 
-    it('requires rejection reason for batch reject', async () => {
+    it('allows batch reject without reason (optional)', async () => {
       const user = userEvent.setup()
       render(
         <StarRequestList
@@ -1121,13 +1121,13 @@ describe('StarRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      // Find the reject button in the modal (it should be disabled without reason)
+      // Find the reject button in the modal (it should NOT be disabled - reason is optional)
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
       const confirmRejectButton = modalButtons.find((btn) => btn.className.includes('bg-red'))
-      expect(confirmRejectButton).toBeDisabled()
+      expect(confirmRejectButton).not.toBeDisabled()
     })
 
-    it('enables batch reject button when reason is provided', async () => {
+    it('keeps batch reject button enabled when reason is provided', async () => {
       const user = userEvent.setup()
       render(
         <StarRequestList
@@ -1146,7 +1146,7 @@ describe('StarRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      const textarea = screen.getByPlaceholderText(/enter rejection reason/i)
+      const textarea = screen.getByPlaceholderText(/optional.*enter rejection reason/i)
       await user.type(textarea, 'Tasks not completed properly')
 
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
@@ -1173,7 +1173,7 @@ describe('StarRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      const textarea = screen.getByPlaceholderText(/enter rejection reason/i)
+      const textarea = screen.getByPlaceholderText(/optional.*enter rejection reason/i)
       await user.type(textarea, 'Not done well')
 
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
@@ -1210,7 +1210,7 @@ describe('StarRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      const textarea = screen.getByPlaceholderText(/enter rejection reason/i)
+      const textarea = screen.getByPlaceholderText(/optional.*enter rejection reason/i)
       await user.type(textarea, 'Reason for rejection')
 
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
