@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -38,6 +38,13 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
   const [viewMode, setViewMode] = useState<"list" | "calendar">("calendar");
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Batch selection state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBatchRejectModal, setShowBatchRejectModal] = useState(false);
+  const [batchRejectReason, setBatchRejectReason] = useState("");
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   // Filter transactions
   const filteredTransactions = useMemo(() => {
@@ -96,6 +103,103 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
     });
     return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
   }, [filteredTransactions]);
+
+  // Get pending transactions from filtered list
+  const pendingTransactions = useMemo(() =>
+    filteredTransactions.filter(t => t.status === "pending"),
+    [filteredTransactions]
+  );
+
+  // Clear selection when exiting selection mode
+  useEffect(() => {
+    if (!selectionMode) {
+      setSelectedIds(new Set());
+    }
+  }, [selectionMode]);
+
+  // Toggle single selection
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Select all pending
+  const selectAllPending = () => {
+    setSelectedIds(new Set(pendingTransactions.map(t => t.id)));
+  };
+
+  // Clear selection
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  };
+
+  // Batch approve handler
+  const handleBatchApprove = async () => {
+    if (selectedIds.size === 0) return;
+
+    const confirmMessage = locale === "zh-CN"
+      ? `确定要批准这 ${selectedIds.size} 条待审批记录吗？`
+      : `Approve ${selectedIds.size} pending requests?`;
+
+    if (!confirm(confirmMessage)) return;
+
+    setIsBatchProcessing(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await (supabase
+        .from("star_transactions")
+        .update as any)({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+        })
+        .in("id", ids);
+
+      if (error) throw error;
+
+      clearSelection();
+      router.refresh();
+    } catch (err) {
+      console.error("Batch approve error:", err);
+      alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed");
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
+
+  // Batch reject handler
+  const handleBatchReject = async () => {
+    if (selectedIds.size === 0 || !batchRejectReason.trim()) return;
+
+    setIsBatchProcessing(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await (supabase
+        .from("star_transactions")
+        .update as any)({
+          status: "rejected",
+          parent_response: batchRejectReason.trim(),
+          reviewed_at: new Date().toISOString(),
+        })
+        .in("id", ids);
+
+      if (error) throw error;
+
+      setShowBatchRejectModal(false);
+      setBatchRejectReason("");
+      clearSelection();
+      router.refresh();
+    } catch (err) {
+      console.error("Batch reject error:", err);
+      alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed");
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
 
   const getQuestName = (transaction: Transaction) => {
     if (transaction.custom_description) {
@@ -374,6 +478,40 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
             ? `显示 ${filteredTransactions.length} 条记录（共 ${transactions.length} 条）`
             : `Showing ${filteredTransactions.length} of ${transactions.length} records`}
         </div>
+
+        {/* Batch Selection Controls */}
+        {pendingTransactions.length > 0 && (
+          <div className="flex items-center space-x-3 pt-2 border-t">
+            <button
+              onClick={() => setSelectionMode(!selectionMode)}
+              className={`px-4 py-2 rounded-lg transition font-medium ${
+                selectionMode
+                  ? "bg-purple-500 text-white"
+                  : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+              }`}
+            >
+              {selectionMode ? "✅ " : "☐ "}
+              {locale === "zh-CN" ? "选择模式" : "Selection Mode"}
+            </button>
+            {selectionMode && (
+              <button
+                onClick={selectAllPending}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+              >
+                {locale === "zh-CN"
+                  ? `全选待审批 (${pendingTransactions.length})`
+                  : `Select All Pending (${pendingTransactions.length})`}
+              </button>
+            )}
+            {selectionMode && selectedIds.size > 0 && (
+              <span className="text-sm text-gray-600">
+                {locale === "zh-CN"
+                  ? `已选择 ${selectedIds.size} 项`
+                  : `${selectedIds.size} selected`}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* List View */}
@@ -397,11 +535,20 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                     : transaction.stars > 0
                     ? "border-green-500"
                     : "border-red-500"
-                }`}
+                } ${selectionMode && transaction.status === "pending" && selectedIds.has(transaction.id) ? "ring-2 ring-purple-500" : ""}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
+                      {/* Checkbox for selection mode */}
+                      {selectionMode && transaction.status === "pending" && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(transaction.id)}
+                          onChange={() => toggleSelection(transaction.id)}
+                          className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                      )}
                       <span className="text-2xl">
                         {transaction.quests?.icon || "⭐"}
                       </span>
@@ -522,10 +669,19 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
                             : transaction.stars > 0
                             ? "border-green-200 bg-green-50"
                             : "border-red-200 bg-red-50"
-                        }`}
+                        } ${selectionMode && transaction.status === "pending" && selectedIds.has(transaction.id) ? "ring-2 ring-purple-500" : ""}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
+                            {/* Checkbox for selection mode */}
+                            {selectionMode && transaction.status === "pending" && (
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(transaction.id)}
+                                onChange={() => toggleSelection(transaction.id)}
+                                className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                              />
+                            )}
                             <span className="text-2xl">
                               {transaction.quests?.icon || "⭐"}
                             </span>
@@ -604,6 +760,96 @@ export default function ActivityList({ transactions, locale }: ActivityListProps
           locale={locale}
           onClose={() => setEditingTransaction(null)}
         />
+      )}
+
+      {/* Floating Action Bar for Batch Operations */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-purple-300 shadow-lg p-4 z-50">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <span className="font-medium text-purple-700">
+              {locale === "zh-CN"
+                ? `已选择 ${selectedIds.size} 项`
+                : `${selectedIds.size} items selected`}
+            </span>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleBatchApprove}
+                disabled={isBatchProcessing}
+                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 font-medium"
+              >
+                {isBatchProcessing
+                  ? (locale === "zh-CN" ? "处理中..." : "Processing...")
+                  : (locale === "zh-CN" ? "✅ 批量批准" : "✅ Batch Approve")}
+              </button>
+              <button
+                onClick={() => setShowBatchRejectModal(true)}
+                disabled={isBatchProcessing}
+                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 font-medium"
+              >
+                {locale === "zh-CN" ? "❌ 批量拒绝" : "❌ Batch Reject"}
+              </button>
+              <button
+                onClick={clearSelection}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+              >
+                {locale === "zh-CN" ? "清除" : "Clear"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Reject Modal */}
+      {showBatchRejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold">
+                {locale === "zh-CN" ? "批量拒绝" : "Batch Reject"}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {locale === "zh-CN"
+                  ? `将拒绝 ${selectedIds.size} 条待审批记录`
+                  : `Rejecting ${selectedIds.size} pending requests`}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {locale === "zh-CN" ? "拒绝原因 *" : "Rejection Reason *"}
+                </label>
+                <textarea
+                  value={batchRejectReason}
+                  onChange={(e) => setBatchRejectReason(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  placeholder={locale === "zh-CN" ? "请输入拒绝原因..." : "Enter rejection reason..."}
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowBatchRejectModal(false);
+                    setBatchRejectReason("");
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  {locale === "zh-CN" ? "取消" : "Cancel"}
+                </button>
+                <button
+                  onClick={handleBatchReject}
+                  disabled={isBatchProcessing || !batchRejectReason.trim()}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
+                >
+                  {isBatchProcessing
+                    ? (locale === "zh-CN" ? "处理中..." : "Processing...")
+                    : (locale === "zh-CN" ? "确认拒绝" : "Confirm Reject")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
