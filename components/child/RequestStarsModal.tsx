@@ -56,6 +56,16 @@ export default function RequestStarsModal({
     setLoading(true);
     setError(null);
 
+    // Validate note is provided
+    if (!note.trim()) {
+      const errorMsg = locale === "zh-CN"
+        ? "请填写说明"
+        : "Please provide a note describing what you did";
+      setError(errorMsg);
+      setLoading(false);
+      return;
+    }
+
     try {
       // Get family_id from the current user
       const { data: userData } = await supabase
@@ -103,6 +113,22 @@ export default function RequestStarsModal({
         const errorMsg = locale === "zh-CN"
           ? "请不要重复提交！请稍等2分钟后再试"
           : "Please don't submit repeatedly! Wait 2 minutes before trying again.";
+        throw new Error(errorMsg);
+      }
+
+      // Check for rate limiting: max 2 records per minute (across all quests)
+      const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
+
+      const { data: recentAllRequests } = await supabase
+        .from("star_transactions")
+        .select("id")
+        .eq("child_id", userId)
+        .gte("created_at", oneMinuteAgo);
+
+      if (recentAllRequests && recentAllRequests.length >= 2) {
+        const errorMsg = locale === "zh-CN"
+          ? "一分钟内最多只能提交2个请求，请稍后再试"
+          : "You can only submit up to 2 requests per minute. Please wait and try again.";
         throw new Error(errorMsg);
       }
       // ========== END DUPLICATE PREVENTION ==========
@@ -202,13 +228,13 @@ export default function RequestStarsModal({
             />
           </div>
 
-          {/* Note */}
+          {/* Note (Required) */}
           <div>
             <label
               htmlFor="note"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              {t("quests.note")} ({t("common.optional")})
+              {t("quests.note")} <span className="text-danger">*</span>
             </label>
             <textarea
               id="note"
@@ -216,10 +242,11 @@ export default function RequestStarsModal({
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
-              placeholder="Tell your parents how you completed this quest..."
+              placeholder={locale === "zh-CN" ? "告诉爸爸妈妈你完成了什么..." : "Tell your parents how you completed this quest..."}
+              required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Help your parents understand what you did!
+              {locale === "zh-CN" ? "请描述你做了什么！" : "Please describe what you did!"}
             </p>
           </div>
 
@@ -250,7 +277,7 @@ export default function RequestStarsModal({
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !note.trim()}
               className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? t("common.loading") : t("common.submit")}

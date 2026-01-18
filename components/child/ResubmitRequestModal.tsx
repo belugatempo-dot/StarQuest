@@ -51,6 +51,17 @@ export default function ResubmitRequestModal({
     setLoading(true);
     setError(null);
 
+    // Validate note is provided
+    if (!childNote.trim()) {
+      setError(
+        locale === "zh-CN"
+          ? "请填写说明"
+          : "Please provide a note describing what you did"
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       // Update the transaction: reset status to pending and update details
       const { error: updateError } = await (supabase
@@ -143,10 +154,10 @@ export default function ResubmitRequestModal({
               />
             </div>
 
-            {/* Child Note */}
+            {/* Child Note (Required) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {locale === "zh-CN" ? "说明（可选）" : "Note (optional)"}
+                {locale === "zh-CN" ? "说明" : "Note"} <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={childNote}
@@ -158,11 +169,12 @@ export default function ResubmitRequestModal({
                     ? "告诉爸爸妈妈你完成了什么..."
                     : "Tell your parents what you did..."
                 }
+                required
               />
               <p className="text-xs text-gray-500 mt-1">
                 {locale === "zh-CN"
-                  ? "提示：详细说明可以帮助家长更好地理解你的请求"
-                  : "Tip: A detailed explanation helps parents understand your request"}
+                  ? "请描述你做了什么！"
+                  : "Please describe what you did!"}
               </p>
             </div>
 
@@ -177,7 +189,7 @@ export default function ResubmitRequestModal({
               </button>
               <button
                 type="submit"
-                disabled={loading || stars < 1}
+                disabled={loading || stars < 1 || !childNote.trim()}
                 className="flex-1 px-4 py-2 bg-primary text-gray-900 font-semibold rounded-lg hover:bg-primary/90 transition disabled:opacity-50"
               >
                 {loading

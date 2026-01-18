@@ -474,7 +474,7 @@ describe('RedemptionRequestList', () => {
       await user.click(rejectButtons[0])
 
       expect(screen.getByText('admin.rejectReason')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText(/explain why you're rejecting this redemption/i)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(/optional/i)).toBeInTheDocument()
     })
 
     it('closes modal when clicking cancel', async () => {
@@ -513,7 +513,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Test reason')
 
       const cancelButton = screen.getByRole('button', { name: /common\.cancel/i })
@@ -522,11 +522,11 @@ describe('RedemptionRequestList', () => {
       // Open modal again
       await user.click(rejectButtons[0])
 
-      const newTextarea = screen.getByPlaceholderText(/explain why/i)
+      const newTextarea = screen.getByPlaceholderText(/optional/i)
       expect(newTextarea).toHaveValue('')
     })
 
-    it('disables reject button when reason is empty', async () => {
+    it('allows rejection without reason (optional)', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -545,10 +545,11 @@ describe('RedemptionRequestList', () => {
       const buttons = within(modal!).getAllByRole('button')
       const modalRejectButton = buttons.find((btn) => btn.className.includes('bg-danger'))
 
-      expect(modalRejectButton).toBeDisabled()
+      // Button should NOT be disabled - rejection reason is optional
+      expect(modalRejectButton).not.toBeDisabled()
     })
 
-    it('enables reject button when reason is provided', async () => {
+    it('keeps reject button enabled when reason is provided', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -563,7 +564,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Not earned enough stars')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -588,7 +589,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Not appropriate')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -621,7 +622,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Reason here')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -664,7 +665,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/explain why/i)
+      const textarea = screen.getByPlaceholderText(/optional/i)
       await user.type(textarea, 'Test reason')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
