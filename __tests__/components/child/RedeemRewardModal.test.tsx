@@ -16,11 +16,14 @@ const mockInsert = jest.fn();
 const mockSelect = jest.fn();
 const mockEq = jest.fn();
 const mockMaybeSingle = jest.fn();
+const mockSingle = jest.fn();
 const mockFrom = jest.fn();
+const mockRpc = jest.fn();
 
 jest.mock("@/lib/supabase/client", () => ({
   createClient: jest.fn(() => ({
     from: mockFrom,
+    rpc: mockRpc,
   })),
 }));
 
@@ -50,20 +53,32 @@ describe("RedeemRewardModal", () => {
       error: null,
     });
 
+    mockSingle.mockResolvedValue({
+      data: { id: "redemption-123" },
+      error: null,
+    });
+
     mockEq.mockReturnThis();
-    mockSelect.mockReturnThis();
+    mockSelect.mockReturnValue({ single: mockSingle });
+    mockRpc.mockResolvedValue({ data: true, error: null });
 
     mockFrom.mockImplementation((table: string) => {
       if (table === "users") {
         return {
-          select: mockSelect,
-          eq: mockEq,
-          maybeSingle: mockMaybeSingle,
+          select: () => ({
+            eq: () => ({
+              maybeSingle: mockMaybeSingle,
+            }),
+          }),
         };
       }
       if (table === "redemptions") {
         return {
-          insert: mockInsert.mockResolvedValue({ error: null }),
+          insert: mockInsert.mockReturnValue({
+            select: () => ({
+              single: mockSingle,
+            }),
+          }),
         };
       }
       return {};
@@ -162,11 +177,11 @@ describe("RedeemRewardModal", () => {
         />
       );
 
-      expect(screen.getByText("Current Balance:")).toBeInTheDocument();
+      expect(screen.getByText(/credit\.currentBalance/)).toBeInTheDocument();
       expect(screen.getByText("100 ⭐")).toBeInTheDocument();
-      expect(screen.getByText("Cost:")).toBeInTheDocument();
+      expect(screen.getByText(/rewards\.cost/)).toBeInTheDocument();
       expect(screen.getByText("-50 ⭐")).toBeInTheDocument();
-      expect(screen.getByText("After Redemption:")).toBeInTheDocument();
+      expect(screen.getByText(/credit\.afterRedemption/)).toBeInTheDocument();
       expect(screen.getByText("50 ⭐")).toBeInTheDocument();
     });
 
@@ -231,7 +246,7 @@ describe("RedeemRewardModal", () => {
         />
       );
 
-      expect(screen.getByText(/Stars will be deducted only after approval/i)).toBeInTheDocument();
+      expect(screen.getByText(/credit\.redemptionPendingInfo/)).toBeInTheDocument();
     });
 
     it("should render cancel and submit buttons", () => {
@@ -312,6 +327,8 @@ describe("RedeemRewardModal", () => {
           stars_spent: 50,
           status: "pending",
           child_note: null,
+          uses_credit: false,
+          credit_amount: 0,
         });
       });
 
@@ -345,6 +362,8 @@ describe("RedeemRewardModal", () => {
           stars_spent: 50,
           status: "pending",
           child_note: "Saturday afternoon please",
+          uses_credit: false,
+          credit_amount: 0,
         });
       });
 
@@ -439,7 +458,9 @@ describe("RedeemRewardModal", () => {
     it("should show error when insert fails", async () => {
       const user = userEvent.setup();
 
-      mockInsert.mockResolvedValueOnce({
+      // Override mockSingle to return an error
+      mockSingle.mockResolvedValueOnce({
+        data: null,
         error: new Error("Database error"),
       });
 
@@ -467,8 +488,10 @@ describe("RedeemRewardModal", () => {
     it("should show generic error when error has no message", async () => {
       const user = userEvent.setup();
 
-      mockInsert.mockResolvedValueOnce({
-        error: "Some string error without message property",
+      // Override mockSingle to return an error without message property
+      mockSingle.mockResolvedValueOnce({
+        data: null,
+        error: { code: "SOME_ERROR" }, // Object without message property
       });
 
       render(
@@ -503,14 +526,20 @@ describe("RedeemRewardModal", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "users") {
           return {
-            select: mockSelect,
-            eq: mockEq,
-            maybeSingle: mockMaybeSingle,
+            select: () => ({
+              eq: () => ({
+                maybeSingle: mockMaybeSingle,
+              }),
+            }),
           };
         }
         if (table === "redemptions") {
           return {
-            insert: () => promise,
+            insert: () => ({
+              select: () => ({
+                single: () => promise,
+              }),
+            }),
           };
         }
         return {};
@@ -534,7 +563,7 @@ describe("RedeemRewardModal", () => {
         expect(screen.getByRole("button", { name: "common.loading" })).toBeInTheDocument();
       });
 
-      resolvePromise!({ error: null });
+      resolvePromise!({ data: { id: "redemption-123" }, error: null });
 
       await waitFor(() => {
         expect(mockOnSuccess).toHaveBeenCalled();
@@ -552,14 +581,20 @@ describe("RedeemRewardModal", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "users") {
           return {
-            select: mockSelect,
-            eq: mockEq,
-            maybeSingle: mockMaybeSingle,
+            select: () => ({
+              eq: () => ({
+                maybeSingle: mockMaybeSingle,
+              }),
+            }),
           };
         }
         if (table === "redemptions") {
           return {
-            insert: () => promise,
+            insert: () => ({
+              select: () => ({
+                single: () => promise,
+              }),
+            }),
           };
         }
         return {};
@@ -584,7 +619,7 @@ describe("RedeemRewardModal", () => {
         expect(loadingButton).toBeDisabled();
       });
 
-      resolvePromise!({ error: null });
+      resolvePromise!({ data: { id: "redemption-123" }, error: null });
     });
   });
 

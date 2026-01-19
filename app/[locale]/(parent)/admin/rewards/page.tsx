@@ -20,14 +20,23 @@ export default async function RewardManagementPage({
     .order("stars_cost", { ascending: true })
     .order("created_at", { ascending: false });
 
+  // Fetch child balances (includes spendable_stars = current_stars + available_credit)
+  const { data: childBalances } = await supabase
+    .from("child_balances")
+    .select("spendable_stars")
+    .eq("family_id", user.family_id!);
+
   const t = await getTranslations();
 
   // Count active and inactive rewards
   const activeRewards = rewards?.filter((r: any) => r.is_active) || [];
   const inactiveRewards = rewards?.filter((r: any) => r.is_active === false) || [];
 
-  // Calculate total stars needed for all active rewards
-  const totalStars = activeRewards.reduce((sum: number, r: any) => sum + r.stars_cost, 0);
+  // Calculate total spendable stars for all children (includes credit)
+  const totalSpendableStars = (childBalances || []).reduce(
+    (sum: number, b: any) => sum + (b.spendable_stars || 0),
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -64,10 +73,10 @@ export default async function RewardManagementPage({
               </div>
               <div>
                 <div className="text-sm text-gray-600 mb-1">
-                  {locale === "zh-CN" ? "总星星" : "Total Stars"}
+                  {locale === "zh-CN" ? "可用星星" : "Available ⭐"}
                 </div>
                 <div className="text-3xl font-bold text-primary">
-                  {totalStars}
+                  {totalSpendableStars}
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
+import CreditUsageWarning from "./CreditUsageWarning";
 
 type Reward = Database["public"]["Tables"]["rewards"]["Row"];
 
@@ -14,6 +15,12 @@ interface RedeemRewardModalProps {
   userId: string;
   onClose: () => void;
   onSuccess: () => void;
+  // Credit-related props
+  creditEnabled?: boolean;
+  creditLimit?: number;
+  creditUsed?: number;
+  availableCredit?: number;
+  spendableStars?: number;
 }
 
 export default function RedeemRewardModal({
@@ -23,11 +30,17 @@ export default function RedeemRewardModal({
   userId,
   onClose,
   onSuccess,
+  creditEnabled = false,
+  creditLimit = 0,
+  creditUsed = 0,
+  availableCredit = 0,
+  spendableStars,
 }: RedeemRewardModalProps) {
   const t = useTranslations();
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmCredit, setConfirmCredit] = useState(false);
 
   const supabase = createClient();
 
@@ -35,8 +48,29 @@ export default function RedeemRewardModal({
     return locale === "zh-CN" ? r.name_zh || r.name_en : r.name_en;
   };
 
+  // Calculate actual spendable amount
+  const actualSpendable = spendableStars ?? (creditEnabled ? Math.max(currentStars, 0) + availableCredit : Math.max(currentStars, 0));
+
+  // Calculate how much credit will be used
+  const willUseCredit = creditEnabled && reward.stars_cost > currentStars;
+  const creditToUse = willUseCredit ? Math.min(reward.stars_cost - Math.max(currentStars, 0), availableCredit) : 0;
+  const newTotalDebt = creditUsed + creditToUse;
+
+  // Check if can afford
+  const canAfford = actualSpendable >= reward.stars_cost;
+
+  // Remaining after redemption
+  const remainingStars = currentStars - reward.stars_cost;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If using credit and hasn't confirmed, show warning
+    if (willUseCredit && creditToUse > 0 && !confirmCredit) {
+      setConfirmCredit(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -52,19 +86,34 @@ export default function RedeemRewardModal({
         throw new Error("Family not found");
       }
 
-      // Create redemption request
-      const { error: insertError } = await (supabase
+      const familyId = (userData as any).family_id;
+
+      // Create redemption request with credit info
+      const { data: redemption, error: insertError } = await (supabase
         .from("redemptions")
         .insert as any)({
-          family_id: (userData as any).family_id,
+          family_id: familyId,
           child_id: userId,
           reward_id: reward.id,
           stars_spent: reward.stars_cost,
           status: "pending",
           child_note: note.trim() || null,
-        });
+          uses_credit: willUseCredit && creditToUse > 0,
+          credit_amount: creditToUse,
+        })
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
+
+      // If using credit, record the credit transaction
+      if (willUseCredit && creditToUse > 0 && redemption?.id) {
+        await (supabase.rpc as any)("record_credit_usage", {
+          p_child_id: userId,
+          p_redemption_id: redemption.id,
+          p_credit_amount: creditToUse,
+        });
+      }
 
       // Success!
       onSuccess();
@@ -74,8 +123,6 @@ export default function RedeemRewardModal({
       setLoading(false);
     }
   };
-
-  const remainingStars = currentStars - reward.stars_cost;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -133,14 +180,44 @@ export default function RedeemRewardModal({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-blue-800">
-                Current Balance:
+                {t("credit.currentBalance")}:
               </span>
-              <span className="text-lg font-bold text-blue-900">
+              <span className={`text-lg font-bold ${currentStars < 0 ? "text-danger" : "text-blue-900"}`}>
                 {currentStars} ⭐
               </span>
             </div>
+
+            {/* Credit Info */}
+            {creditEnabled && availableCredit > 0 && (
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-blue-800">
+                  {t("credit.availableCredit")}:
+                </span>
+                <span className="text-lg font-bold text-secondary">
+                  +{availableCredit} ⭐
+                </span>
+              </div>
+            )}
+
+            {creditEnabled && (
+              <>
+                <div className="border-t border-blue-300 my-2"></div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-blue-800">
+                    {t("credit.canSpend")}:
+                  </span>
+                  <span className="text-lg font-bold text-primary">
+                    {actualSpendable} ⭐
+                  </span>
+                </div>
+              </>
+            )}
+
+            <div className="border-t border-blue-300 my-2"></div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-blue-800">Cost:</span>
+              <span className="text-sm font-medium text-blue-800">
+                {t("rewards.cost")}:
+              </span>
               <span className="text-lg font-bold text-danger">
                 -{reward.stars_cost} ⭐
               </span>
@@ -148,7 +225,7 @@ export default function RedeemRewardModal({
             <div className="border-t border-blue-300 my-2"></div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-blue-800">
-                After Redemption:
+                {t("credit.afterRedemption")}:
               </span>
               <span
                 className={`text-xl font-bold ${
@@ -160,13 +237,36 @@ export default function RedeemRewardModal({
             </div>
           </div>
 
+          {/* Credit Usage Warning */}
+          {willUseCredit && creditToUse > 0 && (
+            <CreditUsageWarning
+              creditAmount={creditToUse}
+              currentDebt={creditUsed}
+              newTotalDebt={newTotalDebt}
+              creditLimit={creditLimit}
+              locale={locale}
+            />
+          )}
+
+          {/* Cannot Afford Warning */}
+          {!canAfford && (
+            <div className="bg-danger/10 border border-danger rounded-lg p-4">
+              <p className="text-sm text-danger font-medium">
+                ❌ {t("credit.cannotAfford")}
+              </p>
+              <p className="text-xs text-gray-600 mt-1">
+                {t("credit.needMoreStars", { needed: reward.stars_cost - actualSpendable })}
+              </p>
+            </div>
+          )}
+
           {/* Note */}
           <div>
             <label
               htmlFor="note"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              {t("quests.note")} (Optional)
+              {t("quests.note")} ({t("common.optional")})
             </label>
             <textarea
               id="note"
@@ -174,7 +274,7 @@ export default function RedeemRewardModal({
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
-              placeholder="When would you like this reward?"
+              placeholder={locale === "zh-CN" ? "你想什么时候获得这个奖励？" : "When would you like this reward?"}
             />
           </div>
 
@@ -188,9 +288,8 @@ export default function RedeemRewardModal({
           {/* Info Box */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">
-              <span className="font-semibold">⏳ Note:</span> Your redemption
-              request will be sent to your parents. Stars will be deducted only
-              after approval!
+              <span className="font-semibold">⏳ {t("credit.note")}:</span>{" "}
+              {t("credit.redemptionPendingInfo")}
             </p>
           </div>
 
@@ -205,10 +304,18 @@ export default function RedeemRewardModal({
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              disabled={loading || !canAfford}
+              className={`flex-1 px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold ${
+                willUseCredit && creditToUse > 0 && !confirmCredit
+                  ? "bg-warning text-gray-900 hover:bg-warning/90"
+                  : "bg-primary text-gray-900 hover:bg-primary/90"
+              }`}
             >
-              {loading ? t("common.loading") : t("common.submit")}
+              {loading
+                ? t("common.loading")
+                : willUseCredit && creditToUse > 0 && !confirmCredit
+                ? t("credit.confirmBorrow")
+                : t("common.submit")}
             </button>
           </div>
         </form>

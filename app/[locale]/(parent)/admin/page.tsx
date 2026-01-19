@@ -103,6 +103,24 @@ export default async function AdminDashboard({
           </div>
         </Link>
 
+        {/* Credit Management */}
+        <Link href={`/${locale}/admin/credit`}>
+          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Credit Management
+              </h3>
+              <span className="text-3xl">💳</span>
+            </div>
+            <p className="text-xl font-semibold text-purple-600 mt-4">
+              {locale === "zh-CN" ? "信用管理" : "Manage Credit"}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              {locale === "zh-CN" ? "设置额度和利率" : "Set limits & rates"}
+            </p>
+          </div>
+        </Link>
+
         {/* Invite Parent */}
         <InviteParentCard familyId={user.family_id!} locale={locale} />
       </div>
