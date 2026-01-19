@@ -270,6 +270,146 @@ export interface Database {
           created_at?: string;
         };
       };
+      child_credit_settings: {
+        Row: {
+          id: string;
+          family_id: string;
+          child_id: string;
+          credit_limit: number;
+          original_credit_limit: number;
+          credit_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          child_id: string;
+          credit_limit?: number;
+          original_credit_limit?: number;
+          credit_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          child_id?: string;
+          credit_limit?: number;
+          original_credit_limit?: number;
+          credit_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      credit_interest_tiers: {
+        Row: {
+          id: string;
+          family_id: string;
+          tier_order: number;
+          min_debt: number;
+          max_debt: number | null;
+          interest_rate: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          tier_order: number;
+          min_debt: number;
+          max_debt?: number | null;
+          interest_rate: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          tier_order?: number;
+          min_debt?: number;
+          max_debt?: number | null;
+          interest_rate?: number;
+          created_at?: string;
+        };
+      };
+      credit_settlements: {
+        Row: {
+          id: string;
+          family_id: string;
+          child_id: string;
+          settlement_date: string;
+          balance_before: number;
+          debt_amount: number;
+          interest_calculated: number;
+          interest_breakdown: any;
+          credit_limit_before: number;
+          credit_limit_after: number;
+          credit_limit_adjustment: number;
+          settled_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          child_id: string;
+          settlement_date: string;
+          balance_before: number;
+          debt_amount: number;
+          interest_calculated: number;
+          interest_breakdown?: any;
+          credit_limit_before: number;
+          credit_limit_after: number;
+          credit_limit_adjustment: number;
+          settled_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          child_id?: string;
+          settlement_date?: string;
+          balance_before?: number;
+          debt_amount?: number;
+          interest_calculated?: number;
+          interest_breakdown?: any;
+          credit_limit_before?: number;
+          credit_limit_after?: number;
+          credit_limit_adjustment?: number;
+          settled_at?: string;
+        };
+      };
+      credit_transactions: {
+        Row: {
+          id: string;
+          family_id: string;
+          child_id: string;
+          redemption_id: string | null;
+          settlement_id: string | null;
+          transaction_type: "credit_used" | "credit_repaid" | "interest_charged";
+          amount: number;
+          balance_after: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          child_id: string;
+          redemption_id?: string | null;
+          settlement_id?: string | null;
+          transaction_type: "credit_used" | "credit_repaid" | "interest_charged";
+          amount: number;
+          balance_after: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          child_id?: string;
+          redemption_id?: string | null;
+          settlement_id?: string | null;
+          transaction_type?: "credit_used" | "credit_repaid" | "interest_charged";
+          amount?: number;
+          balance_after?: number;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       child_balances: {
@@ -279,6 +419,12 @@ export interface Database {
           name: string;
           current_stars: number;
           lifetime_stars: number;
+          credit_enabled: boolean;
+          credit_limit: number;
+          original_credit_limit: number;
+          credit_used: number;
+          available_credit: number;
+          spendable_stars: number;
         };
       };
     };
