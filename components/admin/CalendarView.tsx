@@ -6,6 +6,7 @@ interface Transaction {
   id: string;
   stars: number;
   created_at: string;
+  status?: string;
 }
 
 interface CalendarViewProps {
@@ -67,7 +68,9 @@ export default function CalendarView({
         const transactionLocalDate = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}-${String(transactionDate.getDate()).padStart(2, '0')}`;
         return transactionLocalDate === dateString;
       });
-      const totalStars = dayTransactions.reduce((sum, t) => sum + t.stars, 0);
+      const totalStars = dayTransactions
+        .filter((t) => t.status === "approved")
+        .reduce((sum, t) => sum + t.stars, 0);
       const today = new Date();
       const isToday =
         date.getDate() === today.getDate() &&
