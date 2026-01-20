@@ -76,12 +76,15 @@ export default function CreditManagementClient({
     setSettlementDayError(null);
 
     try {
-      const { error } = await (supabase
-        .from("families")
-        .update as any)({ settlement_day: newDay })
-        .eq("id", familyId);
+      const result = await (supabase
+        .from("families") as any)
+        .update({ settlement_day: newDay })
+        .eq("id", familyId)
+        .select();
 
-      if (error) throw error;
+      console.log("Settlement day update result:", { error: result.error, data: result.data, newDay, familyId });
+
+      if (result.error) throw result.error;
 
       setSettlementDay(newDay);
       router.refresh();
