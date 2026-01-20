@@ -70,7 +70,7 @@ export default function CreditManagementClient({
   };
 
   const handleSettlementDayChange = async (newDay: number) => {
-    if (newDay < 1 || newDay > 28) return;
+    if (newDay < 0 || newDay > 28) return;
 
     setSavingSettlementDay(true);
     setSettlementDayError(null);
@@ -235,6 +235,11 @@ export default function CreditManagementClient({
                 disabled={savingSettlementDay}
                 className="px-3 py-2 border border-blue-300 rounded-lg bg-white text-blue-800 font-medium focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:opacity-50"
               >
+                {/* Last day of month option */}
+                <option value={0}>
+                  {t("credit.lastDayOfMonth")}
+                </option>
+                {/* Days 1-28 */}
                 {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
                   <option key={day} value={day}>
                     {t("credit.dayOfMonth", { day })}
