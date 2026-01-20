@@ -33,11 +33,11 @@ export default async function CreditManagementPage({
     .eq("family_id", user.family_id!);
 
   // Fetch family settlement day setting
-  const { data: familySettings } = await adminClient
+  const { data: familySettings } = (await adminClient
     .from("families")
     .select("settlement_day")
     .eq("id", user.family_id!)
-    .single();
+    .single()) as { data: { settlement_day: number } | null };
 
   const settlementDay = familySettings?.settlement_day || 1;
 
