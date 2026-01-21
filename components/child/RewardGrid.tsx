@@ -11,16 +11,35 @@ type Reward = Database["public"]["Tables"]["rewards"]["Row"];
 interface RewardGridProps {
   rewards: Reward[];
   currentStars: number;
+  spendableStars?: number;
+  creditEnabled?: boolean;
+  creditLimit?: number;
+  creditUsed?: number;
+  availableCredit?: number;
   locale: string;
   userId: string;
+  // Parent redemption props
+  isParent?: boolean;
+  childId?: string;
+  familyId?: string;
 }
 
 export default function RewardGrid({
   rewards,
   currentStars,
+  spendableStars,
+  creditEnabled = false,
+  creditLimit = 0,
+  creditUsed = 0,
+  availableCredit = 0,
   locale,
   userId,
+  isParent = false,
+  childId,
+  familyId,
 }: RewardGridProps) {
+  // Use spendableStars if provided (includes credit), otherwise fall back to currentStars
+  const effectiveSpendable = spendableStars ?? currentStars;
   const t = useTranslations();
   const router = useRouter();
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
@@ -42,7 +61,7 @@ export default function RewardGrid({
   };
 
   const canAfford = (reward: Reward) => {
-    return currentStars >= reward.stars_cost;
+    return effectiveSpendable >= reward.stars_cost;
   };
 
   const getCategoryColor = (category: string | null) => {
@@ -152,7 +171,7 @@ export default function RewardGrid({
                   {!affordable && (
                     <div className="mt-4 p-2 bg-gray-100 rounded text-center">
                       <p className="text-xs text-gray-600">
-                        Need {reward.stars_cost - currentStars} more stars
+                        Need {reward.stars_cost - effectiveSpendable} more stars
                       </p>
                     </div>
                   )}
@@ -187,6 +206,14 @@ export default function RewardGrid({
             setSelectedReward(null);
             router.refresh();
           }}
+          creditEnabled={creditEnabled}
+          creditLimit={creditLimit}
+          creditUsed={creditUsed}
+          availableCredit={availableCredit}
+          spendableStars={effectiveSpendable}
+          isParent={isParent}
+          childId={childId}
+          familyId={familyId}
         />
       )}
     </>

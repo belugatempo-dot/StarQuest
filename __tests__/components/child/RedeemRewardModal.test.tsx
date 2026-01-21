@@ -329,6 +329,8 @@ describe("RedeemRewardModal", () => {
           child_note: null,
           uses_credit: false,
           credit_amount: 0,
+          reviewed_at: null,
+          reviewed_by: null,
         });
       });
 
@@ -364,6 +366,8 @@ describe("RedeemRewardModal", () => {
           child_note: "Saturday afternoon please",
           uses_credit: false,
           credit_amount: 0,
+          reviewed_at: null,
+          reviewed_by: null,
         });
       });
 

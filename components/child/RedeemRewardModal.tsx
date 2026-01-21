@@ -21,6 +21,10 @@ interface RedeemRewardModalProps {
   creditUsed?: number;
   availableCredit?: number;
   spendableStars?: number;
+  // Parent redemption props
+  isParent?: boolean;
+  childId?: string;
+  familyId?: string;
 }
 
 export default function RedeemRewardModal({
@@ -35,6 +39,9 @@ export default function RedeemRewardModal({
   creditUsed = 0,
   availableCredit = 0,
   spendableStars,
+  isParent = false,
+  childId,
+  familyId,
 }: RedeemRewardModalProps) {
   const t = useTranslations();
   const [note, setNote] = useState("");
@@ -65,8 +72,8 @@ export default function RedeemRewardModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // If using credit and hasn't confirmed, show warning
-    if (willUseCredit && creditToUse > 0 && !confirmCredit) {
+    // If using credit and hasn't confirmed, show warning (only for child mode)
+    if (!isParent && willUseCredit && creditToUse > 0 && !confirmCredit) {
       setConfirmCredit(true);
       return;
     }
@@ -75,39 +82,47 @@ export default function RedeemRewardModal({
     setError(null);
 
     try {
-      // Get family_id from the current user
-      const { data: userData } = await supabase
-        .from("users")
-        .select("family_id")
-        .eq("id", userId)
-        .maybeSingle();
+      // Get family_id - use provided familyId for parent mode, or fetch from user
+      let resolvedFamilyId = familyId;
+      if (!resolvedFamilyId) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("family_id")
+          .eq("id", userId)
+          .maybeSingle();
 
-      if (!(userData as any)?.family_id) {
-        throw new Error("Family not found");
+        if (!(userData as any)?.family_id) {
+          throw new Error("Family not found");
+        }
+        resolvedFamilyId = (userData as any).family_id;
       }
 
-      const familyId = (userData as any).family_id;
+      // Determine child_id: use childId for parent mode, userId for child mode
+      const targetChildId = isParent ? childId : userId;
 
       // Create redemption request with credit info
+      // Parent redemptions are auto-approved with no credit
       const { data: redemption, error: insertError } = await (supabase
         .from("redemptions")
         .insert as any)({
-          family_id: familyId,
-          child_id: userId,
+          family_id: resolvedFamilyId,
+          child_id: targetChildId,
           reward_id: reward.id,
           stars_spent: reward.stars_cost,
-          status: "pending",
+          status: isParent ? "approved" : "pending",
           child_note: note.trim() || null,
-          uses_credit: willUseCredit && creditToUse > 0,
-          credit_amount: creditToUse,
+          uses_credit: isParent ? false : (willUseCredit && creditToUse > 0),
+          credit_amount: isParent ? 0 : creditToUse,
+          reviewed_at: isParent ? new Date().toISOString() : null,
+          reviewed_by: isParent ? userId : null,
         })
         .select("id")
         .single();
 
       if (insertError) throw insertError;
 
-      // If using credit, record the credit transaction
-      if (willUseCredit && creditToUse > 0 && redemption?.id) {
+      // If using credit, record the credit transaction (only for child mode)
+      if (!isParent && willUseCredit && creditToUse > 0 && redemption?.id) {
         await (supabase.rpc as any)("record_credit_usage", {
           p_child_id: userId,
           p_redemption_id: redemption.id,
@@ -131,7 +146,7 @@ export default function RedeemRewardModal({
         <div className="p-6 border-b">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">
-              {t("rewards.requestRedemption")}
+              {isParent ? t("admin.redeemForChild") : t("rewards.requestRedemption")}
             </h2>
             <button
               onClick={onClose}
@@ -187,8 +202,8 @@ export default function RedeemRewardModal({
               </span>
             </div>
 
-            {/* Credit Info */}
-            {creditEnabled && availableCredit > 0 && (
+            {/* Credit Info - only show for child mode */}
+            {!isParent && creditEnabled && availableCredit > 0 && (
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-blue-800">
                   {t("credit.availableCredit")}:
@@ -199,7 +214,7 @@ export default function RedeemRewardModal({
               </div>
             )}
 
-            {creditEnabled && (
+            {!isParent && creditEnabled && (
               <>
                 <div className="border-t border-blue-300 my-2"></div>
                 <div className="flex justify-between items-center mb-2">
@@ -237,8 +252,8 @@ export default function RedeemRewardModal({
             </div>
           </div>
 
-          {/* Credit Usage Warning */}
-          {willUseCredit && creditToUse > 0 && (
+          {/* Credit Usage Warning - only show for child mode */}
+          {!isParent && willUseCredit && creditToUse > 0 && (
             <CreditUsageWarning
               creditAmount={creditToUse}
               currentDebt={creditUsed}
@@ -286,12 +301,21 @@ export default function RedeemRewardModal({
           )}
 
           {/* Info Box */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
-              <span className="font-semibold">⏳ {t("credit.note")}:</span>{" "}
-              {t("credit.redemptionPendingInfo")}
-            </p>
-          </div>
+          {isParent ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                <span className="font-semibold">✓ {t("credit.note")}:</span>{" "}
+                {t("admin.autoApproveInfo")}
+              </p>
+            </div>
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-sm text-yellow-800">
+                <span className="font-semibold">⏳ {t("credit.note")}:</span>{" "}
+                {t("credit.redemptionPendingInfo")}
+              </p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
@@ -306,14 +330,18 @@ export default function RedeemRewardModal({
               type="submit"
               disabled={loading || !canAfford}
               className={`flex-1 px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold ${
-                willUseCredit && creditToUse > 0 && !confirmCredit
+                !isParent && willUseCredit && creditToUse > 0 && !confirmCredit
                   ? "bg-warning text-gray-900 hover:bg-warning/90"
+                  : isParent
+                  ? "bg-success text-white hover:bg-success/90"
                   : "bg-primary text-gray-900 hover:bg-primary/90"
               }`}
             >
               {loading
                 ? t("common.loading")
-                : willUseCredit && creditToUse > 0 && !confirmCredit
+                : isParent
+                ? t("admin.redeemNow")
+                : !isParent && willUseCredit && creditToUse > 0 && !confirmCredit
                 ? t("credit.confirmBorrow")
                 : t("common.submit")}
             </button>
