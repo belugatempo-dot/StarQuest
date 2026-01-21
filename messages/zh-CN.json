@@ -180,7 +180,12 @@
     "batchApproveSuccess": "成功批准了 {count} 条请求",
     "batchRejectSuccess": "成功拒绝了 {count} 条请求",
     "batchRejectReason": "拒绝原因（将应用于所有选中项）",
-    "batchProcessing": "处理中..."
+    "batchProcessing": "处理中...",
+    "quickRedeem": "快速兑换",
+    "redeemForChild": "为孩子兑换奖励",
+    "noChildrenInFamily": "还没有孩子账户，请先添加孩子。",
+    "redeemNow": "立即兑换",
+    "autoApproveInfo": "此兑换将立即生效。"
   },
   "family": {
     "title": "家庭成员管理",
@@ -299,6 +304,7 @@
     "yourBalance": "你的余额",
     "youOwe": "你欠",
     "canSpend": "可消费",
+    "includesCredit": "（含 {amount} 信用额度）",
     "debtRepaymentInfo": "提示：当你赚取星星时，它们会自动优先用于偿还欠款。",
     "borrowingWarningTitle": "你正在借用星星！",
     "borrowingWarningMessage": "你将借用 {amount} 颗星星来完成此次兑换。",

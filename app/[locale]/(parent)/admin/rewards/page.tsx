@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import RewardManagement from "@/components/admin/RewardManagement";
+import ParentRedeemSection from "@/components/admin/ParentRedeemSection";
 
 export default async function RewardManagementPage({
   params,
@@ -20,10 +21,18 @@ export default async function RewardManagementPage({
     .order("stars_cost", { ascending: true })
     .order("created_at", { ascending: false });
 
+  // Fetch children in family
+  const { data: children } = await supabase
+    .from("users")
+    .select("*")
+    .eq("family_id", user.family_id!)
+    .eq("role", "child")
+    .order("name", { ascending: true });
+
   // Fetch child balances (includes spendable_stars = current_stars + available_credit)
   const { data: childBalances } = await supabase
     .from("child_balances")
-    .select("spendable_stars")
+    .select("child_id, current_stars, spendable_stars")
     .eq("family_id", user.family_id!);
 
   const t = await getTranslations();
@@ -83,6 +92,16 @@ export default async function RewardManagementPage({
           </div>
         </div>
       </div>
+
+      {/* Quick Redeem Section */}
+      <ParentRedeemSection
+        children={children || []}
+        rewards={rewards || []}
+        childBalances={(childBalances || []) as any}
+        locale={locale}
+        familyId={user.family_id!}
+        parentId={user.id}
+      />
 
       {/* Reward Management Component */}
       <RewardManagement

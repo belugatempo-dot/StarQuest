@@ -180,7 +180,12 @@
     "batchApproveSuccess": "Successfully approved {count} requests",
     "batchRejectSuccess": "Successfully rejected {count} requests",
     "batchRejectReason": "Rejection reason (applies to all selected)",
-    "batchProcessing": "Processing..."
+    "batchProcessing": "Processing...",
+    "quickRedeem": "Quick Redeem",
+    "redeemForChild": "Redeem for Child",
+    "noChildrenInFamily": "No children in family yet. Add a child first.",
+    "redeemNow": "Redeem Now",
+    "autoApproveInfo": "This redemption will be approved immediately."
   },
   "family": {
     "title": "Family Management",
@@ -300,6 +305,7 @@
     "yourBalance": "Your Balance",
     "youOwe": "You Owe",
     "canSpend": "Can Spend",
+    "includesCredit": "(includes {amount} credit)",
     "debtRepaymentInfo": "Tip: When you earn stars, they will automatically be used to pay off your debt first.",
     "borrowingWarningTitle": "You're Borrowing Stars!",
     "borrowingWarningMessage": "You will borrow {amount} stars to complete this redemption.",
