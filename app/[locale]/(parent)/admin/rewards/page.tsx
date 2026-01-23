@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import RewardManagement from "@/components/admin/RewardManagement";
 import ParentRedeemSection from "@/components/admin/ParentRedeemSection";
 
@@ -12,6 +12,7 @@ export default async function RewardManagementPage({
   const { locale } = await params;
   const user = await requireParent(locale);
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Fetch all rewards for this family
   const { data: rewards } = await supabase
@@ -21,19 +22,52 @@ export default async function RewardManagementPage({
     .order("stars_cost", { ascending: true })
     .order("created_at", { ascending: false });
 
-  // Fetch children in family
-  const { data: children } = await supabase
+  // Fetch children in family (try adminClient first, fallback to regular client)
+  let children: any[] | null = null;
+  let childrenError: any = null;
+
+  // Try admin client first (bypasses RLS)
+  const adminResult = await adminClient
     .from("users")
     .select("*")
     .eq("family_id", user.family_id!)
     .eq("role", "child")
     .order("name", { ascending: true });
 
+  if (adminResult.error) {
+    console.error("Admin client error fetching children:", adminResult.error);
+    childrenError = adminResult.error;
+  } else {
+    children = adminResult.data;
+  }
+
+  // Fallback to regular client if admin client returned no data
+  if (!children || children.length === 0) {
+    console.log("Trying regular client as fallback for children query...");
+    const regularResult = await supabase
+      .from("users")
+      .select("*")
+      .eq("family_id", user.family_id!)
+      .eq("role", "child")
+      .order("name", { ascending: true });
+
+    if (regularResult.error) {
+      console.error("Regular client error fetching children:", regularResult.error);
+    } else if (regularResult.data && regularResult.data.length > 0) {
+      children = regularResult.data;
+      console.log("Found children using regular client:", children.length);
+    }
+  }
+
   // Fetch child balances (includes spendable_stars = current_stars + available_credit)
-  const { data: childBalances } = await supabase
+  const { data: childBalances, error: balancesError } = await adminClient
     .from("child_balances")
     .select("child_id, current_stars, spendable_stars")
     .eq("family_id", user.family_id!);
+
+  if (balancesError) {
+    console.error("Error fetching child balances:", balancesError);
+  }
 
   const t = await getTranslations();
 

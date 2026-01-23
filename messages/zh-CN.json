@@ -123,6 +123,8 @@
     "availableRewards": "可兑换的奖励",
     "requestRedemption": "申请兑换",
     "cost": "花费",
+    "myRequests": "我的兑换申请",
+    "fulfilled": "已完成",
     "category": {
       "screen_time": "屏幕时间",
       "toys": "玩具",

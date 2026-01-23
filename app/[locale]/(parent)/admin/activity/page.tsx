@@ -1,7 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import ActivityList from "@/components/admin/ActivityList";
+import UnifiedActivityList from "@/components/shared/UnifiedActivityList";
+import type { UnifiedActivityItem } from "@/types/activity";
+import {
+  transformStarTransaction,
+  transformRedemption,
+  transformCreditTransaction,
+  sortActivitiesByDate,
+  calculateActivityStats,
+} from "@/lib/activity-utils";
 
 export default async function ActivityPage({
   params,
@@ -13,8 +21,8 @@ export default async function ActivityPage({
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
-  // Fetch all transactions for the family with quest and child details
-  const { data: transactions, error } = (await adminClient
+  // Fetch all star transactions for the family with quest and child details
+  const { data: transactions, error: txError } = (await adminClient
     .from("star_transactions")
     .select(`
       *,
@@ -32,20 +40,72 @@ export default async function ActivityPage({
     .eq("family_id", user.family_id!)
     .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
 
-  if (error) {
-    console.error("Error fetching transactions:", error);
+  if (txError) {
+    console.error("Error fetching transactions:", txError);
+  }
+
+  // Fetch all redemptions with reward and child details
+  const { data: redemptions, error: redemptionError } = (await adminClient
+    .from("redemptions")
+    .select(`
+      *,
+      rewards (
+        name_en,
+        name_zh,
+        icon,
+        category
+      ),
+      children:users!redemptions_child_id_fkey (
+        name,
+        avatar_url
+      )
+    `)
+    .eq("family_id", user.family_id!)
+    .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
+
+  if (redemptionError) {
+    console.error("Error fetching redemptions:", redemptionError);
+  }
+
+  // Fetch all credit transactions with child details
+  const { data: creditTransactions, error: creditError } = (await adminClient
+    .from("credit_transactions")
+    .select(`
+      *,
+      children:users!credit_transactions_child_id_fkey (
+        name,
+        avatar_url
+      )
+    `)
+    .eq("family_id", user.family_id!)
+    .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
+
+  if (creditError) {
+    console.error("Error fetching credit transactions:", creditError);
   }
 
   const t = await getTranslations();
 
-  // Calculate statistics - only count approved transactions for star totals
-  const totalRecords = transactions?.length || 0;
-  const approvedTransactions = transactions?.filter((t) => t.status === 'approved') || [];
-  const positiveRecords = approvedTransactions.filter((t) => t.stars > 0).length;
-  const negativeRecords = approvedTransactions.filter((t) => t.stars < 0).length;
-  const totalStarsGiven = approvedTransactions.reduce((sum, t) => sum + (t.stars > 0 ? t.stars : 0), 0);
-  const totalStarsDeducted = approvedTransactions.reduce((sum, t) => sum + (t.stars < 0 ? t.stars : 0), 0);
-  const netStars = totalStarsGiven + totalStarsDeducted;
+  // Convert to unified activity items using utility functions
+  const unifiedActivities: UnifiedActivityItem[] = [
+    ...(transactions || []).map((tx: any) => transformStarTransaction(tx, true)),
+    ...(redemptions || []).map((r: any) => transformRedemption(r, true)),
+    ...(creditTransactions || []).map((ct: any) => transformCreditTransaction(ct, true)),
+  ];
+
+  // Sort all activities by created_at descending
+  const sortedActivities = sortActivitiesByDate(unifiedActivities);
+
+  // Calculate statistics using utility function
+  const stats = calculateActivityStats(sortedActivities);
+  const {
+    totalRecords,
+    positiveRecords,
+    negativeRecords,
+    totalStarsGiven,
+    totalStarsDeducted,
+    netStars,
+  } = stats;
 
   return (
     <div className="space-y-6">
@@ -104,7 +164,7 @@ export default async function ActivityPage({
       </div>
 
       {/* Activity List with Filters */}
-      <ActivityList transactions={transactions || []} locale={locale} />
+      <UnifiedActivityList activities={sortedActivities} locale={locale} role="parent" />
     </div>
   );
 }

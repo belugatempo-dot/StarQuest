@@ -366,6 +366,88 @@ describe("RewardGrid", () => {
     });
   });
 
+  describe("Spendable Stars with Credit", () => {
+    it("should use spendableStars for affordability when provided", () => {
+      // currentStars is 50, but spendableStars is 200 (with credit)
+      render(
+        <RewardGrid
+          rewards={mockRewards}
+          currentStars={50}
+          spendableStars={200}
+          creditEnabled={true}
+          availableCredit={150}
+          locale="en"
+          userId="user-123"
+        />
+      );
+
+      // Park visit costs 150, should be affordable with spendableStars=200
+      const parkCard = screen.getByText("Park visit").closest(".cursor-pointer");
+      expect(parkCard).toBeInTheDocument();
+    });
+
+    it("should show correct 'need more stars' when using spendableStars", () => {
+      // spendableStars is 100, Park visit costs 150
+      render(
+        <RewardGrid
+          rewards={mockRewards}
+          currentStars={50}
+          spendableStars={100}
+          creditEnabled={true}
+          availableCredit={50}
+          locale="en"
+          userId="user-123"
+        />
+      );
+
+      // Need 50 more stars (150 - 100)
+      expect(screen.getByText(/Need 50 more stars/)).toBeInTheDocument();
+    });
+
+    it("should fall back to currentStars when spendableStars not provided", () => {
+      render(
+        <RewardGrid
+          rewards={mockRewards}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+        />
+      );
+
+      // Toy car costs 100, should be affordable with currentStars=100
+      const toyCard = screen.getByText("Toy car").closest(".cursor-pointer");
+      expect(toyCard).toBeInTheDocument();
+
+      // Park visit costs 150, should NOT be affordable
+      const parkCard = screen.getByText("Park visit").closest(".cursor-not-allowed");
+      expect(parkCard).toBeInTheDocument();
+    });
+
+    it("should allow clicking reward when affordable via credit", async () => {
+      const user = userEvent.setup();
+      render(
+        <RewardGrid
+          rewards={mockRewards}
+          currentStars={50}
+          spendableStars={200}
+          creditEnabled={true}
+          availableCredit={150}
+          locale="en"
+          userId="user-123"
+        />
+      );
+
+      // Park visit costs 150, affordable with spendableStars=200
+      const parkCard = screen.getByText("Park visit").closest("div");
+      await user.click(parkCard!);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("redeem-modal")).toBeInTheDocument();
+        expect(screen.getByText("Redeeming: Park visit")).toBeInTheDocument();
+      });
+    });
+  });
+
   describe("Category Colors", () => {
     it("should apply correct color for screen_time category", () => {
       const { container } = render(
