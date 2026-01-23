@@ -75,12 +75,6 @@ export default async function RewardManagementPage({
   const activeRewards = rewards?.filter((r: any) => r.is_active) || [];
   const inactiveRewards = rewards?.filter((r: any) => r.is_active === false) || [];
 
-  // Calculate total spendable stars for all children (includes credit)
-  const totalSpendableStars = (childBalances || []).reduce(
-    (sum: number, b: any) => sum + (b.spendable_stars || 0),
-    0
-  );
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -112,14 +106,6 @@ export default async function RewardManagementPage({
                 </div>
                 <div className="text-3xl font-bold text-gray-500">
                   {inactiveRewards.length}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">
-                  {locale === "zh-CN" ? "可用星星" : "Available ⭐"}
-                </div>
-                <div className="text-3xl font-bold text-primary">
-                  {totalSpendableStars}
                 </div>
               </div>
             </div>
