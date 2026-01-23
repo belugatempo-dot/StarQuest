@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";  // ✅ Correct
 import { createClient } from "../../lib/supabase/server";  // ❌ Avoid
 ```
 
-**Production URL:** https://starquest-qfo34obh3-beluga-tempos-projects.vercel.app
+**Production URL:** https://starquest-kappa.vercel.app
 
 ---
 
@@ -38,16 +38,17 @@ This project strictly follows **Test-Driven Development** methodology:
 ✅ **All PRs must pass 100% of existing tests**
 ✅ **No commits to main without passing test suite**
 
-### Current Test Metrics (as of 2026-01-17)
+### Current Test Metrics (as of 2026-01-23)
 
 ```
-✅ Test Suites: 28 passed, 28 total
-✅ Tests: 753 passed, 753 total
-⏱️  Execution Time: ~9s
-📊 Overall Coverage: ~52%
-   - components/admin: ~63%
+✅ Test Suites: 35 passed, 35 total
+✅ Tests: 983 passed, 983 total
+⏱️  Execution Time: ~15s
+📊 Overall Coverage: ~55%
+   - components/admin: ~65%
    - components/auth: ~95%
-   - components/child: ~83%
+   - components/child: ~85%
+   - components/shared: ~80%
    - components/ui: 100%
    - ThemeProvider: 100% (53 tests)
 ```
@@ -57,10 +58,10 @@ This project strictly follows **Test-Driven Development** methodology:
 ```
 __tests__/
 ├── components/
-│   ├── admin/              # 14 files, ~380 tests - Parent UI components
+│   ├── admin/              # 16 files, ~420 tests - Parent UI components
 │   ├── auth/               # 3 files, 96 tests - Authentication flows
-│   ├── child/              # 5 files, ~160 tests - Child UI components
-│   ├── ui/                 # 1 file, 11 tests - Shared components
+│   ├── child/              # 7 files, ~200 tests - Child UI components
+│   ├── ui/                 # 1 file, 11 tests - Shared UI components
 │   └── ThemeProvider.test.tsx  # 53 tests - Time-based theme switching
 ├── integration/            # 1 file, 13 tests - End-to-end flows
 ├── lib/                    # 1 file, 24 tests - Utility functions
@@ -122,7 +123,7 @@ npm run lint
 
 ### Testing Commands
 ```bash
-# Run all 753 tests
+# Run all 983 tests
 npm test
 
 # Watch mode for development
@@ -428,6 +429,158 @@ export default function RootLayout({ children }) {
 }
 ```
 
+### 10. Unified Activity List (NEW - 2026-01-23)
+
+**Purpose:** Single component for displaying activity history for both parent and child views with role-based permissions.
+
+**Architecture:**
+- `components/shared/UnifiedActivityList.tsx` - Main unified component
+- `types/activity.ts` - Unified types and permission matrix
+- `lib/activity-utils.ts` - Transform functions and helpers
+
+**Unified Activity Item Type:**
+```typescript
+export interface UnifiedActivityItem {
+  id: string;
+  type: "star_transaction" | "redemption" | "credit_transaction";
+  childId: string;
+  childName: string;
+  childAvatar: string | null;
+  stars: number;
+  description: string;
+  descriptionZh: string | null;
+  icon: string;
+  status: "pending" | "approved" | "rejected" | "fulfilled";
+  childNote: string | null;
+  parentResponse: string | null;
+  source: "parent_record" | "child_request" | null;
+  createdAt: string;
+  originalData?: any;
+  questId: string | null;
+  quests?: { ... } | null;
+}
+```
+
+**Permission Matrix:**
+| Feature | Parent | Child |
+|---------|--------|-------|
+| Edit transactions | ✅ | ❌ |
+| Delete transactions | ✅ | ❌ |
+| Batch approve/reject | ✅ | ❌ |
+| Resubmit rejected | ❌ | ✅ |
+| See all children | ✅ | ❌ |
+| Filter by type | ✅ | ❌ |
+| Statistics header | ✅ | ❌ |
+| Pagination (20 items) | ❌ | ✅ |
+
+**Usage:**
+```typescript
+import UnifiedActivityList from "@/components/shared/UnifiedActivityList";
+import { transformStarTransaction } from "@/lib/activity-utils";
+
+// Transform data to unified format
+const activities = transactions.map(tx => transformStarTransaction(tx, true));
+
+// Render with role
+<UnifiedActivityList
+  activities={activities}
+  locale={locale}
+  role="parent" // or "child"
+/>
+```
+
+**Backwards Compatibility:** Existing `ActivityList.tsx` and `TransactionList.tsx` are now thin wrappers that delegate to `UnifiedActivityList`.
+
+### 11. Credit System (NEW - 2026-01-20)
+
+**Purpose:** Allow children to borrow stars (credit) when they don't have enough for rewards, with configurable interest rates and settlement periods.
+
+**Key Components:**
+- `components/admin/CreditSettings.tsx` - Configure credit limits and interest
+- `components/admin/InterestTierManager.tsx` - Tiered interest rates
+- `components/admin/SettlementHistoryTable.tsx` - View settlement history
+- `components/child/CreditBalanceCard.tsx` - Display credit status
+- `components/child/CreditUsageWarning.tsx` - Warning before using credit
+
+**Database Tables:**
+- `credit_settings` - Family credit configuration
+- `credit_transactions` - Credit usage/repayment records
+- `interest_tiers` - Tiered interest rate configuration
+- `settlement_history` - Monthly settlement records
+- `child_balances` (view) - Computed spendable stars
+
+**Settlement Options:**
+- First day of month
+- 15th of month
+- Last day of month
+
+**Credit Transaction Types:**
+- `credit_used` - Stars borrowed
+- `credit_repaid` - Stars paid back
+- `interest_charged` - Interest applied at settlement
+
+### 12. Parent Redemption (Quick Redeem) (NEW - 2026-01-22)
+
+**Purpose:** Allow parents to redeem rewards directly for children without requiring child to request and parent to approve.
+
+**Component:** `components/admin/ParentRedeemSection.tsx`
+
+**Features:**
+- Select child from family
+- View child's available stars (including credit)
+- Browse active rewards
+- Redeem directly with "fulfilled" status
+- No approval workflow needed
+
+**Location:** Integrated into Manage Rewards page (`/admin/rewards`)
+
+**Usage Flow:**
+1. Parent navigates to Manage Rewards
+2. Selects a child in Quick Redeem section
+3. Views child's available stars
+4. Clicks reward to redeem
+5. Confirmation creates fulfilled redemption
+
+### 13. Admin Client with Fallback (NEW - 2026-01-23)
+
+**Purpose:** Robust Supabase client that works even when service role key is not configured.
+
+**Implementation:** `lib/supabase/server.ts`
+```typescript
+export function createAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceRoleKey) {
+    console.warn("SUPABASE_SERVICE_ROLE_KEY not set - using fallback");
+  }
+
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
+```
+
+**Fallback Pattern in Pages:**
+```typescript
+// Try admin client first, fallback to regular client
+let data = null;
+const adminResult = await adminClient.from("users").select("*")...;
+
+if (!adminResult.data || adminResult.data.length === 0) {
+  const regularResult = await supabase.from("users").select("*")...;
+  data = regularResult.data;
+} else {
+  data = adminResult.data;
+}
+```
+
+**When to Use Admin Client:**
+- Querying `users` table across family (bypasses RLS)
+- Operations requiring elevated permissions
+- Accessing `auth.users` indirectly
+
 ---
 
 ## Feature Implementation Status
@@ -467,7 +620,19 @@ export default function RootLayout({ children }) {
 - [x] Status display in activity history (pending/approved/rejected)
 - [x] Time-based day/night theme switching (Tiffany blue day, starry night)
 
-### 🚧 Phase 4: Advanced Features (IN PROGRESS)
+### ✅ Phase 4: Credit & Redemption System (COMPLETED - 2026-01-23)
+- [x] Credit system with configurable limits
+- [x] Tiered interest rates (InterestTierManager)
+- [x] Configurable settlement day (1st, 15th, last day of month)
+- [x] Settlement history tracking
+- [x] Credit balance display for children
+- [x] Credit usage warnings before borrowing
+- [x] Parent Quick Redeem feature (direct redemption)
+- [x] Unified Activity List (shared parent/child component)
+- [x] Role-based permission system for activities
+- [x] Admin client fallback mechanism
+
+### 🚧 Phase 5: Advanced Features (IN PROGRESS)
 - [ ] Advanced statistics and reports
 - [ ] Family settings page
 - [ ] Email notifications
@@ -881,6 +1046,7 @@ cookies().set(name as any, value as any, options as any);
 **Environment Variables (Vercel Dashboard):**
 - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon/public key
+- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key (for admin operations)
 
 **Setting Environment Variables:**
 ```bash
@@ -919,7 +1085,7 @@ vercel rm [deployment-url]
 ### Pre-Deployment Checklist
 
 ✅ **Before deploying:**
-1. Run full test suite: `npm test` (all 753 tests must pass)
+1. Run full test suite: `npm test` (all 983 tests must pass)
 2. Build locally: `npm run build` (must complete without errors)
 3. Check environment variables in Vercel dashboard
 4. Update Supabase redirect URLs (see below)
@@ -1019,7 +1185,10 @@ After deployment, verify:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # Optional but recommended
 ```
+
+**Note:** `SUPABASE_SERVICE_ROLE_KEY` is needed for admin operations like querying all users in a family. Without it, the app will fall back to regular client queries which may be limited by RLS policies.
 
 **Database Setup:**
 1. Create Supabase project
@@ -1166,8 +1335,8 @@ Before marking PR as ready:
 
 ---
 
-**Last Updated:** 2026-01-17
-**Version:** 3.2 (Phase 3 Complete - Production Ready)
-**Test Suite:** 753 tests passing (100%)
+**Last Updated:** 2026-01-23
+**Version:** 4.0 (Phase 4 Complete - Credit System & Unified Activity)
+**Test Suite:** 983 tests passing (100%)
 **Deployment:** Vercel Production
 **Made with ❤️ by Beluga Tempo | 鲸律**
