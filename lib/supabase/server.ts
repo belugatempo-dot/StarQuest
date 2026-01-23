@@ -32,9 +32,15 @@ export async function createClient() {
 
 // Admin client with service role (bypasses RLS)
 export function createAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceRoleKey) {
+    console.warn("SUPABASE_SERVICE_ROLE_KEY is not set - admin client will not work properly");
+  }
+
   return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
         autoRefreshToken: false,

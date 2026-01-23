@@ -123,6 +123,8 @@
     "availableRewards": "Available Rewards",
     "requestRedemption": "Request Redemption",
     "cost": "Cost",
+    "myRequests": "My Redemption Requests",
+    "fulfilled": "Fulfilled",
     "category": {
       "screen_time": "Screen Time",
       "toys": "Toys",

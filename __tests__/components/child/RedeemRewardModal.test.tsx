@@ -330,7 +330,6 @@ describe("RedeemRewardModal", () => {
           uses_credit: false,
           credit_amount: 0,
           reviewed_at: null,
-          reviewed_by: null,
         });
       });
 
@@ -367,7 +366,6 @@ describe("RedeemRewardModal", () => {
           uses_credit: false,
           credit_amount: 0,
           reviewed_at: null,
-          reviewed_by: null,
         });
       });
 

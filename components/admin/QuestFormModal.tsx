@@ -209,6 +209,14 @@ export default function QuestFormModal({
                 </button>
               ))}
             </div>
+            {/* Warning for non-bonus quests */}
+            {type !== "bonus" && (
+              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                {locale === "zh-CN"
+                  ? "⚠️ 注意：孩子只能看到「奖励」类型的任务。「职责」和「违规」类型仅家长可见。"
+                  : "⚠️ Note: Children can only see 'Bonus' quests. 'Duty' and 'Violation' quests are parent-only."}
+              </div>
+            )}
           </div>
 
           {/* Quest Scope */}

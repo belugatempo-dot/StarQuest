@@ -14,16 +14,39 @@ export default async function FamilyManagementPage({
   const adminClient = createAdminClient();
   const t = await getTranslations();
 
-  // Fetch all family members using admin client to bypass RLS
-  const { data: members, error } = await adminClient
+  // Fetch all family members (try adminClient first, fallback to regular client)
+  let members: any[] | null = null;
+
+  // Try admin client first (bypasses RLS)
+  const adminResult = await adminClient
     .from("users")
     .select("*")
     .eq("family_id", user.family_id!)
     .order("role", { ascending: false }) // parents first
     .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching family members:", error);
+  if (adminResult.error) {
+    console.error("Admin client error fetching family members:", adminResult.error);
+  } else {
+    members = adminResult.data;
+  }
+
+  // Fallback to regular client if admin client returned no data
+  if (!members || members.length === 0) {
+    console.log("Trying regular client as fallback for members query...");
+    const regularResult = await supabase
+      .from("users")
+      .select("*")
+      .eq("family_id", user.family_id!)
+      .order("role", { ascending: false })
+      .order("created_at", { ascending: true });
+
+    if (regularResult.error) {
+      console.error("Regular client error fetching family members:", regularResult.error);
+    } else if (regularResult.data && regularResult.data.length > 0) {
+      members = regularResult.data;
+      console.log("Found members using regular client:", members.length);
+    }
   }
 
   // Fetch family info

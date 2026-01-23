@@ -114,7 +114,6 @@ export default function RedeemRewardModal({
           uses_credit: isParent ? false : (willUseCredit && creditToUse > 0),
           credit_amount: isParent ? 0 : creditToUse,
           reviewed_at: isParent ? new Date().toISOString() : null,
-          reviewed_by: isParent ? userId : null,
         })
         .select("id")
         .single();

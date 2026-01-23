@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import TransactionList from "@/components/child/TransactionList";
+import UnifiedActivityList from "@/components/shared/UnifiedActivityList";
+import { transformStarTransaction, sortActivitiesByDate } from "@/lib/activity-utils";
 
 export default async function HistoryPage({
   params,
@@ -33,6 +34,12 @@ export default async function HistoryPage({
 
   const t = await getTranslations();
 
+  // Transform transactions to unified format
+  const unifiedActivities = (transactions || []).map((tx: any) =>
+    transformStarTransaction(tx, false)
+  );
+  const sortedActivities = sortActivitiesByDate(unifiedActivities);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -45,10 +52,12 @@ export default async function HistoryPage({
         </p>
       </div>
 
-      {/* Transaction List */}
-      <TransactionList
-        transactions={transactions || []}
+      {/* Activity List */}
+      <UnifiedActivityList
+        activities={sortedActivities}
         locale={locale}
+        role="child"
+        currentChildId={user.id}
       />
     </div>
   );
