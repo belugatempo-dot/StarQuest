@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import QuestManagement from "@/components/admin/QuestManagement";
+import CategoryManagement from "@/components/admin/CategoryManagement";
+import type { QuestCategory } from "@/types/category";
 
 export default async function QuestManagementPage({
   params,
@@ -21,6 +23,15 @@ export default async function QuestManagementPage({
     .order("stars", { ascending: false })
     .order("created_at", { ascending: false });
 
+  // Fetch quest categories for this family
+  const { data: categoriesData } = await supabase
+    .from("quest_categories")
+    .select("*")
+    .eq("family_id", user.family_id!)
+    .order("sort_order", { ascending: true });
+
+  const categories = (categoriesData || []) as QuestCategory[];
+
   const t = await getTranslations();
 
   // Count positive and negative quests
@@ -37,19 +48,25 @@ export default async function QuestManagementPage({
               {t("admin.questManagement")}
             </h1>
             <p className="text-gray-700">
-              Manage tasks and activities for your children
+              {locale === "zh-CN"
+                ? "管理孩子的任务和活动"
+                : "Manage tasks and activities for your children"}
             </p>
           </div>
           <div className="text-right">
             <div className="flex gap-6">
               <div>
-                <div className="text-sm text-gray-600 mb-1">Positive Tasks</div>
+                <div className="text-sm text-gray-600 mb-1">
+                  {locale === "zh-CN" ? "正向任务" : "Positive Tasks"}
+                </div>
                 <div className="text-3xl font-bold text-success">
                   {positiveQuests.length}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">Negative Tasks</div>
+                <div className="text-sm text-gray-600 mb-1">
+                  {locale === "zh-CN" ? "负向任务" : "Negative Tasks"}
+                </div>
                 <div className="text-3xl font-bold text-danger">
                   {negativeQuests.length}
                 </div>
@@ -59,11 +76,19 @@ export default async function QuestManagementPage({
         </div>
       </div>
 
+      {/* Category Management Component */}
+      <CategoryManagement
+        categories={categories}
+        locale={locale}
+        familyId={user.family_id!}
+      />
+
       {/* Quest Management Component */}
       <QuestManagement
         quests={quests || []}
         locale={locale}
         familyId={user.family_id!}
+        categories={categories}
       />
     </div>
   );
