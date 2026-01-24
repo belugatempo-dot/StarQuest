@@ -3,19 +3,23 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import type { Quest, QuestType, QuestScope, QuestCategory } from "@/types/quest";
+import type { Quest, QuestType, QuestScope } from "@/types/quest";
+import type { QuestCategory as QuestCategoryType } from "@/types/category";
 
 interface QuestFormModalProps {
   quest?: Quest;
   familyId: string;
   locale: string;
+  categories?: QuestCategoryType[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
 const QUEST_TYPES: QuestType[] = ["duty", "bonus", "violation"];
 const QUEST_SCOPES: QuestScope[] = ["self", "family", "other"];
-const QUEST_CATEGORIES: QuestCategory[] = [
+
+// Fallback categories if none provided (for backwards compatibility)
+const DEFAULT_CATEGORY_NAMES = [
   "health",
   "study",
   "chores",
@@ -40,6 +44,7 @@ export default function QuestFormModal({
   quest,
   familyId,
   locale,
+  categories = [],
   onClose,
   onSuccess,
 }: QuestFormModalProps) {
@@ -47,14 +52,17 @@ export default function QuestFormModal({
   const supabase = createClient();
   const isEditMode = !!quest;
 
+  // Get active categories, sorted by sort_order
+  const activeCategories = categories
+    .filter((c) => c.is_active)
+    .sort((a, b) => a.sort_order - b.sort_order);
+
   // Form state
   const [nameEn, setNameEn] = useState(quest?.name_en || "");
   const [nameZh, setNameZh] = useState(quest?.name_zh || "");
   const [type, setType] = useState<QuestType>(quest?.type || "bonus");
   const [scope, setScope] = useState<QuestScope>(quest?.scope || "self");
-  const [category, setCategory] = useState<QuestCategory | "">(
-    quest?.category || ""
-  );
+  const [category, setCategory] = useState<string>(quest?.category || "");
   const [stars, setStars] = useState(quest?.stars || 0);
   const [icon, setIcon] = useState(quest?.icon || DEFAULT_ICONS.bonus);
   const [isActive, setIsActive] = useState(quest?.is_active ?? true);
@@ -252,34 +260,27 @@ export default function QuestFormModal({
             </label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as QuestCategory | "")}
+              onChange={(e) => setCategory(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
             >
               <option value="">
                 {locale === "zh-CN" ? "-- 选择类别 --" : "-- Select Category --"}
               </option>
-              {QUEST_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {locale === "zh-CN"
-                    ? {
-                        health: "健康",
-                        study: "学业",
-                        chores: "家务",
-                        hygiene: "卫生",
-                        learning: "学习",
-                        social: "社交",
-                        creativity: "创造力",
-                        exercise: "运动",
-                        reading: "阅读",
-                        music: "音乐",
-                        art: "艺术",
-                        kindness: "善良",
-                        responsibility: "责任",
-                        other: "其他",
-                      }[cat]
-                    : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </option>
-              ))}
+              {activeCategories.length > 0 ? (
+                // Use dynamic categories from database
+                activeCategories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.icon} {locale === "zh-CN" && cat.name_zh ? cat.name_zh : cat.name_en}
+                  </option>
+                ))
+              ) : (
+                // Fallback to default category names if no categories provided
+                DEFAULT_CATEGORY_NAMES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 

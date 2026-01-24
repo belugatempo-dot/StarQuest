@@ -6,18 +6,21 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Quest } from "@/types/quest";
 import { groupQuests } from "@/types/quest";
+import type { QuestCategory } from "@/types/category";
 import QuestFormModal from "./QuestFormModal";
 
 interface QuestManagementProps {
   quests: Quest[];
   locale: string;
   familyId: string;
+  categories?: QuestCategory[];
 }
 
 export default function QuestManagement({
   quests,
   locale,
   familyId,
+  categories = [],
 }: QuestManagementProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -170,9 +173,13 @@ export default function QuestManagement({
                                     </span>
                                     {quest.category && (
                                       <span className="text-xs px-2 py-1 bg-gray-200 rounded">
-                                        {locale === "zh-CN"
-                                          ? t(`quests.category.${quest.category}`)
-                                          : quest.category}
+                                        {(() => {
+                                          const cat = categories.find(c => c.name === quest.category);
+                                          if (cat) {
+                                            return `${cat.icon} ${locale === "zh-CN" && cat.name_zh ? cat.name_zh : cat.name_en}`;
+                                          }
+                                          return quest.category;
+                                        })()}
                                       </span>
                                     )}
                                     {!quest.is_active && (
@@ -246,6 +253,7 @@ export default function QuestManagement({
         <QuestFormModal
           familyId={familyId}
           locale={locale}
+          categories={categories}
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             setShowAddModal(false);
@@ -259,6 +267,7 @@ export default function QuestManagement({
           quest={editingQuest}
           familyId={familyId}
           locale={locale}
+          categories={categories}
           onClose={() => setEditingQuest(null)}
           onSuccess={() => {
             setEditingQuest(null);
