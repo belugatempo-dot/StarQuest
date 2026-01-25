@@ -12,6 +12,22 @@ interface CategoryManagementProps {
   onCategoriesChange?: () => void;
 }
 
+// Default categories to initialize (matching QuestFormModal fallback)
+const DEFAULT_CATEGORIES = [
+  { name: "health", name_en: "Health", name_zh: "健康", icon: "💪" },
+  { name: "study", name_en: "Study", name_zh: "学习", icon: "📚" },
+  { name: "chores", name_en: "Chores", name_zh: "家务", icon: "🧹" },
+  { name: "social", name_en: "Social", name_zh: "社交", icon: "👫" },
+  { name: "creativity", name_en: "Creativity", name_zh: "创意", icon: "🎨" },
+  { name: "exercise", name_en: "Exercise", name_zh: "运动", icon: "🏃" },
+  { name: "reading", name_en: "Reading", name_zh: "阅读", icon: "📖" },
+  { name: "music", name_en: "Music", name_zh: "音乐", icon: "🎵" },
+  { name: "art", name_en: "Art", name_zh: "艺术", icon: "🖼️" },
+  { name: "kindness", name_en: "Kindness", name_zh: "善良", icon: "💝" },
+  { name: "responsibility", name_en: "Responsibility", name_zh: "责任", icon: "✅" },
+  { name: "other", name_en: "Other", name_zh: "其他", icon: "📦" },
+];
+
 export default function CategoryManagement({
   categories,
   locale,
@@ -24,6 +40,7 @@ export default function CategoryManagement({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<QuestCategory | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initializingDefaults, setInitializingDefaults] = useState(false);
   const [error, setError] = useState("");
 
   // Form state
@@ -44,6 +61,41 @@ export default function CategoryManagement({
     setShowAddForm(false);
     setEditingCategory(null);
     setError("");
+  };
+
+  const handleInitializeDefaults = async () => {
+    setInitializingDefaults(true);
+    setError("");
+
+    try {
+      const newCategories = DEFAULT_CATEGORIES.map((cat, index) => ({
+        family_id: familyId,
+        name: cat.name,
+        name_en: cat.name_en,
+        name_zh: cat.name_zh,
+        icon: cat.icon,
+        sort_order: index + 1,
+        is_active: true,
+      }));
+
+      const { error: insertError } = await (supabase
+        .from("quest_categories")
+        .insert as any)(newCategories);
+
+      if (insertError) throw insertError;
+
+      router.refresh();
+      onCategoriesChange?.();
+    } catch (err: any) {
+      console.error("Error initializing categories:", err);
+      setError(
+        locale === "zh-CN"
+          ? `初始化失败: ${err.message}`
+          : `Initialization failed: ${err.message}`
+      );
+    } finally {
+      setInitializingDefaults(false);
+    }
   };
 
   const handleEdit = (category: QuestCategory) => {
@@ -307,9 +359,34 @@ export default function CategoryManagement({
       {/* Categories List */}
       <div className="space-y-2">
         {sortedCategories.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            {locale === "zh-CN" ? "暂无类别" : "No categories yet"}
-          </p>
+          <div className="text-center py-8 space-y-4">
+            <p className="text-gray-500">
+              {locale === "zh-CN" ? "暂无类别" : "No categories yet"}
+            </p>
+            {error && (
+              <div className="mx-auto max-w-md bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded">
+                {error}
+              </div>
+            )}
+            <button
+              onClick={handleInitializeDefaults}
+              disabled={initializingDefaults}
+              className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50 font-medium"
+            >
+              {initializingDefaults
+                ? locale === "zh-CN"
+                  ? "初始化中..."
+                  : "Initializing..."
+                : locale === "zh-CN"
+                ? "📦 初始化默认类别"
+                : "📦 Initialize Default Categories"}
+            </button>
+            <p className="text-sm text-gray-400">
+              {locale === "zh-CN"
+                ? "将添加 12 个常用类别（健康、学习、家务等）"
+                : "Will add 12 common categories (Health, Study, Chores, etc.)"}
+            </p>
+          </div>
         ) : (
           sortedCategories.map((category) => (
             <div

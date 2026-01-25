@@ -6,7 +6,6 @@ import type { UnifiedActivityItem } from "@/types/activity";
 import {
   transformStarTransaction,
   transformRedemption,
-  transformCreditTransaction,
   sortActivitiesByDate,
   calculateActivityStats,
 } from "@/lib/activity-utils";
@@ -87,11 +86,16 @@ export default async function ActivityPage({
   const t = await getTranslations();
 
   // Convert to unified activity items using utility functions
+  // Credit transactions are not shown in activity list - only displayed as a summary tile
   const unifiedActivities: UnifiedActivityItem[] = [
     ...(transactions || []).map((tx: any) => transformStarTransaction(tx, true)),
     ...(redemptions || []).map((r: any) => transformRedemption(r, true)),
-    ...(creditTransactions || []).map((ct: any) => transformCreditTransaction(ct, true)),
   ];
+
+  // Calculate total credit borrowed (credit_used transactions)
+  const totalCreditBorrowed = (creditTransactions || [])
+    .filter((ct: any) => ct.transaction_type === 'credit_used')
+    .reduce((sum: number, ct: any) => sum + ct.amount, 0);
 
   // Sort all activities by created_at descending
   const sortedActivities = sortActivitiesByDate(unifiedActivities);
@@ -122,7 +126,7 @@ export default async function ActivityPage({
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "总记录" : "Total Records"}
@@ -152,6 +156,12 @@ export default async function ActivityPage({
             {locale === "zh-CN" ? "总星星-" : "Total Stars -"}
           </div>
           <div className="text-2xl font-bold text-red-600">{totalStarsDeducted}</div>
+        </div>
+        <div className="glass-card rounded-lg shadow-md p-4 border-2 border-blue-200 bg-blue-50">
+          <div className="text-sm text-blue-600 mb-1">
+            💳 {locale === "zh-CN" ? "信用借用" : "Credit Borrowed"}
+          </div>
+          <div className="text-2xl font-bold text-blue-600">{totalCreditBorrowed}</div>
         </div>
         <div className="net-stars-card rounded-lg shadow-lg p-4">
           <div className="text-sm text-star-glow mb-1 relative z-10">

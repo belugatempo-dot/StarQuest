@@ -96,8 +96,7 @@ export type ActivityFilterType =
   | "positive"
   | "negative"
   | "stars"
-  | "redemptions"
-  | "credit";
+  | "redemptions";
 
 // Status filter types
 export type ActivityStatusFilter = "all" | "approved" | "pending" | "rejected";
