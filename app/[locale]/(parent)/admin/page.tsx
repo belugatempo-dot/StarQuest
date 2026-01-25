@@ -37,6 +37,16 @@ export default async function AdminDashboard({
     .eq("family_id", user.family_id!)
     .eq("role", "child");
 
+  // Fetch family parents count
+  const { count: parentsCount } = await adminClient
+    .from("users")
+    .select("*", { count: "exact", head: true })
+    .eq("family_id", user.family_id!)
+    .eq("role", "parent");
+
+  const childrenCount = children?.length || 0;
+  const totalFamilyMembers = (parentsCount || 0) + childrenCount;
+
   // Fetch children balances
   const { data: balances } = await adminClient
     .from("child_balances")
@@ -73,17 +83,19 @@ export default async function AdminDashboard({
           </div>
         </Link>
 
-        {/* Total Children */}
+        {/* Family Members */}
         <Link href={`/${locale}/admin/family`}>
           <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-gray-700">
-                Family Members
+                {locale === "zh-CN" ? "家庭成员" : "Family Members"}
               </h3>
               <span className="text-3xl">👥</span>
             </div>
-            <p className="text-4xl font-bold text-secondary">{children?.length || 0}</p>
-            <p className="text-sm text-gray-500 mt-1">Children</p>
+            <p className="text-4xl font-bold text-secondary">{totalFamilyMembers}</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {parentsCount || 0} {locale === "zh-CN" ? "家长" : (parentsCount === 1 ? "parent" : "parents")}, {childrenCount} {locale === "zh-CN" ? "孩子" : (childrenCount === 1 ? "child" : "children")}
+            </p>
           </div>
         </Link>
 

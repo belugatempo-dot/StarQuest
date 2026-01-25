@@ -92,8 +92,6 @@ export default function UnifiedActivityList({
         filtered = filtered.filter((a) => a.type === "star_transaction");
       } else if (filterType === "redemptions") {
         filtered = filtered.filter((a) => a.type === "redemption");
-      } else if (filterType === "credit") {
-        filtered = filtered.filter((a) => a.type === "credit_transaction");
       }
     }
 
@@ -389,11 +387,6 @@ export default function UnifiedActivityList({
                       key: "redemptions",
                       label: `🎁 ${locale === "zh-CN" ? "兑换" : "Redemptions"}`,
                       bgActive: "bg-purple-500",
-                    },
-                    {
-                      key: "credit",
-                      label: `💳 ${locale === "zh-CN" ? "信用" : "Credit"}`,
-                      bgActive: "bg-blue-600",
                     },
                     {
                       key: "positive",
