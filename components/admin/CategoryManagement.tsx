@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { QuestCategory, QuestCategoryInsert } from "@/types/category";
+import { DEFAULT_CATEGORIES } from "@/types/category";
 
 interface CategoryManagementProps {
   categories: QuestCategory[];
@@ -11,22 +12,6 @@ interface CategoryManagementProps {
   familyId: string;
   onCategoriesChange?: () => void;
 }
-
-// Default categories to initialize (matching QuestFormModal fallback)
-const DEFAULT_CATEGORIES = [
-  { name: "health", name_en: "Health", name_zh: "健康", icon: "💪" },
-  { name: "study", name_en: "Study", name_zh: "学习", icon: "📚" },
-  { name: "chores", name_en: "Chores", name_zh: "家务", icon: "🧹" },
-  { name: "social", name_en: "Social", name_zh: "社交", icon: "👫" },
-  { name: "creativity", name_en: "Creativity", name_zh: "创意", icon: "🎨" },
-  { name: "exercise", name_en: "Exercise", name_zh: "运动", icon: "🏃" },
-  { name: "reading", name_en: "Reading", name_zh: "阅读", icon: "📖" },
-  { name: "music", name_en: "Music", name_zh: "音乐", icon: "🎵" },
-  { name: "art", name_en: "Art", name_zh: "艺术", icon: "🖼️" },
-  { name: "kindness", name_en: "Kindness", name_zh: "善良", icon: "💝" },
-  { name: "responsibility", name_en: "Responsibility", name_zh: "责任", icon: "✅" },
-  { name: "other", name_en: "Other", name_zh: "其他", icon: "📦" },
-];
 
 export default function CategoryManagement({
   categories,
@@ -68,13 +53,13 @@ export default function CategoryManagement({
     setError("");
 
     try {
-      const newCategories = DEFAULT_CATEGORIES.map((cat, index) => ({
+      const newCategories = DEFAULT_CATEGORIES.map((cat) => ({
         family_id: familyId,
         name: cat.name,
         name_en: cat.name_en,
         name_zh: cat.name_zh,
         icon: cat.icon,
-        sort_order: index + 1,
+        sort_order: cat.sort_order ?? 99,
         is_active: true,
       }));
 
@@ -383,8 +368,8 @@ export default function CategoryManagement({
             </button>
             <p className="text-sm text-gray-400">
               {locale === "zh-CN"
-                ? "将添加 12 个常用类别（健康、学习、家务等）"
-                : "Will add 12 common categories (Health, Study, Chores, etc.)"}
+                ? "将添加 14 个常用类别（健康、学习、家务等）"
+                : "Will add 14 common categories (Health, Study, Chores, etc.)"}
             </p>
           </div>
         ) : (
