@@ -23,6 +23,8 @@ const DEFAULT_CATEGORY_NAMES = [
   "health",
   "study",
   "chores",
+  "hygiene",
+  "learning",
   "social",
   "creativity",
   "exercise",
