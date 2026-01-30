@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ModalFrame from "@/components/ui/ModalFrame";
@@ -24,6 +25,7 @@ export default function EditTransactionModal({
   locale,
   onClose,
 }: EditTransactionModalProps) {
+  const t = useTranslations();
   const router = useRouter();
   const supabase = createClient();
 
@@ -81,12 +83,12 @@ export default function EditTransactionModal({
         ? transaction.quests.name_zh || transaction.quests.name_en
         : transaction.quests.name_en;
     }
-    return locale === "zh-CN" ? "未知任务" : "Unknown quest";
+    return t("editTransaction.unknownQuest");
   };
 
   return (
     <ModalFrame
-      title={locale === "zh-CN" ? "编辑记录" : "Edit Record"}
+      title={t("editTransaction.title")}
       error={error}
       onClose={onClose}
       maxWidth="md"
@@ -95,16 +97,14 @@ export default function EditTransactionModal({
         {/* Quest Name (Read-only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "任务" : "Quest"}
+            {t("editTransaction.quest")}
           </label>
           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
             {getQuestName()}
           </div>
           {!transaction.quest_id && (
             <p className="text-xs text-gray-500 mt-1">
-              {locale === "zh-CN"
-                ? "自定义描述可以修改"
-                : "Custom description can be edited"}
+              {t("editTransaction.customDescEditable")}
             </p>
           )}
         </div>
@@ -113,7 +113,7 @@ export default function EditTransactionModal({
         {!transaction.quest_id && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {locale === "zh-CN" ? "自定义描述" : "Custom Description"}
+              {t("editTransaction.customDescription")}
             </label>
             <input
               type="text"
@@ -128,7 +128,7 @@ export default function EditTransactionModal({
         {/* Stars */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "星星数量" : "Stars Amount"}
+            {t("editTransaction.starsAmount")}
           </label>
           <input
             type="number"
@@ -138,32 +138,28 @@ export default function EditTransactionModal({
             required
           />
           <p className="text-xs text-gray-500 mt-1">
-            {locale === "zh-CN"
-              ? "正数表示加分，负数表示扣分"
-              : "Positive for rewards, negative for deductions"}
+            {t("editTransaction.starsHint")}
           </p>
         </div>
 
         {/* Parent Note */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "家长备注" : "Parent Note"}
+            {t("editTransaction.parentNote")}
           </label>
           <textarea
             value={parentResponse}
             onChange={(e) => setParentResponse(e.target.value)}
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
-            placeholder={
-              locale === "zh-CN" ? "添加备注（可选）" : "Add note (optional)"
-            }
+            placeholder={t("editTransaction.parentNotePlaceholder")}
           />
         </div>
 
         {/* Status Selector */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "状态" : "Status"}
+            {t("common.status")}
           </label>
           <select
             value={status}
@@ -171,20 +167,21 @@ export default function EditTransactionModal({
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           >
             <option value="approved">
-              {locale === "zh-CN" ? "已批准" : "Approved"}
+              {t("status.approved")}
             </option>
             <option value="pending">
-              {locale === "zh-CN" ? "待审批" : "Pending"}
+              {t("status.pending")}
             </option>
             <option value="rejected">
-              {locale === "zh-CN" ? "已拒绝" : "Rejected"}
+              {t("status.rejected")}
             </option>
           </select>
           {status !== transaction.status && (
             <p className="text-xs text-blue-600 mt-1">
-              {locale === "zh-CN"
-                ? `状态将从"${transaction.status === "approved" ? "已批准" : transaction.status === "pending" ? "待审批" : "已拒绝"}"更改为"${status === "approved" ? "已批准" : status === "pending" ? "待审批" : "已拒绝"}"`
-                : `Status will change from "${transaction.status}" to "${status}"`}
+              {t("editTransaction.statusChangeHint", {
+                from: t(`status.${transaction.status}` as any),
+                to: t(`status.${status}` as any),
+              })}
             </p>
           )}
         </div>
@@ -192,7 +189,7 @@ export default function EditTransactionModal({
         {/* Date (Read-only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "创建日期" : "Created Date"}
+            {t("editTransaction.createdDate")}
           </label>
           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
             {new Date(transaction.created_at).toLocaleString(
@@ -205,9 +202,7 @@ export default function EditTransactionModal({
         {(transaction.status === "rejected" || transaction.status === "pending") && (
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-sm text-green-700 mb-2">
-              {locale === "zh-CN"
-                ? "快速操作：修改后直接批准"
-                : "Quick action: Edit and approve"}
+              {t("editTransaction.quickAction")}
             </p>
             <button
               type="button"
@@ -215,13 +210,7 @@ export default function EditTransactionModal({
               disabled={loading}
               className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 font-medium"
             >
-              {loading
-                ? locale === "zh-CN"
-                  ? "处理中..."
-                  : "Processing..."
-                : locale === "zh-CN"
-                ? "保存并批准"
-                : "Save & Approve"}
+              {loading ? t("admin.processing") : t("editTransaction.saveAndApprove")}
             </button>
           </div>
         )}
@@ -233,20 +222,14 @@ export default function EditTransactionModal({
             onClick={onClose}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
           >
-            {locale === "zh-CN" ? "取消" : "Cancel"}
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={loading}
             className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50"
           >
-            {loading
-              ? locale === "zh-CN"
-                ? "保存中..."
-                : "Saving..."
-              : locale === "zh-CN"
-              ? "保存"
-              : "Save"}
+            {loading ? t("common.saving") : t("common.save")}
           </button>
         </div>
       </form>

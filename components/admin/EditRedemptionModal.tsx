@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ModalFrame from "@/components/ui/ModalFrame";
@@ -16,6 +17,7 @@ export default function EditRedemptionModal({
   locale,
   onClose,
 }: EditRedemptionModalProps) {
+  const t = useTranslations();
   const router = useRouter();
   const supabase = createClient();
 
@@ -61,9 +63,7 @@ export default function EditRedemptionModal({
       setError(
         err instanceof Error
           ? err.message
-          : locale === "zh-CN"
-            ? "更新失败"
-            : "Failed to update"
+          : t("editRedemption.updateFailed")
       );
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export default function EditRedemptionModal({
 
   return (
     <ModalFrame
-      title={locale === "zh-CN" ? "编辑兑换日期" : "Edit Redemption Date"}
+      title={t("editRedemption.title")}
       error={error}
       onClose={onClose}
     >
@@ -80,7 +80,7 @@ export default function EditRedemptionModal({
         {/* Reward Name (Read-only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "兑换奖励" : "Reward"}
+            {t("editRedemption.reward")}
           </label>
           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
             {redemption.rewards?.icon || "🎁"} {rewardName}
@@ -90,7 +90,7 @@ export default function EditRedemptionModal({
         {/* Stars Spent (Read-only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "花费星星" : "Stars Spent"}
+            {t("editRedemption.starsSpent")}
           </label>
           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
             -{redemption.stars_spent} ⭐
@@ -100,7 +100,7 @@ export default function EditRedemptionModal({
         {/* Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "日期" : "Date"}
+            {t("common.date")}
           </label>
           <input
             type="date"
@@ -114,7 +114,7 @@ export default function EditRedemptionModal({
         {/* Time */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {locale === "zh-CN" ? "时间" : "Time"}
+            {t("editRedemption.time")}
           </label>
           <input
             type="time"
@@ -132,20 +132,14 @@ export default function EditRedemptionModal({
             onClick={onClose}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
           >
-            {locale === "zh-CN" ? "取消" : "Cancel"}
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={loading}
             className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50"
           >
-            {loading
-              ? locale === "zh-CN"
-                ? "保存中..."
-                : "Saving..."
-              : locale === "zh-CN"
-                ? "保存"
-                : "Save"}
+            {loading ? t("common.saving") : t("common.save")}
           </button>
         </div>
       </form>

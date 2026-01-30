@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { QuestCategory, QuestCategoryInsert } from "@/types/category";
@@ -19,6 +20,7 @@ export default function CategoryManagement({
   familyId,
   onCategoriesChange,
 }: CategoryManagementProps) {
+  const t = useTranslations();
   const router = useRouter();
   const supabase = createClient();
 
@@ -73,11 +75,7 @@ export default function CategoryManagement({
       onCategoriesChange?.();
     } catch (err: any) {
       console.error("Error initializing categories:", err);
-      setError(
-        locale === "zh-CN"
-          ? `初始化失败: ${err.message}`
-          : `Initialization failed: ${err.message}`
-      );
+      setError(`${t("categoryManagement.saveFailed")}: ${err.message}`);
     } finally {
       setInitializingDefaults(false);
     }
@@ -100,7 +98,7 @@ export default function CategoryManagement({
 
     // Validation
     if (!formData.name_en.trim()) {
-      setError(locale === "zh-CN" ? "请输入英文名称" : "English name is required");
+      setError(t("categoryManagement.nameRequired"));
       return;
     }
 
@@ -153,11 +151,7 @@ export default function CategoryManagement({
             : "A category with this name already exists"
         );
       } else {
-        setError(
-          locale === "zh-CN"
-            ? `保存失败: ${err.message}`
-            : `Save failed: ${err.message}`
-        );
+        setError(`${t("categoryManagement.saveFailed")}: ${err.message}`);
       }
     } finally {
       setLoading(false);
@@ -177,11 +171,7 @@ export default function CategoryManagement({
       onCategoriesChange?.();
     } catch (err: any) {
       console.error("Error toggling category:", err);
-      alert(
-        locale === "zh-CN"
-          ? "切换类别状态失败"
-          : "Failed to toggle category status"
-      );
+      alert(t("categoryManagement.toggleFailed"));
     }
   };
 
@@ -189,12 +179,7 @@ export default function CategoryManagement({
     const categoryName =
       locale === "zh-CN" ? category.name_zh || category.name_en : category.name_en;
 
-    const confirmMessage =
-      locale === "zh-CN"
-        ? `确定要删除类别 "${categoryName}" 吗？使用此类别的任务将变为无类别。`
-        : `Are you sure you want to delete "${categoryName}"? Quests using this category will become uncategorized.`;
-
-    if (!confirm(confirmMessage)) {
+    if (!confirm(t("categoryManagement.deleteConfirm", { name: categoryName }))) {
       return;
     }
 
@@ -210,7 +195,7 @@ export default function CategoryManagement({
       onCategoriesChange?.();
     } catch (err: any) {
       console.error("Error deleting category:", err);
-      alert(locale === "zh-CN" ? "删除类别失败" : "Failed to delete category");
+      alert(t("categoryManagement.deleteFailed"));
     }
   };
 
@@ -229,12 +214,10 @@ export default function CategoryManagement({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold">
-            {locale === "zh-CN" ? "类别管理" : "Category Management"}
+            {t("categoryManagement.title")}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            {locale === "zh-CN"
-              ? "自定义任务类别，方便组织和筛选任务"
-              : "Customize quest categories to organize and filter quests"}
+            {t("categoryManagement.infoNote")}
           </p>
         </div>
         {!showAddForm && !editingCategory && (
@@ -243,7 +226,7 @@ export default function CategoryManagement({
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition flex items-center gap-2"
           >
             <span>+</span>
-            <span>{locale === "zh-CN" ? "添加类别" : "Add Category"}</span>
+            <span>{t("categoryManagement.addCategory")}</span>
           </button>
         )}
       </div>
@@ -253,12 +236,8 @@ export default function CategoryManagement({
         <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded-lg border">
           <h3 className="font-semibold mb-4">
             {editingCategory
-              ? locale === "zh-CN"
-                ? "编辑类别"
-                : "Edit Category"
-              : locale === "zh-CN"
-              ? "添加新类别"
-              : "Add New Category"}
+              ? t("categoryManagement.editCategory")
+              : t("categoryManagement.addCategory")}
           </h3>
 
           {error && (
@@ -271,7 +250,7 @@ export default function CategoryManagement({
             {/* Icon */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                {locale === "zh-CN" ? "图标" : "Icon"}
+                {t("categoryManagement.icon")}
               </label>
               <input
                 type="text"
@@ -286,7 +265,7 @@ export default function CategoryManagement({
             {/* English Name */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                {locale === "zh-CN" ? "英文名称" : "English Name"}{" "}
+                {t("categoryManagement.englishName")}{" "}
                 <span className="text-red-500">*</span>
               </label>
               <input
@@ -302,7 +281,7 @@ export default function CategoryManagement({
             {/* Chinese Name */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                {locale === "zh-CN" ? "中文名称" : "Chinese Name"}
+                {t("categoryManagement.chineseName")}
               </label>
               <input
                 type="text"
@@ -320,13 +299,7 @@ export default function CategoryManagement({
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition disabled:opacity-50"
                 disabled={loading}
               >
-                {loading
-                  ? locale === "zh-CN"
-                    ? "保存中..."
-                    : "Saving..."
-                  : locale === "zh-CN"
-                  ? "保存"
-                  : "Save"}
+                {loading ? t("common.saving") : t("common.save")}
               </button>
               <button
                 type="button"
@@ -334,7 +307,7 @@ export default function CategoryManagement({
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                 disabled={loading}
               >
-                {locale === "zh-CN" ? "取消" : "Cancel"}
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -346,7 +319,7 @@ export default function CategoryManagement({
         {sortedCategories.length === 0 ? (
           <div className="text-center py-8 space-y-4">
             <p className="text-gray-500">
-              {locale === "zh-CN" ? "暂无类别" : "No categories yet"}
+              {t("categoryManagement.noCategories")}
             </p>
             {error && (
               <div className="mx-auto max-w-md bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded">
@@ -359,9 +332,7 @@ export default function CategoryManagement({
               className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50 font-medium"
             >
               {initializingDefaults
-                ? locale === "zh-CN"
-                  ? "初始化中..."
-                  : "Initializing..."
+                ? t("common.loading")
                 : locale === "zh-CN"
                 ? "📦 初始化默认类别"
                 : "📦 Initialize Default Categories"}
@@ -409,12 +380,8 @@ export default function CategoryManagement({
                   title={category.is_active ? "Disable" : "Enable"}
                 >
                   {category.is_active
-                    ? locale === "zh-CN"
-                      ? "禁用"
-                      : "Disable"
-                    : locale === "zh-CN"
-                    ? "启用"
-                    : "Enable"}
+                    ? locale === "zh-CN" ? "禁用" : "Disable"
+                    : locale === "zh-CN" ? "启用" : "Enable"}
                 </button>
 
                 {/* Edit */}
@@ -422,7 +389,7 @@ export default function CategoryManagement({
                   onClick={() => handleEdit(category)}
                   className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition"
                 >
-                  {locale === "zh-CN" ? "编辑" : "Edit"}
+                  {t("common.edit")}
                 </button>
 
                 {/* Delete */}
@@ -430,7 +397,7 @@ export default function CategoryManagement({
                   onClick={() => handleDelete(category)}
                   className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition"
                 >
-                  {locale === "zh-CN" ? "删除" : "Delete"}
+                  {t("common.delete")}
                 </button>
               </div>
             </div>

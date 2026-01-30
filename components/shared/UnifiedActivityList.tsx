@@ -195,12 +195,7 @@ export default function UnifiedActivityList({
   const handleBatchApprove = async () => {
     if (selectedIds.size === 0) return;
 
-    const confirmMessage =
-      locale === "zh-CN"
-        ? `确定要批准这 ${selectedIds.size} 条待审批记录吗？`
-        : `Approve ${selectedIds.size} pending requests?`;
-
-    if (!confirm(confirmMessage)) return;
+    if (!confirm(t("activity.confirmBatchApprove", { count: selectedIds.size }))) return;
 
     setIsBatchProcessing(true);
     try {
@@ -217,7 +212,7 @@ export default function UnifiedActivityList({
       router.refresh();
     } catch (err) {
       console.error("Batch approve error:", err);
-      alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed");
+      alert(t("activity.batchApproveFailed"));
     } finally {
       setIsBatchProcessing(false);
     }
@@ -245,7 +240,7 @@ export default function UnifiedActivityList({
       router.refresh();
     } catch (err) {
       console.error("Batch reject error:", err);
-      alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed");
+      alert(t("activity.batchRejectFailed"));
     } finally {
       setIsBatchProcessing(false);
     }
@@ -254,18 +249,15 @@ export default function UnifiedActivityList({
   // Delete handler (parent only)
   const handleDelete = async (activity: UnifiedActivityItem) => {
     if (activity.type !== "star_transaction") {
-      alert(
-        locale === "zh-CN" ? "只能删除星星记录" : "Can only delete star transactions"
-      );
+      alert(t("activity.canOnlyDeleteStars"));
       return;
     }
 
-    const confirmMessage =
-      locale === "zh-CN"
-        ? `确定要删除这条记录吗？\n\n任务: ${getActivityDescription(activity, locale)}\n星星: ${activity.stars > 0 ? "+" : ""}${activity.stars}⭐`
-        : `Are you sure you want to delete this record?\n\nQuest: ${getActivityDescription(activity, locale)}\nStars: ${activity.stars > 0 ? "+" : ""}${activity.stars}⭐`;
-
-    if (!confirm(confirmMessage)) return;
+    const starsStr = `${activity.stars > 0 ? "+" : ""}${activity.stars}⭐`;
+    if (!confirm(t("activity.confirmDeleteRecord", {
+      quest: getActivityDescription(activity, locale),
+      stars: starsStr,
+    }))) return;
 
     setDeletingId(activity.id);
 
@@ -280,11 +272,7 @@ export default function UnifiedActivityList({
       router.refresh();
     } catch (err) {
       console.error("Error deleting transaction:", err);
-      alert(
-        locale === "zh-CN"
-          ? "删除失败，请重试"
-          : "Failed to delete, please try again"
-      );
+      alert(t("activity.deleteFailed"));
     } finally {
       setDeletingId(null);
     }
@@ -345,7 +333,7 @@ export default function UnifiedActivityList({
             {/* Header with view mode toggle */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">
-                {locale === "zh-CN" ? "筛选" : "Filters"}
+                {t("activity.filters")}
               </h2>
               <div className="flex items-center space-x-2">
                 <button
@@ -356,7 +344,7 @@ export default function UnifiedActivityList({
                       : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
-                  📋 {locale === "zh-CN" ? "列表" : "List"}
+                  📋 {t("activity.list")}
                 </button>
                 <button
                   onClick={() => setViewMode("calendar")}
@@ -366,7 +354,7 @@ export default function UnifiedActivityList({
                       : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
-                  📅 {locale === "zh-CN" ? "日历" : "Calendar"}
+                  📅 {t("activity.calendar")}
                 </button>
               </div>
             </div>
@@ -375,29 +363,29 @@ export default function UnifiedActivityList({
             {permissions.canFilterByType && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {locale === "zh-CN" ? "类型" : "Type"}
+                  {t("activity.type")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { key: "all", label: locale === "zh-CN" ? "全部" : "All" },
+                    { key: "all", label: t("common.all") },
                     {
                       key: "stars",
-                      label: `⭐ ${locale === "zh-CN" ? "星星" : "Stars"}`,
+                      label: `⭐ ${t("activity.starsType")}`,
                       bgActive: "bg-yellow-500",
                     },
                     {
                       key: "redemptions",
-                      label: `🎁 ${locale === "zh-CN" ? "兑换" : "Redemptions"}`,
+                      label: `🎁 ${t("activity.redemptionsType")}`,
                       bgActive: "bg-purple-500",
                     },
                     {
                       key: "positive",
-                      label: `➕ ${locale === "zh-CN" ? "加分" : "Positive"}`,
+                      label: `➕ ${t("activity.positiveType")}`,
                       bgActive: "bg-green-500",
                     },
                     {
                       key: "negative",
-                      label: `➖ ${locale === "zh-CN" ? "扣分" : "Negative"}`,
+                      label: `➖ ${t("activity.negativeType")}`,
                       bgActive: "bg-red-500",
                     },
                   ].map((filter) => (
@@ -422,7 +410,7 @@ export default function UnifiedActivityList({
             {/* Status Filter (both roles) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {locale === "zh-CN" ? "状态" : "Status"}
+                {t("common.status")}
               </label>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -470,7 +458,7 @@ export default function UnifiedActivityList({
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {locale === "zh-CN" ? "单个日期" : "Single Date"}
+                    {t("activity.singleDate")}
                   </label>
                   <input
                     type="date"
@@ -485,7 +473,7 @@ export default function UnifiedActivityList({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {locale === "zh-CN" ? "开始日期" : "Start Date"}
+                    {t("activity.startDate")}
                   </label>
                   <input
                     type="date"
@@ -499,7 +487,7 @@ export default function UnifiedActivityList({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {locale === "zh-CN" ? "结束日期" : "End Date"}
+                    {t("activity.endDate")}
                   </label>
                   <input
                     type="date"
@@ -520,15 +508,13 @@ export default function UnifiedActivityList({
                 onClick={clearFilters}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
-                🔄 {locale === "zh-CN" ? "清除所有筛选" : "Clear all filters"}
+                🔄 {t("activity.clearFilters")}
               </button>
             )}
 
             {/* Results Count */}
             <div className="text-sm text-gray-600">
-              {locale === "zh-CN"
-                ? `显示 ${displayedActivities.length} 条记录（共 ${activities.length} 条）`
-                : `Showing ${displayedActivities.length} of ${activities.length} records`}
+              {t("activity.showingRecords", { displayed: displayedActivities.length, total: activities.length })}
             </div>
 
             {/* Batch Selection Controls (parent only) */}
@@ -543,23 +529,19 @@ export default function UnifiedActivityList({
                   }`}
                 >
                   {selectionMode ? "✅ " : "☐ "}
-                  {locale === "zh-CN" ? "选择模式" : "Selection Mode"}
+                  {t("activity.selectionMode")}
                 </button>
                 {selectionMode && (
                   <button
                     onClick={selectAllPending}
                     className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
                   >
-                    {locale === "zh-CN"
-                      ? `全选待审批 (${pendingTransactions.length})`
-                      : `Select All Pending (${pendingTransactions.length})`}
+                    {t("activity.selectAllPending", { count: pendingTransactions.length })}
                   </button>
                 )}
                 {selectionMode && selectedIds.size > 0 && (
                   <span className="text-sm text-gray-600">
-                    {locale === "zh-CN"
-                      ? `已选择 ${selectedIds.size} 项`
-                      : `${selectedIds.size} selected`}
+                    {t("activity.selectedItems", { count: selectedIds.size })}
                   </span>
                 )}
               </div>
@@ -608,7 +590,7 @@ export default function UnifiedActivityList({
               {groupedByDate.length === 0 ? (
                 <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
                   <p className="text-gray-500">
-                    {locale === "zh-CN" ? "没有找到记录" : "No records found"}
+                    {t("activity.noRecordsFound")}
                   </p>
                 </div>
               ) : (
@@ -627,7 +609,7 @@ export default function UnifiedActivityList({
                           </h3>
                           <p className="text-sm text-white/70">
                             {dayActivities.length}{" "}
-                            {locale === "zh-CN" ? "条记录" : "records"}
+                            {t("activity.records")}
                           </p>
                         </div>
                         <div
@@ -729,9 +711,7 @@ export default function UnifiedActivityList({
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-purple-300 shadow-lg p-4 z-50">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <span className="font-medium text-purple-700">
-              {locale === "zh-CN"
-                ? `已选择 ${selectedIds.size} 项`
-                : `${selectedIds.size} items selected`}
+              {t("activity.itemsSelected", { count: selectedIds.size })}
             </span>
             <div className="flex items-center space-x-3">
               <button
@@ -740,25 +720,21 @@ export default function UnifiedActivityList({
                 className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 font-medium"
               >
                 {isBatchProcessing
-                  ? locale === "zh-CN"
-                    ? "处理中..."
-                    : "Processing..."
-                  : locale === "zh-CN"
-                    ? "✅ 批量批准"
-                    : "✅ Batch Approve"}
+                  ? t("activity.processing")
+                  : `✅ ${t("activity.batchApprove")}`}
               </button>
               <button
                 onClick={() => setShowBatchRejectModal(true)}
                 disabled={isBatchProcessing}
                 className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 font-medium"
               >
-                {locale === "zh-CN" ? "❌ 批量拒绝" : "❌ Batch Reject"}
+                {`❌ ${t("activity.batchReject")}`}
               </button>
               <button
                 onClick={clearSelection}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
               >
-                {locale === "zh-CN" ? "清除" : "Clear"}
+                {t("activity.clear")}
               </button>
             </div>
           </div>
@@ -771,29 +747,23 @@ export default function UnifiedActivityList({
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6 border-b">
               <h2 className="text-xl font-bold">
-                {locale === "zh-CN" ? "批量拒绝" : "Batch Reject"}
+                {t("activity.batchRejectTitle")}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {locale === "zh-CN"
-                  ? `将拒绝 ${selectedIds.size} 条待审批记录`
-                  : `Rejecting ${selectedIds.size} pending requests`}
+                {t("activity.rejectingCount", { count: selectedIds.size })}
               </p>
             </div>
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {locale === "zh-CN" ? "拒绝原因 *" : "Rejection Reason *"}
+                  {t("activity.rejectionReason")}
                 </label>
                 <textarea
                   value={batchRejectReason}
                   onChange={(e) => setBatchRejectReason(e.target.value)}
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                  placeholder={
-                    locale === "zh-CN"
-                      ? "请输入拒绝原因..."
-                      : "Enter rejection reason..."
-                  }
+                  placeholder={t("activity.rejectionPlaceholder")}
                   required
                 />
               </div>
@@ -805,7 +775,7 @@ export default function UnifiedActivityList({
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
                 >
-                  {locale === "zh-CN" ? "取消" : "Cancel"}
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleBatchReject}
@@ -813,12 +783,8 @@ export default function UnifiedActivityList({
                   className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
                 >
                   {isBatchProcessing
-                    ? locale === "zh-CN"
-                      ? "处理中..."
-                      : "Processing..."
-                    : locale === "zh-CN"
-                      ? "确认拒绝"
-                      : "Confirm Reject"}
+                    ? t("activity.processing")
+                    : t("activity.confirmReject")}
                 </button>
               </div>
             </div>
@@ -918,7 +884,7 @@ function ActivityItem({
           ? "px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
           : "px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"}
       >
-        {variant === "list" ? `✏️ ${locale === "zh-CN" ? "编辑" : "Edit"}` : "✏️"}
+        {variant === "list" ? `✏️ ${t("common.edit")}` : "✏️"}
       </button>
       {activity.type === "star_transaction" && (
         <button
@@ -928,7 +894,7 @@ function ActivityItem({
             ? "px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
             : "px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"}
         >
-          {variant === "list" ? `🗑️ ${locale === "zh-CN" ? "删除" : "Delete"}` : "🗑️"}
+          {variant === "list" ? `🗑️ ${t("common.delete")}` : "🗑️"}
         </button>
       )}
     </div>
@@ -1054,7 +1020,7 @@ function ActivityItem({
                   onClick={onResubmit}
                   className="mt-2 px-3 py-1 text-sm bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition font-medium"
                 >
-                  {locale === "zh-CN" ? "修改并重新提交" : "Edit & Resubmit"}
+                  {t("activity.editResubmit")}
                 </button>
               )}
           </div>
