@@ -153,6 +153,32 @@ See `__tests__/README.md` for detailed testing guide.
 
 ---
 
+## 🗄️ Database Backup
+
+### Manual Backup
+
+Create a local pg_dump snapshot before migrations or risky operations:
+
+```bash
+# Basic backup
+npm run db:backup
+
+# Backup with a label
+npm run db:backup -- pre-migration-v2
+```
+
+Backup files are saved to `backups/` (gitignored). Only the 2 most recent backups are kept; older files are automatically deleted.
+
+**Requires** `SUPABASE_DB_URL` in `.env.local` — find it in Supabase Dashboard > Settings > Database > Connection string.
+
+### Automated Weekly Backup
+
+A GitHub Actions workflow runs every Sunday at midnight UTC, creating a backup and uploading it as a GitHub Actions artifact (90-day retention). See `.github/workflows/weekly-backup.yml`.
+
+**Setup:** Add `SUPABASE_DB_URL` as a repository secret in GitHub > Settings > Secrets and variables > Actions.
+
+---
+
 ## 🌍 Internationalization
 
 The app supports:
