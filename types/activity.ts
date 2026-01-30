@@ -21,6 +21,41 @@ export type StarTransaction = Database["public"]["Tables"]["star_transactions"][
   } | null;
 };
 
+/** Raw star transaction from Supabase query with joined relations */
+export type RawStarTransaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
+  quests?: {
+    name_en: string;
+    name_zh: string | null;
+    icon: string | null;
+    category: string | null;
+  } | null;
+  children?: {
+    name: string;
+    avatar_url: string | null;
+  } | null;
+};
+
+/** Raw redemption from Supabase query with joined relations */
+export type RawRedemption = Database["public"]["Tables"]["redemptions"]["Row"] & {
+  rewards?: {
+    name_en: string;
+    name_zh: string | null;
+    icon: string | null;
+  } | null;
+  children?: {
+    name: string;
+    avatar_url: string | null;
+  } | null;
+};
+
+/** Raw credit transaction from Supabase query with joined relations */
+export type RawCreditTransaction = Database["public"]["Tables"]["credit_transactions"]["Row"] & {
+  children?: {
+    name: string;
+    avatar_url: string | null;
+  } | null;
+};
+
 // Unified activity item that works for all activity types
 export interface UnifiedActivityItem {
   id: string;

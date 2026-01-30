@@ -4,13 +4,19 @@
  * Helper functions for transforming and working with activity data.
  */
 
-import type { UnifiedActivityItem, StarTransaction } from "@/types/activity";
+import type {
+  UnifiedActivityItem,
+  RawStarTransaction,
+  RawRedemption,
+  RawCreditTransaction,
+} from "@/types/activity";
+import { toLocalDateString } from "@/lib/date-utils";
 
 /**
  * Transform a star transaction to unified activity format
  */
 export function transformStarTransaction(
-  tx: any,
+  tx: RawStarTransaction,
   includeChildInfo: boolean = true
 ): UnifiedActivityItem {
   // Determine icon: use quest icon, or default based on stars (⭐ for positive, ⚠️ for negative)
@@ -44,7 +50,7 @@ export function transformStarTransaction(
  * Transform a redemption to unified activity format
  */
 export function transformRedemption(
-  redemption: any,
+  redemption: RawRedemption,
   includeChildInfo: boolean = true
 ): UnifiedActivityItem {
   return {
@@ -74,7 +80,7 @@ export function transformRedemption(
  * Transform a credit transaction to unified activity format
  */
 export function transformCreditTransaction(
-  ct: any,
+  ct: RawCreditTransaction,
   includeChildInfo: boolean = true
 ): UnifiedActivityItem {
   let description = "";
@@ -128,17 +134,17 @@ export function transformCreditTransaction(
  * Transform any activity to unified format based on type
  */
 export function transformToUnifiedActivity(
-  data: any,
+  data: RawStarTransaction | RawRedemption | RawCreditTransaction,
   type: "star_transaction" | "redemption" | "credit_transaction",
   includeChildInfo: boolean = true
 ): UnifiedActivityItem {
   switch (type) {
     case "star_transaction":
-      return transformStarTransaction(data, includeChildInfo);
+      return transformStarTransaction(data as RawStarTransaction, includeChildInfo);
     case "redemption":
-      return transformRedemption(data, includeChildInfo);
+      return transformRedemption(data as RawRedemption, includeChildInfo);
     case "credit_transaction":
-      return transformCreditTransaction(data, includeChildInfo);
+      return transformCreditTransaction(data as RawCreditTransaction, includeChildInfo);
   }
 }
 
@@ -298,7 +304,7 @@ export function groupActivitiesByDate(
 
   activities.forEach((activity) => {
     const date = new Date(activity.createdAt);
-    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const dateString = toLocalDateString(date);
     if (!groups[dateString]) {
       groups[dateString] = [];
     }
