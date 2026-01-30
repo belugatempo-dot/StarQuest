@@ -36,3 +36,10 @@ pg_dump "$SUPABASE_DB_URL" \
 
 echo "Backup saved to: $FILENAME"
 echo "Size: $(du -h "$FILENAME" | cut -f1)"
+
+# Retain only the 2 most recent backups
+BACKUP_COUNT=$(ls -1 "$OUTDIR"/*.sql 2>/dev/null | wc -l | tr -d ' ')
+if [ "$BACKUP_COUNT" -gt 2 ]; then
+  ls -t "$OUTDIR"/*.sql | tail -n +3 | while read -r f; do rm "$f"; done
+  echo "Cleaned old backups. Kept 2 most recent."
+fi
