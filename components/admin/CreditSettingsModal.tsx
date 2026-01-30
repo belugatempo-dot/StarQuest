@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import ModalFrame from "@/components/ui/ModalFrame";
 import type { ChildCreditSettings, ChildBalanceWithCredit } from "@/types/credit";
 
 interface CreditSettingsModalProps {
@@ -91,28 +92,12 @@ export default function CreditSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">
-              {t("credit.settingsTitle")}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-          <p className="text-gray-600 mt-1">
-            {t("credit.settingsFor")}: <span className="font-semibold">{child.name}</span>
-          </p>
-        </div>
-
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <ModalFrame
+      title={t("credit.settingsTitle")}
+      subtitle={`${t("credit.settingsFor")}: ${child.name}`}
+      onClose={onClose}
+    >
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-6">
           {/* Current Status */}
           {balance && (
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
@@ -231,7 +216,6 @@ export default function CreditSettingsModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalFrame>
   );
 }

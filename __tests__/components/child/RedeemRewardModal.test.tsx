@@ -277,7 +277,7 @@ describe("RedeemRewardModal", () => {
         />
       );
 
-      expect(screen.getByRole("button", { name: "×" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "✕" })).toBeInTheDocument();
     });
   });
 
@@ -639,7 +639,7 @@ describe("RedeemRewardModal", () => {
         />
       );
 
-      const closeButton = screen.getByRole("button", { name: "×" });
+      const closeButton = screen.getByRole("button", { name: "✕" });
       await user.click(closeButton);
 
       expect(mockOnClose).toHaveBeenCalled();

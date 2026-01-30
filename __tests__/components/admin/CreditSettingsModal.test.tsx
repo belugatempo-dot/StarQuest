@@ -67,12 +67,12 @@ describe("CreditSettingsModal", () => {
 
     it("displays child name", () => {
       render(<CreditSettingsModal {...defaultProps} />);
-      expect(screen.getByText("Test Child")).toBeInTheDocument();
+      expect(screen.getByText(/Test Child/)).toBeInTheDocument();
     });
 
     it("renders close button", () => {
       render(<CreditSettingsModal {...defaultProps} />);
-      expect(screen.getByText("×")).toBeInTheDocument();
+      expect(screen.getByText("✕")).toBeInTheDocument();
     });
 
     it("renders enable credit toggle", () => {
@@ -212,7 +212,7 @@ describe("CreditSettingsModal", () => {
       const onClose = jest.fn();
       render(<CreditSettingsModal {...defaultProps} onClose={onClose} />);
 
-      fireEvent.click(screen.getByText("×"));
+      fireEvent.click(screen.getByText("✕"));
       expect(onClose).toHaveBeenCalled();
     });
 
