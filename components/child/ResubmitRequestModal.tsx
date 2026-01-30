@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import { useTranslations } from "next-intl";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
@@ -65,9 +66,7 @@ export default function ResubmitRequestModal({
 
     try {
       // Update the transaction: reset status to pending and update details
-      const { error: updateError } = await (supabase
-        .from("star_transactions")
-        .update as any)({
+      const { error: updateError } = await typedUpdate(supabase, "star_transactions", {
         stars: stars,
         child_note: childNote || null,
         status: "pending",

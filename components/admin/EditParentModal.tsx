@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { User } from "@/lib/auth";
 
@@ -39,9 +40,7 @@ export default function EditParentModal({
 
     try {
       // Update users table
-      const { error: updateError } = await (supabase
-        .from("users")
-        .update as any)({
+      const { error: updateError } = await typedUpdate(supabase, "users", {
           name: name.trim(),
         })
         .eq("id", parent.id);

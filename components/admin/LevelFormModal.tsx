@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 
@@ -49,8 +50,7 @@ export default function LevelFormModal({
         stars_required: starsRequired, icon,
       };
 
-      const { error: updateError } = await (supabase
-        .from("levels").update as any)(levelData).eq("id", level.id);
+      const { error: updateError } = await typedUpdate(supabase, "levels", levelData).eq("id", level.id);
       if (updateError) throw updateError;
 
       onSuccess();

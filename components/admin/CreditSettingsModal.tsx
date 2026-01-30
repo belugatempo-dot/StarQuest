@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { ChildCreditSettings, ChildBalanceWithCredit } from "@/types/credit";
 
@@ -57,9 +58,7 @@ export default function CreditSettingsModal({
 
       if (existing) {
         // Update existing settings
-        const { error: updateError } = await (supabase
-          .from("child_credit_settings")
-          .update as any)({
+        const { error: updateError } = await typedUpdate(supabase, "child_credit_settings", {
             credit_enabled: creditEnabled,
             credit_limit: creditLimit,
             original_credit_limit: creditEnabled ? creditLimit : 0,
@@ -69,9 +68,7 @@ export default function CreditSettingsModal({
         if (updateError) throw updateError;
       } else {
         // Create new settings
-        const { error: insertError } = await (supabase
-          .from("child_credit_settings")
-          .insert as any)({
+        const { error: insertError } = await typedInsert(supabase, "child_credit_settings", {
             family_id: child.family_id,
             child_id: child.id,
             credit_enabled: creditEnabled,

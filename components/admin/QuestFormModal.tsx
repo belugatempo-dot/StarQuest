@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Quest, QuestType, QuestScope } from "@/types/quest";
 import type { QuestCategory as QuestCategoryType } from "@/types/category";
@@ -92,12 +93,10 @@ export default function QuestFormModal({
       };
 
       if (isEditMode) {
-        const { error: updateError } = await (supabase
-          .from("quests").update as any)(questData).eq("id", quest.id);
+        const { error: updateError } = await typedUpdate(supabase, "quests", questData).eq("id", quest.id);
         if (updateError) throw updateError;
       } else {
-        const { error: insertError } = await (supabase
-          .from("quests").insert as any)([questData]);
+        const { error: insertError } = await typedInsert(supabase, "quests", [questData]);
         if (insertError) throw insertError;
       }
 

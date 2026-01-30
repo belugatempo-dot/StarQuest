@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import CalendarView from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
@@ -201,8 +202,7 @@ export default function UnifiedActivityList({
     setIsBatchProcessing(true);
     try {
       const ids = Array.from(selectedIds);
-      const { error } = await (supabase.from("star_transactions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "star_transactions", {
         status: "approved",
         reviewed_at: new Date().toISOString(),
       }).in("id", ids);
@@ -226,8 +226,7 @@ export default function UnifiedActivityList({
     setIsBatchProcessing(true);
     try {
       const ids = Array.from(selectedIds);
-      const { error } = await (supabase.from("star_transactions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "star_transactions", {
         status: "rejected",
         parent_response: batchRejectReason.trim(),
         reviewed_at: new Date().toISOString(),

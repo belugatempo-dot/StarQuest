@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import { getTodayString } from "@/lib/date-utils";
 import type { Database } from "@/types/database";
@@ -132,9 +133,7 @@ export default function RequestStarsModal({
       );
 
       // Create star transaction request
-      const { error: insertError } = await (supabase
-        .from("star_transactions")
-        .insert as any)({
+      const { error: insertError } = await typedInsert(supabase, "star_transactions", {
           family_id: (userData as any).family_id,
           child_id: userId,
           quest_id: quest.id,

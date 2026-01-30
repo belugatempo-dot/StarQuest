@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 
@@ -64,12 +65,10 @@ export default function RewardFormModal({
       };
 
       if (isEditMode) {
-        const { error: updateError } = await (supabase
-          .from("rewards").update as any)(rewardData).eq("id", reward.id);
+        const { error: updateError } = await typedUpdate(supabase, "rewards", rewardData).eq("id", reward.id);
         if (updateError) throw updateError;
       } else {
-        const { error: insertError } = await (supabase
-          .from("rewards").insert as any)([rewardData]);
+        const { error: insertError } = await typedInsert(supabase, "rewards", [rewardData]);
         if (insertError) throw insertError;
       }
 

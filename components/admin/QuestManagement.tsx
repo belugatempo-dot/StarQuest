@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import type { Quest } from "@/types/quest";
 import { groupQuests } from "@/types/quest";
 import type { QuestCategory } from "@/types/category";
@@ -46,9 +47,7 @@ export default function QuestManagement({
 
   const handleToggleActive = async (quest: Quest) => {
     try {
-      const { error } = await (supabase
-        .from("quests")
-        .update as any)({ is_active: !quest.is_active })
+      const { error } = await typedUpdate(supabase, "quests", { is_active: !quest.is_active })
         .eq("id", quest.id);
 
       if (error) throw error;

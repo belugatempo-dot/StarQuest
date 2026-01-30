@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import { toLocalDateString, toLocalTimeString } from "@/lib/date-utils";
 
@@ -44,9 +45,7 @@ export default function EditRedemptionModal({
       // Build new created_at from date + time
       const newCreatedAt = new Date(`${date}T${time}:00`).toISOString();
 
-      const { error: updateError } = await (supabase
-        .from("redemptions")
-        .update as any)({ created_at: newCreatedAt })
+      const { error: updateError } = await typedUpdate(supabase, "redemptions", { created_at: newCreatedAt })
         .eq("id", redemption.id);
 
       if (updateError) throw updateError;
