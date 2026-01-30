@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import CalendarView from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
+import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
 import type {
   UnifiedActivityItem,
@@ -58,6 +59,7 @@ export default function UnifiedActivityList({
   const [editingTransaction, setEditingTransaction] = useState<any | null>(
     null
   );
+  const [editingRedemption, setEditingRedemption] = useState<any | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Resubmit state (child only)
@@ -582,7 +584,13 @@ export default function UnifiedActivityList({
                     selectionMode={selectionMode}
                     isSelected={selectedIds.has(activity.id)}
                     onToggleSelection={() => toggleSelection(activity.id)}
-                    onEdit={() => setEditingTransaction(activity.originalData)}
+                    onEdit={() => {
+                      if (activity.type === "redemption") {
+                        setEditingRedemption(activity.originalData);
+                      } else {
+                        setEditingTransaction(activity.originalData);
+                      }
+                    }}
                     onDelete={() => handleDelete(activity)}
                     onResubmit={() => setResubmitTransaction(activity.originalData)}
                     deletingId={deletingId}
@@ -648,9 +656,13 @@ export default function UnifiedActivityList({
                             onToggleSelection={() =>
                               toggleSelection(activity.id)
                             }
-                            onEdit={() =>
-                              setEditingTransaction(activity.originalData)
-                            }
+                            onEdit={() => {
+                              if (activity.type === "redemption") {
+                                setEditingRedemption(activity.originalData);
+                              } else {
+                                setEditingTransaction(activity.originalData);
+                              }
+                            }}
                             onDelete={() => handleDelete(activity)}
                             onResubmit={() =>
                               setResubmitTransaction(activity.originalData)
@@ -683,12 +695,21 @@ export default function UnifiedActivityList({
         </div>
       </div>
 
-      {/* Edit Modal (parent only) */}
+      {/* Edit Modal (parent only - star transactions) */}
       {editingTransaction && permissions.canEdit && (
         <EditTransactionModal
           transaction={editingTransaction}
           locale={locale}
           onClose={() => setEditingTransaction(null)}
+        />
+      )}
+
+      {/* Edit Redemption Modal (parent only) */}
+      {editingRedemption && permissions.canEdit && (
+        <EditRedemptionModal
+          redemption={editingRedemption}
+          locale={locale}
+          onClose={() => setEditingRedemption(null)}
         />
       )}
 
@@ -960,8 +981,8 @@ function ActivityListItem({
             {t(`status.${activity.status}` as any)}
           </span>
 
-          {/* Action Buttons (parent only for star_transactions) */}
-          {permissions.canEdit && activity.type === "star_transaction" && (
+          {/* Action Buttons (parent only) */}
+          {permissions.canEdit && (activity.type === "star_transaction" || activity.type === "redemption") && (
             <div className="flex flex-col space-y-1 mt-2">
               <button
                 onClick={onEdit}
@@ -969,13 +990,15 @@ function ActivityListItem({
               >
                 ✏️ {locale === "zh-CN" ? "编辑" : "Edit"}
               </button>
-              <button
-                onClick={onDelete}
-                disabled={deletingId === activity.id}
-                className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
-              >
-                🗑️ {locale === "zh-CN" ? "删除" : "Delete"}
-              </button>
+              {activity.type === "star_transaction" && (
+                <button
+                  onClick={onDelete}
+                  disabled={deletingId === activity.id}
+                  className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
+                >
+                  🗑️ {locale === "zh-CN" ? "删除" : "Delete"}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1082,8 +1105,8 @@ function ActivityCalendarItem({
             {activity.stars > 0 ? "+" : ""}
             {activity.stars}⭐
           </div>
-          {/* Action Buttons (parent only for star_transactions) */}
-          {permissions.canEdit && activity.type === "star_transaction" && (
+          {/* Action Buttons (parent only) */}
+          {permissions.canEdit && (activity.type === "star_transaction" || activity.type === "redemption") && (
             <div className="flex space-x-1">
               <button
                 onClick={onEdit}
@@ -1091,13 +1114,15 @@ function ActivityCalendarItem({
               >
                 ✏️
               </button>
-              <button
-                onClick={onDelete}
-                disabled={deletingId === activity.id}
-                className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
-              >
-                🗑️
-              </button>
+              {activity.type === "star_transaction" && (
+                <button
+                  onClick={onDelete}
+                  disabled={deletingId === activity.id}
+                  className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
+                >
+                  🗑️
+                </button>
+              )}
             </div>
           )}
         </div>
