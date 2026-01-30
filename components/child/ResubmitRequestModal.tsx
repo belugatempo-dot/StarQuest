@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
+import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 
 type Transaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
@@ -91,22 +92,11 @@ export default function ResubmitRequestModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {locale === "zh-CN" ? "重新提交请求" : "Resubmit Request"}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-
+    <ModalFrame
+      title={locale === "zh-CN" ? "重新提交请求" : "Resubmit Request"}
+      onClose={onClose}
+    >
+        <div className="px-6 pb-6">
           {/* Previous Rejection Reason */}
           {transaction.parent_response && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -203,7 +193,6 @@ export default function ResubmitRequestModal({
             </div>
           </form>
         </div>
-      </div>
-    </div>
+    </ModalFrame>
   );
 }

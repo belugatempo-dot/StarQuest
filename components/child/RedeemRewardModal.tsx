@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 import CreditUsageWarning from "./CreditUsageWarning";
 
@@ -139,25 +140,11 @@ export default function RedeemRewardModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">
-              {isParent ? t("admin.redeemForChild") : t("rewards.requestRedemption")}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <ModalFrame
+      title={isParent ? t("admin.redeemForChild") : t("rewards.requestRedemption")}
+      onClose={onClose}
+    >
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           {/* Reward Info */}
           <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -346,7 +333,6 @@ export default function RedeemRewardModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalFrame>
   );
 }

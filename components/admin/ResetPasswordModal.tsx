@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import ModalFrame from "@/components/ui/ModalFrame";
 import type { User } from "@/lib/auth";
 
 interface ResetPasswordModalProps {
@@ -72,12 +73,11 @@ export default function ResetPasswordModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">
-          {t("family.resetPassword")}
-        </h2>
-
+    <ModalFrame
+      title={t("family.resetPassword")}
+      onClose={onClose}
+    >
+      <div className="px-6 pb-6">
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">
             {t("family.resetPasswordFor")}: <span className="font-semibold">{child.name}</span>
@@ -173,6 +173,6 @@ export default function ResetPasswordModal({
           </div>
         )}
       </div>
-    </div>
+    </ModalFrame>
   );
 }
