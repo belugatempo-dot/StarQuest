@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "db:backup": "bash scripts/backup.sh"
   },
   "dependencies": {
     "@supabase/auth-ui-react": "^0.4.7",
@@ -19,7 +20,8 @@
     "next": "^15.1.0",
     "next-intl": "^3.26.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "resend": "^6.8.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

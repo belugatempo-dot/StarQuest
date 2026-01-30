@@ -24,6 +24,9 @@ npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
 npm test -- File.test.tsx  # Specific file
 
+# Database
+npm run db:backup [label]  # Manual pg_dump snapshot (requires SUPABASE_DB_URL)
+
 # Deployment
 vercel --prod            # Production deploy
 vercel                   # Preview deploy
@@ -265,6 +268,24 @@ NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key  # Optional, for admin operations
 ```
+
+---
+
+## Database Safety
+
+### Backups
+- **Supabase automated:** Daily backups with 7-day retention (check Dashboard > Settings > Database)
+- **Manual snapshot:** `npm run db:backup [label]` — creates local pg_dump before risky operations
+- **Backup files:** Stored in `backups/` (gitignored, contains user data)
+
+### When to Take Manual Backups
+- Before running any new migration with ALTER/DROP/DELETE
+- Before running settlement operations manually
+- Before any bulk data modifications
+
+### Recovery
+- **Platform restore:** Supabase Dashboard > Settings > Database > Backups
+- **Local restore:** `psql "$SUPABASE_DB_URL" < backups/[file].sql`
 
 ---
 
