@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getTodayString } from "@/lib/date-utils";
 import type { Database } from "@/types/database";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
@@ -40,21 +41,12 @@ export default function QuickRecordForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Helper function to get today's date in local timezone (YYYY-MM-DD format)
-  const getLocalDateString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
   // Store max date in state to avoid SSR timezone mismatch
   const [maxDate, setMaxDate] = useState<string>("");
 
   // Fix SSR hydration mismatch: set correct date on client mount
   useEffect(() => {
-    const today = getLocalDateString();
+    const today = getTodayString();
     setRecordDate(today);
     setMaxDate(today);
   }, []);

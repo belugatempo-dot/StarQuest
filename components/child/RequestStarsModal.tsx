@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import ModalFrame from "@/components/ui/ModalFrame";
+import { getTodayString } from "@/lib/date-utils";
 import type { Database } from "@/types/database";
 
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
@@ -15,15 +16,6 @@ interface RequestStarsModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
-
-// Helper function to get local date string (YYYY-MM-DD)
-const getLocalDateString = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 export default function RequestStarsModal({
   quest,
@@ -43,7 +35,7 @@ export default function RequestStarsModal({
 
   // Set date on client mount to avoid SSR timezone issues
   useEffect(() => {
-    const today = getLocalDateString();
+    const today = getTodayString();
     setRequestDate(today);
     setMaxDate(today);
   }, []);

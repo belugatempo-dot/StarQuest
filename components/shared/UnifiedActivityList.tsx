@@ -8,6 +8,7 @@ import CalendarView from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
+import { toLocalDateString } from "@/lib/date-utils";
 import type {
   UnifiedActivityItem,
   UnifiedActivityListProps,
@@ -106,7 +107,7 @@ export default function UnifiedActivityList({
     if (filterDate) {
       filtered = filtered.filter((a) => {
         const date = new Date(a.createdAt);
-        const activityDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        const activityDate = toLocalDateString(date);
         return activityDate === filterDate;
       });
     }
@@ -115,19 +116,19 @@ export default function UnifiedActivityList({
     if (startDate && endDate) {
       filtered = filtered.filter((a) => {
         const date = new Date(a.createdAt);
-        const activityDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        const activityDate = toLocalDateString(date);
         return activityDate >= startDate && activityDate <= endDate;
       });
     } else if (startDate) {
       filtered = filtered.filter((a) => {
         const date = new Date(a.createdAt);
-        const activityDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        const activityDate = toLocalDateString(date);
         return activityDate >= startDate;
       });
     } else if (endDate) {
       filtered = filtered.filter((a) => {
         const date = new Date(a.createdAt);
-        const activityDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        const activityDate = toLocalDateString(date);
         return activityDate <= endDate;
       });
     }

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ModalFrame from "@/components/ui/ModalFrame";
+import { toLocalDateString, toLocalTimeString } from "@/lib/date-utils";
 
 interface EditRedemptionModalProps {
   redemption: any;
@@ -23,12 +24,6 @@ export default function EditRedemptionModal({
 
   // Parse the current created_at date to local date string for the input
   const currentDate = new Date(redemption.created_at);
-  const toLocalDateString = (date: Date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  };
-  const toLocalTimeString = (date: Date) => {
-    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-  };
 
   const [date, setDate] = useState(toLocalDateString(currentDate));
   const [time, setTime] = useState(toLocalTimeString(currentDate));

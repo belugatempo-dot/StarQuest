@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getTodayString } from "@/lib/date-utils";
 
 interface RedemptionRequestListProps {
   requests: any[];
@@ -24,12 +25,27 @@ export default function RedemptionRequestList({
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
+  // Approval modal state
+  const [showApproveModal, setShowApproveModal] = useState<string | null>(null);
+  const [approvalDate, setApprovalDate] = useState<string>("");
+  const [maxDate, setMaxDate] = useState<string>("");
+
   // Batch selection state
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBatchApproveModal, setShowBatchApproveModal] = useState(false);
+  const [batchApprovalDate, setBatchApprovalDate] = useState<string>("");
   const [showBatchRejectModal, setShowBatchRejectModal] = useState(false);
   const [batchRejectReason, setBatchRejectReason] = useState("");
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+
+  // Initialize date on client mount to avoid SSR timezone issues
+  useEffect(() => {
+    const today = getTodayString();
+    setApprovalDate(today);
+    setBatchApprovalDate(today);
+    setMaxDate(today);
+  }, []);
 
   // Clear selection when exiting selection mode
   useEffect(() => {
@@ -87,20 +103,34 @@ export default function RedemptionRequestList({
     setSelectedIds(new Set());
   };
 
-  const handleApprove = async (requestId: string) => {
-    setProcessingId(requestId);
+  const handleApprove = (requestId: string) => {
+    // Reset date to today when opening modal
+    setApprovalDate(getTodayString());
+    setShowApproveModal(requestId);
+  };
+
+  const confirmApprove = async () => {
+    if (!showApproveModal) return;
+
+    setProcessingId(showApproveModal);
 
     try {
+      // Convert date to ISO timestamp (noon UTC to avoid timezone day-shifting)
+      const dateToUse = approvalDate
+        ? new Date(approvalDate + "T12:00:00Z").toISOString()
+        : new Date().toISOString();
+
       const { error } = await (supabase
         .from("redemptions")
         .update as any)({
           status: "approved",
-          reviewed_at: new Date().toISOString(),
+          reviewed_at: dateToUse,
         })
-        .eq("id", requestId);
+        .eq("id", showApproveModal);
 
       if (error) throw error;
 
+      setShowApproveModal(null);
       router.refresh();
     } catch (err) {
       console.error("Error approving redemption:", err);
@@ -138,30 +168,37 @@ export default function RedemptionRequestList({
     }
   };
 
-  // Batch approve handler
-  const handleBatchApprove = async () => {
+  // Open batch approve modal
+  const handleBatchApprove = () => {
     if (selectedIds.size === 0) return;
+    // Reset date to today when opening modal
+    setBatchApprovalDate(getTodayString());
+    setShowBatchApproveModal(true);
+  };
 
-    const confirmMessage =
-      locale === "zh-CN"
-        ? `确定要批准这 ${selectedIds.size} 条待审批请求吗？`
-        : `Approve ${selectedIds.size} pending requests?`;
-
-    if (!confirm(confirmMessage)) return;
+  // Confirm batch approve
+  const confirmBatchApprove = async () => {
+    if (selectedIds.size === 0) return;
 
     setIsBatchProcessing(true);
     try {
       const ids = Array.from(selectedIds);
+      // Convert date to ISO timestamp (noon UTC to avoid timezone day-shifting)
+      const dateToUse = batchApprovalDate
+        ? new Date(batchApprovalDate + "T12:00:00Z").toISOString()
+        : new Date().toISOString();
+
       const { error } = await (supabase
         .from("redemptions")
         .update as any)({
           status: "approved",
-          reviewed_at: new Date().toISOString(),
+          reviewed_at: dateToUse,
         })
         .in("id", ids);
 
       if (error) throw error;
 
+      setShowBatchApproveModal(false);
       exitSelectionMode();
       router.refresh();
     } catch (err) {
@@ -404,6 +441,42 @@ export default function RedemptionRequestList({
         </div>
       )}
 
+      {/* Individual Approve Modal */}
+      {showApproveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">{t("admin.confirmApproval")}</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("admin.approvalDate")}
+              </label>
+              <input
+                type="date"
+                value={approvalDate}
+                onChange={(e) => setApprovalDate(e.target.value)}
+                max={maxDate || undefined}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-success focus:border-transparent"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowApproveModal(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={confirmApprove}
+                disabled={processingId === showApproveModal}
+                className="flex-1 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 disabled:opacity-50"
+              >
+                {processingId ? t("admin.processing") : t("admin.approve")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Individual Reject Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -434,6 +507,53 @@ export default function RedemptionRequestList({
               >
                 {processingId ? t("admin.processing") : t("admin.reject")}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Approve Modal */}
+      {showBatchApproveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold">{t("admin.batchApprove")}</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {locale === "zh-CN"
+                  ? `将批准 ${selectedIds.size} 条待审批请求`
+                  : `Approving ${selectedIds.size} pending requests`}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("admin.approvalDate")}
+                </label>
+                <input
+                  type="date"
+                  value={batchApprovalDate}
+                  onChange={(e) => setBatchApprovalDate(e.target.value)}
+                  max={maxDate || undefined}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBatchApproveModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={confirmBatchApprove}
+                  disabled={isBatchProcessing}
+                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+                >
+                  {isBatchProcessing
+                    ? t("admin.batchProcessing")
+                    : t("admin.approve")}
+                </button>
+              </div>
             </div>
           </div>
         </div>
