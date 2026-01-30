@@ -1,7 +1,7 @@
 # ⭐ StarQuest Product Documentation
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-25
+**Version:** 1.1.0
+**Last Updated:** 2026-01-29
 
 ---
 
@@ -69,6 +69,7 @@ To make family task management fun, engaging, and educational by applying game m
      - **Scope:** self, family, other
      - **Category:** learning, chores, hygiene, health, social, etc.
    - Set star values and daily limits
+   - **Configurable Categories:** Add, edit, toggle, or delete quest categories per family (14 defaults)
 
 4. **Reward Management**
    - Create tiered reward catalog
@@ -299,9 +300,10 @@ To make family task management fun, engaging, and educational by applying game m
 
 1. **Child Requests:** Browse catalog and submit redemption request
 2. **Parent Reviews:** Sees request in Approval Center
-3. **Parent Decides:** Approve (deducts stars) or Reject (with reason)
+3. **Parent Decides:** Approve (deducts stars, with optional custom date) or Reject (with reason)
 4. **Fulfillment:** Parent fulfills reward in real life
 5. **Status Update:** Request marked as fulfilled
+6. **Date Editing:** Parents can edit the redemption date after approval via the activity list (useful for backdating forgotten redemptions)
 
 ---
 
@@ -563,6 +565,17 @@ To make family task management fun, engaging, and educational by applying game m
 - `reviewed_at` TIMESTAMP
 - `review_note` TEXT
 
+#### quest_categories
+- `id` UUID (PK)
+- `family_id` UUID (FK to families)
+- `name` TEXT (internal key)
+- `name_en` TEXT
+- `name_zh` TEXT
+- `icon` TEXT (emoji, default 📦)
+- `is_active` BOOLEAN
+- `sort_order` INTEGER
+- `created_at` TIMESTAMP
+
 #### levels
 - `id` UUID (PK)
 - `family_id` UUID (FK to families)
@@ -705,4 +718,4 @@ Seeds family with default quests, rewards, and levels.
 
 ---
 
-**© 2025 StarQuest. Built with Next.js & Supabase.**
+**© 2026 StarQuest. Built with Next.js & Supabase.**
