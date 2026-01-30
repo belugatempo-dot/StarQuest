@@ -23,14 +23,15 @@ export default async function QuestManagementPage({
     .order("stars", { ascending: false })
     .order("created_at", { ascending: false });
 
-  // Fetch quest categories for this family
-  const { data: categoriesData } = await supabase
+  // Fetch quest categories for this family (table may not exist yet)
+  const { data: categoriesData, error: categoriesError } = await supabase
     .from("quest_categories")
     .select("*")
     .eq("family_id", user.family_id!)
     .order("sort_order", { ascending: true });
 
-  const categories = (categoriesData || []) as QuestCategory[];
+  const categories = (categoriesError ? [] : categoriesData || []) as QuestCategory[];
+  const categoriesTableMissing = !!categoriesError;
 
   const t = await getTranslations();
 
@@ -76,13 +77,6 @@ export default async function QuestManagementPage({
         </div>
       </div>
 
-      {/* Category Management Component */}
-      <CategoryManagement
-        categories={categories}
-        locale={locale}
-        familyId={user.family_id!}
-      />
-
       {/* Quest Management Component */}
       <QuestManagement
         quests={quests || []}
@@ -90,6 +84,15 @@ export default async function QuestManagementPage({
         familyId={user.family_id!}
         categories={categories}
       />
+
+      {/* Category Management Component (below quests) */}
+      {!categoriesTableMissing && (
+        <CategoryManagement
+          categories={categories}
+          locale={locale}
+          familyId={user.family_id!}
+        />
+      )}
     </div>
   );
 }
