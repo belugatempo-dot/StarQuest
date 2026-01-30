@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import type { QuestCategory, QuestCategoryInsert } from "@/types/category";
 import { DEFAULT_CATEGORIES } from "@/types/category";
 
@@ -65,9 +66,7 @@ export default function CategoryManagement({
         is_active: true,
       }));
 
-      const { error: insertError } = await (supabase
-        .from("quest_categories")
-        .insert as any)(newCategories);
+      const { error: insertError } = await typedInsert(supabase, "quest_categories", newCategories);
 
       if (insertError) throw insertError;
 
@@ -110,9 +109,7 @@ export default function CategoryManagement({
     try {
       if (editingCategory) {
         // Update existing category
-        const { error: updateError } = await (supabase
-          .from("quest_categories")
-          .update as any)({
+        const { error: updateError } = await typedUpdate(supabase, "quest_categories", {
             name,
             name_en: formData.name_en.trim(),
             name_zh: formData.name_zh.trim() || null,
@@ -132,9 +129,7 @@ export default function CategoryManagement({
           sort_order: categories.length + 1,
         };
 
-        const { error: insertError } = await (supabase
-          .from("quest_categories")
-          .insert as any)([newCategory]);
+        const { error: insertError } = await typedInsert(supabase, "quest_categories", [newCategory]);
 
         if (insertError) throw insertError;
       }
@@ -160,9 +155,7 @@ export default function CategoryManagement({
 
   const handleToggleActive = async (category: QuestCategory) => {
     try {
-      const { error } = await (supabase
-        .from("quest_categories")
-        .update as any)({ is_active: !category.is_active })
+      const { error } = await typedUpdate(supabase, "quest_categories", { is_active: !category.is_active })
         .eq("id", category.id);
 
       if (error) throw error;

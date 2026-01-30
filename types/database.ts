@@ -70,7 +70,7 @@ export interface Database {
           stars: number;
           type: "duty" | "bonus" | "violation";
           scope: "self" | "family" | "other";
-          category: "learning" | "chores" | "hygiene" | "health" | "social" | "other" | null;
+          category: string | null;
           icon: string | null;
           is_positive: boolean;
           is_active: boolean;
@@ -86,7 +86,7 @@ export interface Database {
           stars: number;
           type?: "duty" | "bonus" | "violation";
           scope?: "self" | "family" | "other";
-          category?: "learning" | "chores" | "hygiene" | "health" | "social" | "other" | null;
+          category?: string | null;
           icon?: string | null;
           is_active?: boolean;
           max_per_day?: number;
@@ -101,7 +101,7 @@ export interface Database {
           stars?: number;
           type?: "duty" | "bonus" | "violation";
           scope?: "self" | "family" | "other";
-          category?: "learning" | "chores" | "hygiene" | "health" | "social" | "other" | null;
+          category?: string | null;
           icon?: string | null;
           is_active?: boolean;
           max_per_day?: number;
@@ -210,6 +210,8 @@ export interface Database {
           status: "pending" | "approved" | "rejected" | "fulfilled";
           child_note: string | null;
           parent_response: string | null;
+          uses_credit: boolean;
+          credit_amount: number;
           created_at: string;
           reviewed_at: string | null;
           fulfilled_at: string | null;
@@ -223,6 +225,8 @@ export interface Database {
           status?: "pending" | "approved" | "rejected" | "fulfilled";
           child_note?: string | null;
           parent_response?: string | null;
+          uses_credit?: boolean;
+          credit_amount?: number;
           created_at?: string;
           reviewed_at?: string | null;
           fulfilled_at?: string | null;
@@ -236,6 +240,8 @@ export interface Database {
           status?: "pending" | "approved" | "rejected" | "fulfilled";
           child_note?: string | null;
           parent_response?: string | null;
+          uses_credit?: boolean;
+          credit_amount?: number;
           created_at?: string;
           reviewed_at?: string | null;
           fulfilled_at?: string | null;
@@ -410,6 +416,120 @@ export interface Database {
           transaction_type?: "credit_used" | "credit_repaid" | "interest_charged";
           amount?: number;
           balance_after?: number;
+          created_at?: string;
+        };
+      };
+      family_report_preferences: {
+        Row: {
+          id: string;
+          family_id: string;
+          report_email: string | null;
+          weekly_report_enabled: boolean;
+          monthly_report_enabled: boolean;
+          settlement_email_enabled: boolean;
+          timezone: string;
+          report_locale: "en" | "zh-CN";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          report_email?: string | null;
+          weekly_report_enabled?: boolean;
+          monthly_report_enabled?: boolean;
+          settlement_email_enabled?: boolean;
+          timezone?: string;
+          report_locale?: "en" | "zh-CN";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          report_email?: string | null;
+          weekly_report_enabled?: boolean;
+          monthly_report_enabled?: boolean;
+          settlement_email_enabled?: boolean;
+          timezone?: string;
+          report_locale?: "en" | "zh-CN";
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      report_history: {
+        Row: {
+          id: string;
+          family_id: string;
+          report_type: "weekly" | "monthly" | "settlement";
+          report_period_start: string;
+          report_period_end: string;
+          status: "pending" | "sent" | "failed" | "skipped";
+          sent_to_email: string | null;
+          report_data: Record<string, unknown> | null;
+          error_message: string | null;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          report_type: "weekly" | "monthly" | "settlement";
+          report_period_start: string;
+          report_period_end: string;
+          status?: "pending" | "sent" | "failed" | "skipped";
+          sent_to_email?: string | null;
+          report_data?: Record<string, unknown> | null;
+          error_message?: string | null;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          report_type?: "weekly" | "monthly" | "settlement";
+          report_period_start?: string;
+          report_period_end?: string;
+          status?: "pending" | "sent" | "failed" | "skipped";
+          sent_to_email?: string | null;
+          report_data?: Record<string, unknown> | null;
+          error_message?: string | null;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+      };
+      quest_categories: {
+        Row: {
+          id: string;
+          family_id: string;
+          name: string;
+          name_en: string;
+          name_zh: string | null;
+          icon: string;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id: string;
+          name: string;
+          name_en: string;
+          name_zh?: string | null;
+          icon?: string;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string;
+          name?: string;
+          name_en?: string;
+          name_zh?: string | null;
+          icon?: string;
+          is_active?: boolean;
+          sort_order?: number;
           created_at?: string;
         };
       };

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import type { Database } from "@/types/database";
 import RewardFormModal from "./RewardFormModal";
 
@@ -47,9 +48,7 @@ export default function RewardManagement({
 
   const handleToggleActive = async (reward: Reward) => {
     try {
-      const { error } = await (supabase
-        .from("rewards")
-        .update as any)({ is_active: !reward.is_active })
+      const { error } = await typedUpdate(supabase, "rewards", { is_active: !reward.is_active })
         .eq("id", reward.id);
 
       if (error) throw error;

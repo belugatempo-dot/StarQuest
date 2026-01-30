@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -42,9 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update name in users table
-    const { error: updateNameError } = await (supabase
-      .from("users")
-      .update as any)({
+    const { error: updateNameError } = await typedUpdate(supabase, "users", {
         name: name.trim(),
       })
       .eq("id", childId);
@@ -69,9 +68,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (!newEmail && currentEmail) {
       // Clear email if it was removed
-      const { error: clearEmailError } = await (supabase
-        .from("users")
-        .update as any)({
+      const { error: clearEmailError } = await typedUpdate(supabase, "users", {
           email: null,
         })
         .eq("id", childId);

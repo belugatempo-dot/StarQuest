@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedInsert } from "@/lib/supabase/helpers";
 import { getTodayString } from "@/lib/date-utils";
 import type { Database } from "@/types/database";
 
@@ -99,9 +100,7 @@ export default function QuickRecordForm({
       // Create timestamp from selected date at current time
       const selectedDateTime = new Date(recordDate + "T" + new Date().toTimeString().split(" ")[0]);
 
-      const { error: insertError } = await (supabase
-        .from("star_transactions")
-        .insert as any)({
+      const { error: insertError } = await typedInsert(supabase, "star_transactions", {
           family_id: familyId,
           child_id: selectedChild,
           quest_id: selectedQuest || null,

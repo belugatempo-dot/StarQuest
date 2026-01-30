@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import type { CreditInterestTier } from "@/types/credit";
 import { formatInterestRate, formatDebtRange, DEFAULT_INTEREST_TIERS } from "@/types/credit";
 
@@ -106,18 +107,14 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
 
       if (editingTier) {
         // Update existing tier
-        const { error: updateError } = await (supabase
-          .from("credit_interest_tiers")
-          .update as any)(tierData)
+        const { error: updateError } = await typedUpdate(supabase, "credit_interest_tiers", tierData)
           .eq("id", editingTier.id);
 
         if (updateError) throw updateError;
       } else if (isAddingNew) {
         // Insert new tier
         const nextOrder = tiers.length > 0 ? Math.max(...tiers.map((t) => t.tier_order)) + 1 : 1;
-        const { error: insertError } = await (supabase
-          .from("credit_interest_tiers")
-          .insert as any)({
+        const { error: insertError } = await typedInsert(supabase, "credit_interest_tiers", {
             ...tierData,
             tier_order: nextOrder,
           });

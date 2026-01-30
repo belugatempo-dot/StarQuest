@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import { getTodayString } from "@/lib/date-utils";
 
 interface RedemptionRequestListProps {
@@ -120,9 +121,7 @@ export default function RedemptionRequestList({
         ? new Date(approvalDate + "T12:00:00Z").toISOString()
         : new Date().toISOString();
 
-      const { error } = await (supabase
-        .from("redemptions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "redemptions", {
           status: "approved",
           reviewed_at: dateToUse,
         })
@@ -146,9 +145,7 @@ export default function RedemptionRequestList({
     setProcessingId(showRejectModal);
 
     try {
-      const { error } = await (supabase
-        .from("redemptions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "redemptions", {
           status: "rejected",
           parent_response: rejectReason.trim() || null,
           reviewed_at: new Date().toISOString(),
@@ -188,9 +185,7 @@ export default function RedemptionRequestList({
         ? new Date(batchApprovalDate + "T12:00:00Z").toISOString()
         : new Date().toISOString();
 
-      const { error } = await (supabase
-        .from("redemptions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "redemptions", {
           status: "approved",
           reviewed_at: dateToUse,
         })
@@ -216,9 +211,7 @@ export default function RedemptionRequestList({
     setIsBatchProcessing(true);
     try {
       const ids = Array.from(selectedIds);
-      const { error } = await (supabase
-        .from("redemptions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "redemptions", {
           status: "rejected",
           parent_response: batchRejectReason.trim() || null,
           reviewed_at: new Date().toISOString(),

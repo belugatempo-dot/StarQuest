@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 
 interface AddChildModalProps {
@@ -77,7 +78,7 @@ export default function AddChildModal({
       }
 
       // Insert into users table
-      const { error: insertError } = await (supabase.from("users").insert as any)({
+      const { error: insertError } = await typedInsert(supabase, "users", {
         id: authData.user.id,
         family_id: familyId,
         name: name,

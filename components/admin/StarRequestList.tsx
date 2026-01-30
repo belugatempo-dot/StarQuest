@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 
 interface StarRequestListProps {
   requests: any[];
@@ -91,9 +92,7 @@ export default function StarRequestList({
     setProcessingId(requestId);
 
     try {
-      const { error } = await (supabase
-        .from("star_transactions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "star_transactions", {
           status: "approved",
           reviewed_by: parentId,
           reviewed_at: new Date().toISOString(),
@@ -117,9 +116,7 @@ export default function StarRequestList({
     setProcessingId(showRejectModal);
 
     try {
-      const { error } = await (supabase
-        .from("star_transactions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "star_transactions", {
           status: "rejected",
           parent_response: rejectReason.trim() || null,
           reviewed_by: parentId,
@@ -154,9 +151,7 @@ export default function StarRequestList({
     setIsBatchProcessing(true);
     try {
       const ids = Array.from(selectedIds);
-      const { error } = await (supabase
-        .from("star_transactions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "star_transactions", {
           status: "approved",
           reviewed_by: parentId,
           reviewed_at: new Date().toISOString(),
@@ -182,9 +177,7 @@ export default function StarRequestList({
     setIsBatchProcessing(true);
     try {
       const ids = Array.from(selectedIds);
-      const { error } = await (supabase
-        .from("star_transactions")
-        .update as any)({
+      const { error } = await typedUpdate(supabase, "star_transactions", {
           status: "rejected",
           parent_response: batchRejectReason.trim() || null,
           reviewed_by: parentId,

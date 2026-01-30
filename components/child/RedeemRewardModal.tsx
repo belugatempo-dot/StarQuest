@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 import CreditUsageWarning from "./CreditUsageWarning";
@@ -103,11 +104,9 @@ export default function RedeemRewardModal({
 
       // Create redemption request with credit info
       // Parent redemptions are auto-approved with no credit
-      const { data: redemption, error: insertError } = await (supabase
-        .from("redemptions")
-        .insert as any)({
-          family_id: resolvedFamilyId,
-          child_id: targetChildId,
+      const { data: redemption, error: insertError } = await typedInsert(supabase, "redemptions", {
+          family_id: resolvedFamilyId!,
+          child_id: targetChildId!,
           reward_id: reward.id,
           stars_spent: reward.stars_cost,
           status: isParent ? "approved" : "pending",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { typedUpdate } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 
@@ -57,9 +58,7 @@ export default function EditTransactionModal({
         updateData.status = approveRejected ? "approved" : status;
       }
 
-      const { error: updateError } = await (supabase
-        .from("star_transactions")
-        .update as any)(updateData)
+      const { error: updateError } = await typedUpdate(supabase, "star_transactions", updateData)
         .eq("id", transaction.id);
 
       if (updateError) throw updateError;
