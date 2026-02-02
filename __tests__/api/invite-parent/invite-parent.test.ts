@@ -7,31 +7,52 @@
 
 describe("Invite Parent API - Unit Tests", () => {
   describe("Input validation", () => {
-    it("should validate required fields: familyId, email, locale", () => {
-      const body1 = { familyId: "", email: "test@test.com", locale: "en" };
-      const body2 = { familyId: "f1", email: "", locale: "en" };
-      const body3 = { familyId: "f1", email: "test@test.com", locale: "" };
+    it("should validate required fields: familyId and locale (email optional)", () => {
+      const body1 = { familyId: "", locale: "en" };
+      const body2 = { familyId: "f1", locale: "" };
 
-      expect(!body1.familyId || !body1.email || !body1.locale).toBe(true);
-      expect(!body2.familyId || !body2.email || !body2.locale).toBe(true);
-      expect(!body3.familyId || !body3.email || !body3.locale).toBe(true);
+      expect(!body1.familyId || !body1.locale).toBe(true);
+      expect(!body2.familyId || !body2.locale).toBe(true);
     });
 
-    it("should accept valid required fields", () => {
+    it("should accept valid required fields without email", () => {
+      const body = { familyId: "f1", locale: "en" };
+      expect(!body.familyId || !body.locale).toBe(false);
+    });
+
+    it("should accept valid required fields with email", () => {
       const body = { familyId: "f1", email: "test@test.com", locale: "en" };
-      expect(!body.familyId || !body.email || !body.locale).toBe(false);
+      expect(!body.familyId || !body.locale).toBe(false);
     });
 
-    it("should validate email format with regex", () => {
+    it("should validate email format only when email is provided", () => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+      // Valid emails
       expect(emailRegex.test("user@example.com")).toBe(true);
       expect(emailRegex.test("user+tag@example.co.uk")).toBe(true);
+
+      // Invalid emails
       expect(emailRegex.test("not-an-email")).toBe(false);
       expect(emailRegex.test("@example.com")).toBe(false);
       expect(emailRegex.test("user@")).toBe(false);
       expect(emailRegex.test("user @example.com")).toBe(false);
       expect(emailRegex.test("")).toBe(false);
+    });
+
+    it("should allow empty/undefined email (optional field)", () => {
+      const body1 = { familyId: "f1", locale: "en" };
+      const body2 = { familyId: "f1", email: undefined, locale: "en" };
+      const body3 = { familyId: "f1", email: "", locale: "en" };
+
+      const trimmedEmail1 = body1.email?.trim() || "";
+      const trimmedEmail2 = body2.email?.trim() || "";
+      const trimmedEmail3 = body3.email?.trim() || "";
+
+      // Empty emails should not trigger validation
+      expect(trimmedEmail1).toBe("");
+      expect(trimmedEmail2).toBe("");
+      expect(trimmedEmail3).toBe("");
     });
   });
 
@@ -63,6 +84,63 @@ describe("Invite Parent API - Unit Tests", () => {
       expect(
         profile.role !== "parent" || profile.family_id !== familyId
       ).toBe(false);
+    });
+  });
+
+  describe("Response format", () => {
+    it("should always return inviteCode and emailSent in success response", () => {
+      const response = { success: true, inviteCode: "ABC123", emailSent: false };
+      expect(response).toHaveProperty("success", true);
+      expect(response).toHaveProperty("inviteCode");
+      expect(response).toHaveProperty("emailSent");
+      expect(typeof response.inviteCode).toBe("string");
+      expect(typeof response.emailSent).toBe("boolean");
+    });
+
+    it("should set emailSent to true when email was sent successfully", () => {
+      const response = { success: true, inviteCode: "ABC123", emailSent: true };
+      expect(response.emailSent).toBe(true);
+    });
+
+    it("should set emailSent to false when no email provided", () => {
+      const response = { success: true, inviteCode: "ABC123", emailSent: false };
+      expect(response.emailSent).toBe(false);
+    });
+
+    it("should set emailSent to false when email service unavailable", () => {
+      // Simulating: email provided but service not available
+      const emailProvided = true;
+      const isEmailServiceAvailable = false;
+      const shouldAttemptEmail = emailProvided && isEmailServiceAvailable;
+      expect(shouldAttemptEmail).toBe(false);
+    });
+  });
+
+  describe("Email sending logic", () => {
+    it("should only attempt email when both email provided and service available", () => {
+      const cases = [
+        { email: "", available: true, expected: false },
+        { email: "", available: false, expected: false },
+        { email: "test@test.com", available: false, expected: false },
+        { email: "test@test.com", available: true, expected: true },
+      ];
+
+      for (const { email, available, expected } of cases) {
+        const trimmedEmail = email.trim();
+        const shouldAttempt = !!trimmedEmail && available;
+        expect(shouldAttempt).toBe(expected);
+      }
+    });
+
+    it("should not fail the whole request if email sending fails", () => {
+      // Email failure should result in emailSent: false, NOT a 500 error
+      const emailSendResult = { success: false, error: "Domain not verified" };
+      const emailSent = emailSendResult.success;
+      const response = { success: true, inviteCode: "CODE1", emailSent };
+
+      expect(response.success).toBe(true);
+      expect(response.emailSent).toBe(false);
+      expect(response.inviteCode).toBe("CODE1");
     });
   });
 

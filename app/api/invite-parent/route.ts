@@ -12,25 +12,28 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { familyId, email, locale } = body as {
       familyId: string;
-      email: string;
+      email?: string;
       locale: string;
     };
 
-    // Validate required fields
-    if (!familyId || !email || !locale) {
+    // Validate required fields (email is now optional)
+    if (!familyId || !locale) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid email address" },
-        { status: 400 }
-      );
+    // If email provided, validate format
+    const trimmedEmail = email?.trim() || "";
+    if (trimmedEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        return NextResponse.json(
+          { success: false, error: "Invalid email address" },
+          { status: 400 }
+        );
+      }
     }
 
     // Authenticate the requesting user
@@ -70,14 +73,6 @@ export async function POST(request: NextRequest) {
     const familyName = family?.name || "StarQuest Family";
     const inviterName = profile.name || "A parent";
 
-    // Check email service availability before doing anything else
-    if (!isEmailServiceAvailable()) {
-      return NextResponse.json(
-        { success: false, error: "Email service not configured (RESEND_API_KEY missing)" },
-        { status: 503 }
-      );
-    }
-
     // Generate invite code via existing RPC
     let inviteCode: string;
     try {
@@ -108,32 +103,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build and send the email
-    const reportLocale: ReportLocale = locale === "zh-CN" ? "zh-CN" : "en";
-    const emailData = {
-      inviterName,
-      familyName,
-      inviteCode,
-      locale: reportLocale,
-    };
+    // Try sending email if email provided and service available
+    let emailSent = false;
+    if (trimmedEmail && isEmailServiceAvailable()) {
+      try {
+        const reportLocale: ReportLocale = locale === "zh-CN" ? "zh-CN" : "en";
+        const emailData = {
+          inviterName,
+          familyName,
+          inviteCode,
+          locale: reportLocale,
+        };
 
-    const html = generateInviteParentHtml(emailData);
-    const subject = getInviteParentSubject(emailData);
+        const html = generateInviteParentHtml(emailData);
+        const subject = getInviteParentSubject(emailData);
 
-    const result = await sendEmail({
-      to: email,
-      subject,
-      html,
-    });
+        const result = await sendEmail({
+          to: trimmedEmail,
+          subject,
+          html,
+        });
 
-    if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: `Email send failed: ${result.error}` },
-        { status: 500 }
-      );
+        emailSent = result.success;
+      } catch {
+        // Email failure is not fatal — invite code is on screen
+        emailSent = false;
+      }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, inviteCode, emailSent });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Invite parent API error:", message);
