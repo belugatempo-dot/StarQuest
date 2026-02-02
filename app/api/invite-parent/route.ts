@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { sendEmail } from "@/lib/email/resend";
+import { sendEmail, isEmailServiceAvailable } from "@/lib/email/resend";
 import {
   generateInviteParentHtml,
   getInviteParentSubject,
@@ -85,6 +85,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check email service availability
+    if (!isEmailServiceAvailable()) {
+      console.error("RESEND_API_KEY not configured");
+      return NextResponse.json(
+        { success: false, error: "Email service not configured" },
+        { status: 503 }
+      );
+    }
+
     // Build and send the email
     const reportLocale: ReportLocale = locale === "zh-CN" ? "zh-CN" : "en";
     const emailData = {
@@ -113,9 +122,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Invite parent API error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Invite parent API error:", message);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: message || "Internal server error" },
       { status: 500 }
     );
   }
