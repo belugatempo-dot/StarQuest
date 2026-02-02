@@ -63,7 +63,7 @@ export default async function HomePage({
 
         {/* Footer */}
         <div className="mt-16 text-gray-500 text-sm">
-          <p>© 2025 Beluga Tempo | 鲸律</p>
+          <p>© 2026 Beluga Tempo | 鲸律</p>
         </div>
       </div>
     </div>

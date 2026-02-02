@@ -304,7 +304,7 @@ describe('RedemptionRequestList', () => {
   })
 
   describe('Approve Redemption', () => {
-    it('calls update with correct data when approving', async () => {
+    it('opens approve modal when clicking approve button', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -318,6 +318,30 @@ describe('RedemptionRequestList', () => {
         name: /admin\.approve/i,
       })
       await user.click(approveButtons[0])
+
+      expect(screen.getByText('admin.confirmApproval')).toBeInTheDocument()
+      expect(screen.getByText('admin.approvalDate')).toBeInTheDocument()
+    })
+
+    it('calls update with correct data when confirming approval', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const approveButtons = screen.getAllByRole('button', {
+        name: /admin\.approve/i,
+      })
+      await user.click(approveButtons[0])
+
+      // Find and click the confirm button in the modal
+      const modal = screen.getByText('admin.confirmApproval').closest('div')
+      const confirmButton = within(modal!.parentElement!).getAllByRole('button', { name: /admin\.approve/i })[0]
+      await user.click(confirmButton)
 
       await waitFor(() => {
         expect(mockUpdate).toHaveBeenCalledWith(
@@ -343,6 +367,11 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(approveButtons[0])
 
+      // Confirm in modal
+      const modal = screen.getByText('admin.confirmApproval').closest('div')
+      const confirmButton = within(modal!.parentElement!).getAllByRole('button', { name: /admin\.approve/i })[0]
+      await user.click(confirmButton)
+
       await waitFor(() => {
         const callArg = mockUpdate.mock.calls[0][0]
         expect(callArg).not.toHaveProperty('reviewed_by')
@@ -363,6 +392,11 @@ describe('RedemptionRequestList', () => {
         name: /admin\.approve/i,
       })
       await user.click(approveButtons[0])
+
+      // Confirm in modal
+      const modal = screen.getByText('admin.confirmApproval').closest('div')
+      const confirmButton = within(modal!.parentElement!).getAllByRole('button', { name: /admin\.approve/i })[0]
+      await user.click(confirmButton)
 
       await waitFor(() => {
         expect(mockRefresh).toHaveBeenCalled()
@@ -391,8 +425,15 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(approveButtons[0])
 
+      // Confirm in modal
+      const modal = screen.getByText('admin.confirmApproval').closest('div')
+      const confirmButton = within(modal!.parentElement!).getAllByRole('button', { name: /admin\.approve/i })[0]
+      await user.click(confirmButton)
+
       await waitFor(() => {
-        expect(screen.getByText('admin.processing')).toBeInTheDocument()
+        // There will be processing text in the modal
+        const processingButtons = screen.getAllByText('admin.processing')
+        expect(processingButtons.length).toBeGreaterThan(0)
       })
     })
 
@@ -418,11 +459,17 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(approveButtons[0])
 
+      // Confirm in modal
+      const modal = screen.getByText('admin.confirmApproval').closest('div')
+      const confirmButton = within(modal!.parentElement!).getAllByRole('button', { name: /admin\.approve/i })[0]
+      await user.click(confirmButton)
+
       await waitFor(() => {
-        const processingButton = screen.getByRole('button', {
+        const processingButtons = screen.getAllByRole('button', {
           name: /admin\.processing/i,
         })
-        expect(processingButton).toBeDisabled()
+        // At least one should be disabled
+        expect(processingButtons.some(btn => btn.hasAttribute('disabled'))).toBe(true)
       })
     })
 
@@ -451,8 +498,111 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(approveButtons[0])
 
+      // Confirm in modal
+      const modal = screen.getByText('admin.confirmApproval').closest('div')
+      const confirmButton = within(modal!.parentElement!).getAllByRole('button', { name: /admin\.approve/i })[0]
+      await user.click(confirmButton)
+
       await waitFor(() => {
         expect(mockAlert).toHaveBeenCalledWith('Failed to approve redemption')
+      })
+    })
+
+    it('closes approve modal when clicking cancel', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const approveButtons = screen.getAllByRole('button', {
+        name: /admin\.approve/i,
+      })
+      await user.click(approveButtons[0])
+
+      expect(screen.getByText('admin.confirmApproval')).toBeInTheDocument()
+
+      const cancelButton = screen.getByRole('button', { name: /common\.cancel/i })
+      await user.click(cancelButton)
+
+      expect(screen.queryByText('admin.confirmApproval')).not.toBeInTheDocument()
+    })
+
+    it('displays date picker in approval modal', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const approveButtons = screen.getAllByRole('button', {
+        name: /admin\.approve/i,
+      })
+      await user.click(approveButtons[0])
+
+      // Verify date picker label and input are present
+      expect(screen.getByText('admin.approvalDate')).toBeInTheDocument()
+      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const dateInput = modal?.querySelector('input[type="date"]')
+      expect(dateInput).toBeInTheDocument()
+    })
+
+    it('date input has max attribute set', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const approveButtons = screen.getAllByRole('button', {
+        name: /admin\.approve/i,
+      })
+      await user.click(approveButtons[0])
+
+      // Find the date input in the modal
+      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const dateInput = modal?.querySelector('input[type="date"]')
+      expect(dateInput).toBeInTheDocument()
+      // Date input should have a max attribute to prevent future dates
+      expect(dateInput).toHaveAttribute('max')
+    })
+
+    it('sends reviewed_at date in approval request', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const approveButtons = screen.getAllByRole('button', {
+        name: /admin\.approve/i,
+      })
+      await user.click(approveButtons[0])
+
+      // Confirm with default date
+      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
+      await user.click(confirmButton)
+
+      await waitFor(() => {
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: 'approved',
+            reviewed_at: expect.any(String),
+          })
+        )
       })
     })
   })
@@ -914,7 +1064,6 @@ describe('RedemptionRequestList', () => {
 
   describe('Batch Approve Redemptions', () => {
     beforeEach(() => {
-      global.confirm = jest.fn(() => true)
       mockFrom.mockReturnValue({
         update: mockUpdate.mockReturnThis(),
         eq: jest.fn().mockResolvedValue({ error: null }),
@@ -922,7 +1071,32 @@ describe('RedemptionRequestList', () => {
       })
     })
 
-    it('calls batch update when approving selected redemptions', async () => {
+    it('opens batch approve modal when clicking batch approve', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      // Enter selection mode and select items
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      // Click batch approve
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      // Verify modal opens
+      expect(screen.getByText('admin.approvalDate')).toBeInTheDocument()
+    })
+
+    it('calls batch update when confirming batch approve', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -940,9 +1114,14 @@ describe('RedemptionRequestList', () => {
       await user.click(checkboxes[0])
       await user.click(checkboxes[1])
 
-      // Click batch approve
+      // Click batch approve to open modal
       const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
       await user.click(batchApproveButton)
+
+      // Find and click confirm button in modal
+      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
+      await user.click(confirmButton)
 
       await waitFor(() => {
         expect(mockUpdate).toHaveBeenCalledWith(
@@ -953,7 +1132,7 @@ describe('RedemptionRequestList', () => {
       })
     })
 
-    it('shows confirmation dialog before batch approve', async () => {
+    it('does not approve if modal is cancelled', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -972,28 +1151,9 @@ describe('RedemptionRequestList', () => {
       const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
       await user.click(batchApproveButton)
 
-      expect(global.confirm).toHaveBeenCalled()
-    })
-
-    it('does not approve if confirmation is cancelled', async () => {
-      global.confirm = jest.fn(() => false)
-      const user = userEvent.setup()
-      render(
-        <RedemptionRequestList
-          requests={mockRequests}
-          locale="en"
-          parentId="parent-1"
-        />
-      )
-
-      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
-      await user.click(selectButton)
-
-      const checkboxes = screen.getAllByRole('checkbox')
-      await user.click(checkboxes[0])
-
-      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
-      await user.click(batchApproveButton)
+      // Cancel the modal
+      const cancelButton = screen.getByRole('button', { name: /common\.cancel/i })
+      await user.click(cancelButton)
 
       expect(mockUpdate).not.toHaveBeenCalled()
     })
@@ -1017,9 +1177,123 @@ describe('RedemptionRequestList', () => {
       const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
       await user.click(batchApproveButton)
 
+      // Confirm in modal
+      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
+      await user.click(confirmButton)
+
       await waitFor(() => {
         expect(mockRefresh).toHaveBeenCalled()
       })
+    })
+
+    it('displays date picker in batch approve modal', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      // Verify date picker is present
+      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const dateInput = modal?.querySelector('input[type="date"]')
+      expect(dateInput).toBeInTheDocument()
+    })
+
+    it('batch approve date input has max attribute', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      // Verify date input has max attribute
+      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const dateInput = modal?.querySelector('input[type="date"]')
+      expect(dateInput).toHaveAttribute('max')
+    })
+
+    it('sends reviewed_at in batch approval request', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+      await user.click(checkboxes[1])
+
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      // Confirm with default date
+      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
+      await user.click(confirmButton)
+
+      await waitFor(() => {
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: 'approved',
+            reviewed_at: expect.any(String),
+          })
+        )
+      })
+    })
+
+    it('shows selected count in batch approve modal', async () => {
+      const user = userEvent.setup()
+      render(
+        <RedemptionRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+      await user.click(checkboxes[1])
+
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      // Verify count is shown
+      expect(screen.getByText(/2 pending requests/i)).toBeInTheDocument()
     })
   })
 
