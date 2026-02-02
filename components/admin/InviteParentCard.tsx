@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
 interface InviteParentCardProps {
@@ -9,109 +8,112 @@ interface InviteParentCardProps {
 }
 
 export default function InviteParentCard({ familyId, locale }: InviteParentCardProps) {
-  const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
 
-  const supabase = createClient();
+  const isZh = locale === "zh-CN";
 
-  const generateInviteCode = async () => {
-    setIsGenerating(true);
+  const sendInvitation = async () => {
     setError("");
-    setCopied(false);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError(isZh ? "请输入邮箱地址" : "Please enter an email address");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError(isZh ? "请输入有效的邮箱地址" : "Please enter a valid email address");
+      return;
+    }
+
+    setIsSending(true);
 
     try {
-      const { data, error: generateError } = await (supabase.rpc as any)("create_family_invite", {
-        p_family_id: familyId,
+      const response = await fetch("/api/invite-parent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ familyId, email: trimmedEmail, locale }),
       });
 
-      if (generateError) throw generateError;
+      const data = await response.json();
 
-      setInviteCode(data);
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || (isZh ? "发送邀请失败" : "Failed to send invitation"));
+      }
+
+      setSentTo(trimmedEmail);
+      setEmail("");
     } catch (err: any) {
-      console.error("❌ Failed to generate invite code:", err);
-      setError(err.message || (locale === "zh-CN" ? "生成邀请码失败" : "Failed to generate invite code"));
+      setError(err.message || (isZh ? "发送邀请失败" : "Failed to send invitation"));
     } finally {
-      setIsGenerating(false);
+      setIsSending(false);
     }
   };
 
-  const copyToClipboard = () => {
-    if (!inviteCode) return;
-
-    const inviteUrl = `${window.location.origin}/${locale}/register?invite=${inviteCode}`;
-    const message =
-      locale === "zh-CN"
-        ? `加入我们的家庭！\n\n访问 ${inviteUrl}\n或在注册时输入邀请码：${inviteCode}\n\n(邀请码7天内有效)`
-        : `Join our family!\n\nVisit ${inviteUrl}\nOr enter invite code during registration: ${inviteCode}\n\n(Code valid for 7 days)`;
-
-    navigator.clipboard.writeText(message);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+  const resetForm = () => {
+    setSentTo(null);
+    setEmail("");
+    setError("");
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-700">
-          {locale === "zh-CN" ? "邀请家长" : "Invite Parent"}
+          {isZh ? "邀请家长" : "Invite Parent"}
         </h3>
         <span className="text-3xl">👥</span>
       </div>
 
-      {!inviteCode ? (
+      {sentTo ? (
         <>
-          <p className="text-sm text-gray-600 mb-4">
-            {locale === "zh-CN"
-              ? "邀请配偶或家庭成员成为第二家长，共同管理孩子的任务和奖励"
-              : "Invite your spouse or family member to become a second parent and co-manage children's quests and rewards"}
-          </p>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <p className="text-green-700 font-medium">
+              {isZh ? `邀请已发送至 ${sentTo}` : `Invitation sent to ${sentTo}`}
+            </p>
+            <p className="text-green-600 text-sm mt-1">
+              {isZh ? "邀请码7天内有效" : "The invitation expires in 7 days"}
+            </p>
+          </div>
           <button
-            onClick={generateInviteCode}
-            disabled={isGenerating}
-            className="w-full bg-secondary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={resetForm}
+            className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
           >
-            {isGenerating
-              ? (locale === "zh-CN" ? "生成中..." : "Generating...")
-              : (locale === "zh-CN" ? "生成邀请码" : "Generate Invite Code")}
+            {isZh ? "发送另一个邀请" : "Send Another"}
           </button>
         </>
       ) : (
         <>
-          <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 mb-4">
-            <p className="text-sm text-gray-600 mb-2">
-              {locale === "zh-CN" ? "邀请码（7天内有效）：" : "Invite Code (valid for 7 days):"}
-            </p>
-            <div className="flex items-center justify-between">
-              <code className="text-2xl font-bold font-mono tracking-widest text-secondary">
-                {inviteCode}
-              </code>
-              <button
-                onClick={copyToClipboard}
-                className="ml-4 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-              >
-                {copied
-                  ? (locale === "zh-CN" ? "✓ 已复制" : "✓ Copied")
-                  : (locale === "zh-CN" ? "复制" : "Copy")}
-              </button>
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-500 mb-3">
-            {locale === "zh-CN"
-              ? "分享此邀请码给您的配偶或家庭成员。他们在注册时输入此邀请码即可加入您的家庭成为家长。"
-              : "Share this invite code with your spouse or family member. They can enter it during registration to join your family as a parent."}
+          <p className="text-sm text-gray-600 mb-4">
+            {isZh
+              ? "输入配偶或家庭成员的邮箱地址，系统将发送包含邀请码的邮件"
+              : "Enter your spouse or family member's email to send them an invitation with a registration link"}
           </p>
-
+          <div className="mb-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError("");
+              }}
+              placeholder={isZh ? "输入邮箱地址" : "Enter email address"}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary"
+              disabled={isSending}
+            />
+          </div>
           <button
-            onClick={() => {
-              setInviteCode(null);
-              setError("");
-            }}
-            className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
+            onClick={sendInvitation}
+            disabled={isSending}
+            className="w-full bg-secondary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {locale === "zh-CN" ? "生成新邀请码" : "Generate New Code"}
+            {isSending
+              ? (isZh ? "发送中..." : "Sending...")
+              : (isZh ? "发送邀请" : "Send Invitation")}
           </button>
         </>
       )}

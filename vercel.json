@@ -6,8 +6,8 @@
   "regions": ["hkg1"],
   "crons": [
     {
-      "path": "/api/cron/settlement",
-      "schedule": "1 0 1 * *"
+      "path": "/api/cron/daily-jobs",
+      "schedule": "0 0 * * *"
     }
   ]
 }
