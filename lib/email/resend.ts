@@ -35,7 +35,7 @@ export interface SendEmailOptions {
  * Default sender email address
  */
 const DEFAULT_FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL || "StarQuest <noreply@beluga-tempo.com>";
+  process.env.RESEND_FROM_EMAIL || "StarQuest <onboarding@resend.dev>";
 
 /**
  * Send an email using Resend
