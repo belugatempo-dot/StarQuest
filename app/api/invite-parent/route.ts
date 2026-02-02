@@ -70,27 +70,41 @@ export async function POST(request: NextRequest) {
     const familyName = family?.name || "StarQuest Family";
     const inviterName = profile.name || "A parent";
 
-    // Generate invite code via existing RPC
-    const { data: inviteCode, error: rpcError } = await (
-      supabase.rpc as any
-    )("create_family_invite", {
-      p_family_id: familyId,
-    });
-
-    if (rpcError || !inviteCode) {
-      console.error("Failed to create invite:", rpcError);
+    // Check email service availability before doing anything else
+    if (!isEmailServiceAvailable()) {
       return NextResponse.json(
-        { success: false, error: "Failed to generate invite code" },
-        { status: 500 }
+        { success: false, error: "Email service not configured (RESEND_API_KEY missing)" },
+        { status: 503 }
       );
     }
 
-    // Check email service availability
-    if (!isEmailServiceAvailable()) {
-      console.error("RESEND_API_KEY not configured");
+    // Generate invite code via existing RPC
+    let inviteCode: string;
+    try {
+      const { data, error: rpcError } = await (
+        supabase.rpc as any
+      )("create_family_invite", {
+        p_family_id: familyId,
+      });
+
+      if (rpcError) {
+        return NextResponse.json(
+          { success: false, error: `RPC error: ${rpcError.message}` },
+          { status: 500 }
+        );
+      }
+      if (!data) {
+        return NextResponse.json(
+          { success: false, error: "RPC returned no invite code" },
+          { status: 500 }
+        );
+      }
+      inviteCode = data as string;
+    } catch (rpcErr) {
+      const msg = rpcErr instanceof Error ? rpcErr.message : String(rpcErr);
       return NextResponse.json(
-        { success: false, error: "Email service not configured" },
-        { status: 503 }
+        { success: false, error: `RPC exception: ${msg}` },
+        { status: 500 }
       );
     }
 
@@ -99,7 +113,7 @@ export async function POST(request: NextRequest) {
     const emailData = {
       inviterName,
       familyName,
-      inviteCode: inviteCode as string,
+      inviteCode,
       locale: reportLocale,
     };
 
@@ -113,9 +127,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error("Failed to send invite email:", result.error);
       return NextResponse.json(
-        { success: false, error: "Failed to send invitation email" },
+        { success: false, error: `Email send failed: ${result.error}` },
         { status: 500 }
       );
     }
