@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { formatDateOnly } from "@/lib/date-utils";
 import type { CreditSettlement, InterestBreakdownItem } from "@/types/credit";
 import { formatInterestRate } from "@/types/credit";
 
@@ -67,15 +68,6 @@ export default function SettlementHistoryTable({
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(locale === "zh-CN" ? "zh-CN" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const toggleExpand = (id: string) => {
@@ -143,7 +135,7 @@ export default function SettlementHistoryTable({
                     className="border-b border-gray-100 hover:bg-gray-50"
                   >
                     <td className="py-3 px-2">
-                      {formatDate(settlement.settlement_date)}
+                      {formatDateOnly(settlement.settlement_date, locale)}
                     </td>
                     {!childId && (
                       <td className="py-3 px-2">{settlement.child_name}</td>

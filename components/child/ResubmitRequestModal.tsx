@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
 import { useTranslations } from "next-intl";
 import ModalFrame from "@/components/ui/ModalFrame";
+import { getQuestName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 
 type Transaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
@@ -36,17 +37,8 @@ export default function ResubmitRequestModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getQuestName = () => {
-    if (transaction.custom_description) {
-      return transaction.custom_description;
-    }
-    if (transaction.quests) {
-      return locale === "zh-CN"
-        ? transaction.quests.name_zh || transaction.quests.name_en
-        : transaction.quests.name_en;
-    }
-    return locale === "zh-CN" ? "未知任务" : "Unknown quest";
-  };
+  const questDisplayName = transaction.custom_description
+    || getQuestName(transaction.quests, locale);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +115,7 @@ export default function ResubmitRequestModal({
                 <span className="text-2xl mr-2">
                   {transaction.quests?.icon || "⭐"}
                 </span>
-                {getQuestName()}
+                {questDisplayName}
               </div>
             </div>
 

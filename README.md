@@ -10,7 +10,7 @@ A gamified family behavior tracking system that helps children build positive ha
 
 ## 📋 Project Status
 
-**Current Phase**: Phase 2 - Child Features ✅ **COMPLETED**
+**Current Phase**: Phase 4 - Advanced Features 🚧
 
 ### ✅ Completed Features
 
@@ -30,6 +30,25 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Reward catalog with affordability check
 - [x] Reward redemption requests
 - [x] Profile page with level progress and badge wall
+
+**Phase 3 - Parent Features:**
+- [x] Parent dashboard with quick actions
+- [x] Quick record stars with multiplier
+- [x] Approval center (star requests & redemptions with batch actions)
+- [x] Quest management (CRUD with categories)
+- [x] Reward management (CRUD)
+- [x] Level configuration
+- [x] Family member management (add/edit/delete children, reset passwords)
+- [x] Email-based parent invitation system
+- [x] Credit system (borrowing stars, interest tiers, settlements)
+
+**Phase 4 - Advanced Features (In Progress):**
+- [x] Unified activity list with calendar view
+- [x] Redemption date picker and editing
+- [x] Configurable quest categories
+- [x] Email reports (weekly/monthly summaries, settlement notices)
+- [x] Report preferences settings page
+- [x] Database backup system (manual + automated weekly)
 
 ---
 
@@ -57,7 +76,7 @@ A gamified family behavior tracking system that helps children build positive ha
 3. **Configure environment**
    ```bash
    cp .env.example .env.local
-   # Edit .env.local with your Supabase credentials
+   # Edit .env.local with your Supabase and Resend credentials
    ```
 
 4. **Run development server**
@@ -80,7 +99,8 @@ A gamified family behavior tracking system that helps children build positive ha
 - **Internationalization**: next-intl
 - **Testing**: Jest + React Testing Library
 - **Type Safety**: TypeScript
-- **Deployment**: Vercel (planned)
+- **Email**: Resend (transactional emails)
+- **Deployment**: Vercel
 
 ---
 
@@ -100,9 +120,12 @@ StarQuest/
 │   └── admin/             # Admin-specific components
 ├── lib/
 │   ├── supabase/          # Supabase client configs
+│   ├── email/             # Email sending (Resend) and templates
+│   ├── reports/           # Report data generation
 │   └── auth.ts            # Auth utilities
 ├── types/
-│   └── database.ts        # Database type definitions
+│   ├── database.ts        # Database type definitions
+│   └── reports.ts         # Report system types
 ├── messages/              # i18n translations
 │   ├── en.json
 │   └── zh-CN.json
@@ -200,44 +223,26 @@ Language can be switched via the UI. User language preference is saved in their 
 
 ## 📝 Development Roadmap
 
-### Phase 1: Foundation ✅ COMPLETED
-1. ✅ Project setup
-2. ✅ Authentication
-3. ✅ Basic layouts
-4. ✅ Database schema
-5. ✅ Testing setup
+### Phase 1: Foundation ✅
+1. ✅ Project setup, auth, layouts, database schema, testing
 
-### Phase 2: Child Features ✅ COMPLETED
-7. ✅ Child dashboard with star balance
-8. ✅ Quest list and star request submission
-9. ✅ Rewards catalog with affordability check
-10. ✅ Redemption requests
-11. ✅ Activity history with filtering
-12. ✅ Profile with level badges and progress
+### Phase 2: Child Features ✅
+2. ✅ Dashboard, quests, star requests, rewards, redemptions, profile
 
-### Phase 3: Parent Features 🚧 NEXT
-13. Parent dashboard (basic version done)
-14. Quick record stars
-15. Approval center (star requests & redemptions)
-16. Quest management (CRUD)
-17. Reward management (CRUD)
-18. Level configuration
-19. Family member management
+### Phase 3: Parent Features ✅
+3. ✅ Dashboard, quick record, approval center, quest/reward/level CRUD
+4. ✅ Family management, email-based parent invitations, credit system
 
-### Phase 4: Advanced Features
-19. Level system with animations
-20. Family member management
-21. Statistics and reports
-22. Settings page
-23. Email notifications
+### Phase 4: Advanced Features 🚧
+5. ✅ Unified activity list, calendar view, redemption date editing
+6. ✅ Email reports (weekly/monthly), settlement notices, settings page
+7. ✅ Database backup system (manual + weekly GitHub Actions)
+8. PWA support
+9. Data export
 
 ### Phase 5: Polish & Launch
-24. Weekly email reports
-25. Invite system
-26. PWA support
-27. Data export
-28. Performance optimization
-29. Production deployment
+10. Performance optimization
+11. Production hardening
 
 ---
 

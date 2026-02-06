@@ -21,3 +21,41 @@ export function toLocalTimeString(date: Date): string {
 export function getTodayString(): string {
   return toLocalDateString(new Date());
 }
+
+/**
+ * Format a date string for display with locale support.
+ * Replaces duplicated formatDate helpers across components.
+ */
+export function formatDateTime(
+  dateString: string | null,
+  locale: string,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return date.toLocaleString(
+    locale === "zh-CN" ? "zh-CN" : "en-US",
+    options ?? defaultOptions
+  );
+}
+
+/**
+ * Format a date string for display (date only, no time).
+ */
+export function formatDateOnly(
+  dateString: string | null,
+  locale: string
+): string {
+  return formatDateTime(dateString, locale, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}

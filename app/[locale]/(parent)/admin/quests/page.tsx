@@ -3,7 +3,7 @@ import { requireParent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import QuestManagement from "@/components/admin/QuestManagement";
 import CategoryManagement from "@/components/admin/CategoryManagement";
-import type { QuestCategory } from "@/types/category";
+import type { QuestCategoryRow } from "@/types/category";
 
 export default async function QuestManagementPage({
   params,
@@ -30,7 +30,7 @@ export default async function QuestManagementPage({
     .eq("family_id", user.family_id!)
     .order("sort_order", { ascending: true });
 
-  const categories = (categoriesError ? [] : categoriesData || []) as QuestCategory[];
+  const categories = (categoriesError ? [] : categoriesData || []) as QuestCategoryRow[];
   const categoriesTableMissing = !!categoriesError;
 
   const t = await getTranslations();

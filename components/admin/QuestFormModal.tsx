@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Quest, QuestType, QuestScope } from "@/types/quest";
-import type { QuestCategory as QuestCategoryType } from "@/types/category";
+import type { QuestCategoryRow as QuestCategoryType } from "@/types/category";
 
 interface QuestFormModalProps {
   quest?: Quest;

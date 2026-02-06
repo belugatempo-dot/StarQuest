@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import type { Database } from "@/types/database";
+import { getRewardName } from "@/lib/localization";
+import { formatDateTime } from "@/lib/date-utils";
 
 type Redemption = Database["public"]["Tables"]["redemptions"]["Row"] & {
   rewards: {
@@ -26,13 +28,6 @@ export default function ChildRedemptionList({
   if (redemptions.length === 0) {
     return null;
   }
-
-  const getRewardName = (redemption: Redemption) => {
-    if (!redemption.rewards) return "Unknown Reward";
-    return locale === "zh-CN"
-      ? redemption.rewards.name_zh || redemption.rewards.name_en
-      : redemption.rewards.name_en;
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -69,17 +64,6 @@ export default function ChildRedemptionList({
     }
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(locale === "zh-CN" ? "zh-CN" : "en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-xl font-bold mb-4 flex items-center">
@@ -106,9 +90,9 @@ export default function ChildRedemptionList({
                 {redemption.rewards?.icon || "🎁"}
               </div>
               <div>
-                <div className="font-semibold">{getRewardName(redemption)}</div>
+                <div className="font-semibold">{getRewardName(redemption.rewards, locale)}</div>
                 <div className="text-sm text-gray-500">
-                  {redemption.stars_spent} {t("common.stars")} • {formatDate(redemption.created_at)}
+                  {redemption.stars_spent} {t("common.stars")} • {formatDateTime(redemption.created_at, locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </div>
                 {redemption.child_note && (
                   <div className="text-xs text-gray-400 mt-1">

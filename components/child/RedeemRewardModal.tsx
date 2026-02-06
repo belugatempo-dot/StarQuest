@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
+import { getRewardName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 import CreditUsageWarning from "./CreditUsageWarning";
 
@@ -52,10 +53,6 @@ export default function RedeemRewardModal({
   const [confirmCredit, setConfirmCredit] = useState(false);
 
   const supabase = createClient();
-
-  const getRewardName = (r: Reward) => {
-    return locale === "zh-CN" ? r.name_zh || r.name_en : r.name_en;
-  };
 
   // Calculate actual spendable amount
   const actualSpendable = spendableStars ?? (creditEnabled ? Math.max(currentStars, 0) + availableCredit : Math.max(currentStars, 0));
@@ -151,7 +148,7 @@ export default function RedeemRewardModal({
                 <div className="text-3xl">{reward.icon || "🎁"}</div>
                 <div>
                   <h3 className="font-semibold text-lg">
-                    {getRewardName(reward)}
+                    {getRewardName(reward, locale)}
                   </h3>
                   {reward.category && (
                     <p className="text-sm text-gray-600">

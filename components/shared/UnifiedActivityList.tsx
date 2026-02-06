@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
+import { useBatchSelection } from "@/lib/hooks/useBatchSelection";
 import CalendarView from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
@@ -70,11 +71,7 @@ export default function UnifiedActivityList({
   );
 
   // Batch selection state (parent only)
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showBatchRejectModal, setShowBatchRejectModal] = useState(false);
-  const [batchRejectReason, setBatchRejectReason] = useState("");
-  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const batch = useBatchSelection();
 
   // Calculate stats
   const stats = useMemo(
@@ -167,41 +164,15 @@ export default function UnifiedActivityList({
     [filteredActivities]
   );
 
-  // Clear selection when exiting selection mode
-  useEffect(() => {
-    if (!selectionMode) {
-      setSelectedIds(new Set());
-    }
-  }, [selectionMode]);
-
-  // Selection handlers (parent only)
-  const toggleSelection = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const selectAllPending = () => {
-    setSelectedIds(new Set(pendingTransactions.map((t) => t.id)));
-  };
-
-  const clearSelection = () => {
-    setSelectedIds(new Set());
-    setSelectionMode(false);
-  };
-
   // Batch approve handler (parent only)
   const handleBatchApprove = async () => {
-    if (selectedIds.size === 0) return;
+    if (batch.selectedIds.size === 0) return;
 
-    if (!confirm(t("activity.confirmBatchApprove", { count: selectedIds.size }))) return;
+    if (!confirm(t("activity.confirmBatchApprove", { count: batch.selectedIds.size }))) return;
 
-    setIsBatchProcessing(true);
+    batch.setIsBatchProcessing(true);
     try {
-      const ids = Array.from(selectedIds);
+      const ids = Array.from(batch.selectedIds);
       const { error } = await typedUpdate(supabase, "star_transactions", {
         status: "approved",
         reviewed_at: new Date().toISOString(),
@@ -209,40 +180,40 @@ export default function UnifiedActivityList({
 
       if (error) throw error;
 
-      clearSelection();
+      batch.exitSelectionMode();
       router.refresh();
     } catch (err) {
       console.error("Batch approve error:", err);
       alert(t("activity.batchApproveFailed"));
     } finally {
-      setIsBatchProcessing(false);
+      batch.setIsBatchProcessing(false);
     }
   };
 
   // Batch reject handler (parent only)
   const handleBatchReject = async () => {
-    if (selectedIds.size === 0 || !batchRejectReason.trim()) return;
+    if (batch.selectedIds.size === 0 || !batch.batchRejectReason.trim()) return;
 
-    setIsBatchProcessing(true);
+    batch.setIsBatchProcessing(true);
     try {
-      const ids = Array.from(selectedIds);
+      const ids = Array.from(batch.selectedIds);
       const { error } = await typedUpdate(supabase, "star_transactions", {
         status: "rejected",
-        parent_response: batchRejectReason.trim(),
+        parent_response: batch.batchRejectReason.trim(),
         reviewed_at: new Date().toISOString(),
       }).in("id", ids);
 
       if (error) throw error;
 
-      setShowBatchRejectModal(false);
-      setBatchRejectReason("");
-      clearSelection();
+      batch.setShowBatchRejectModal(false);
+      batch.setBatchRejectReason("");
+      batch.exitSelectionMode();
       router.refresh();
     } catch (err) {
       console.error("Batch reject error:", err);
       alert(t("activity.batchRejectFailed"));
     } finally {
-      setIsBatchProcessing(false);
+      batch.setIsBatchProcessing(false);
     }
   };
 
@@ -521,27 +492,27 @@ export default function UnifiedActivityList({
             {permissions.canBatchApprove && pendingTransactions.length > 0 && (
               <div className="flex items-center space-x-3 pt-2 border-t">
                 <button
-                  onClick={() => setSelectionMode(!selectionMode)}
+                  onClick={() => batch.setSelectionMode(!batch.selectionMode)}
                   className={`px-4 py-2 rounded-lg transition font-medium ${
-                    selectionMode
+                    batch.selectionMode
                       ? "bg-purple-500 text-white"
                       : "bg-purple-100 text-purple-700 hover:bg-purple-200"
                   }`}
                 >
-                  {selectionMode ? "✅ " : "☐ "}
+                  {batch.selectionMode ? "✅ " : "☐ "}
                   {t("activity.selectionMode")}
                 </button>
-                {selectionMode && (
+                {batch.selectionMode && (
                   <button
-                    onClick={selectAllPending}
+                    onClick={() => batch.selectAll(pendingTransactions.map((t) => t.id))}
                     className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
                   >
                     {t("activity.selectAllPending", { count: pendingTransactions.length })}
                   </button>
                 )}
-                {selectionMode && selectedIds.size > 0 && (
+                {batch.selectionMode && batch.selectedIds.size > 0 && (
                   <span className="text-sm text-gray-600">
-                    {t("activity.selectedItems", { count: selectedIds.size })}
+                    {t("activity.selectedItems", { count: batch.selectedIds.size })}
                   </span>
                 )}
               </div>
@@ -563,9 +534,9 @@ export default function UnifiedActivityList({
                     activity={activity}
                     locale={locale}
                     permissions={permissions}
-                    selectionMode={selectionMode}
-                    isSelected={selectedIds.has(activity.id)}
-                    onToggleSelection={() => toggleSelection(activity.id)}
+                    selectionMode={batch.selectionMode}
+                    isSelected={batch.selectedIds.has(activity.id)}
+                    onToggleSelection={() => batch.toggleSelection(activity.id)}
                     onEdit={() => {
                       if (activity.type === "redemption") {
                         setEditingRedemption(activity.originalData);
@@ -634,10 +605,10 @@ export default function UnifiedActivityList({
                             activity={activity}
                             locale={locale}
                             permissions={permissions}
-                            selectionMode={selectionMode}
-                            isSelected={selectedIds.has(activity.id)}
+                            selectionMode={batch.selectionMode}
+                            isSelected={batch.selectedIds.has(activity.id)}
                             onToggleSelection={() =>
-                              toggleSelection(activity.id)
+                              batch.toggleSelection(activity.id)
                             }
                             onEdit={() => {
                               if (activity.type === "redemption") {
@@ -707,31 +678,31 @@ export default function UnifiedActivityList({
       )}
 
       {/* Floating Action Bar for Batch Operations (parent only) */}
-      {selectedIds.size > 0 && permissions.canBatchApprove && (
+      {batch.selectedIds.size > 0 && permissions.canBatchApprove && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-purple-300 shadow-lg p-4 z-50">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <span className="font-medium text-purple-700">
-              {t("activity.itemsSelected", { count: selectedIds.size })}
+              {t("activity.itemsSelected", { count: batch.selectedIds.size })}
             </span>
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleBatchApprove}
-                disabled={isBatchProcessing}
+                disabled={batch.isBatchProcessing}
                 className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 font-medium"
               >
-                {isBatchProcessing
+                {batch.isBatchProcessing
                   ? t("activity.processing")
                   : `✅ ${t("activity.batchApprove")}`}
               </button>
               <button
-                onClick={() => setShowBatchRejectModal(true)}
-                disabled={isBatchProcessing}
+                onClick={() => batch.setShowBatchRejectModal(true)}
+                disabled={batch.isBatchProcessing}
                 className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 font-medium"
               >
                 {`❌ ${t("activity.batchReject")}`}
               </button>
               <button
-                onClick={clearSelection}
+                onClick={batch.exitSelectionMode}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
               >
                 {t("activity.clear")}
@@ -742,7 +713,7 @@ export default function UnifiedActivityList({
       )}
 
       {/* Batch Reject Modal (parent only) */}
-      {showBatchRejectModal && permissions.canBatchApprove && (
+      {batch.showBatchRejectModal && permissions.canBatchApprove && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6 border-b">
@@ -750,7 +721,7 @@ export default function UnifiedActivityList({
                 {t("activity.batchRejectTitle")}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {t("activity.rejectingCount", { count: selectedIds.size })}
+                {t("activity.rejectingCount", { count: batch.selectedIds.size })}
               </p>
             </div>
             <div className="p-6 space-y-4">
@@ -759,8 +730,8 @@ export default function UnifiedActivityList({
                   {t("activity.rejectionReason")}
                 </label>
                 <textarea
-                  value={batchRejectReason}
-                  onChange={(e) => setBatchRejectReason(e.target.value)}
+                  value={batch.batchRejectReason}
+                  onChange={(e) => batch.setBatchRejectReason(e.target.value)}
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   placeholder={t("activity.rejectionPlaceholder")}
@@ -770,8 +741,8 @@ export default function UnifiedActivityList({
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    setShowBatchRejectModal(false);
-                    setBatchRejectReason("");
+                    batch.setShowBatchRejectModal(false);
+                    batch.setBatchRejectReason("");
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
                 >
@@ -779,10 +750,10 @@ export default function UnifiedActivityList({
                 </button>
                 <button
                   onClick={handleBatchReject}
-                  disabled={isBatchProcessing || !batchRejectReason.trim()}
+                  disabled={batch.isBatchProcessing || !batch.batchRejectReason.trim()}
                   className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
                 >
-                  {isBatchProcessing
+                  {batch.isBatchProcessing
                     ? t("activity.processing")
                     : t("activity.confirmReject")}
                 </button>

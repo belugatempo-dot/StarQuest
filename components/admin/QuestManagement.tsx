@@ -7,14 +7,14 @@ import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
 import type { Quest } from "@/types/quest";
 import { groupQuests } from "@/types/quest";
-import type { QuestCategory } from "@/types/category";
+import type { QuestCategoryRow } from "@/types/category";
 import QuestFormModal from "./QuestFormModal";
 
 interface QuestManagementProps {
   quests: Quest[];
   locale: string;
   familyId: string;
-  categories?: QuestCategory[];
+  categories?: QuestCategoryRow[];
 }
 
 export default function QuestManagement({

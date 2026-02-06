@@ -5,11 +5,11 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
-import type { QuestCategory, QuestCategoryInsert } from "@/types/category";
+import type { QuestCategoryRow, QuestCategoryInsert } from "@/types/category";
 import { DEFAULT_CATEGORIES } from "@/types/category";
 
 interface CategoryManagementProps {
-  categories: QuestCategory[];
+  categories: QuestCategoryRow[];
   locale: string;
   familyId: string;
   onCategoriesChange?: () => void;
@@ -26,7 +26,7 @@ export default function CategoryManagement({
   const supabase = createClient();
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<QuestCategory | null>(null);
+  const [editingCategory, setEditingCategory] = useState<QuestCategoryRow | null>(null);
   const [loading, setLoading] = useState(false);
   const [initializingDefaults, setInitializingDefaults] = useState(false);
   const [error, setError] = useState("");
@@ -80,7 +80,7 @@ export default function CategoryManagement({
     }
   };
 
-  const handleEdit = (category: QuestCategory) => {
+  const handleEdit = (category: QuestCategoryRow) => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -153,7 +153,7 @@ export default function CategoryManagement({
     }
   };
 
-  const handleToggleActive = async (category: QuestCategory) => {
+  const handleToggleActive = async (category: QuestCategoryRow) => {
     try {
       const { error } = await typedUpdate(supabase, "quest_categories", { is_active: !category.is_active })
         .eq("id", category.id);
@@ -168,7 +168,7 @@ export default function CategoryManagement({
     }
   };
 
-  const handleDelete = async (category: QuestCategory) => {
+  const handleDelete = async (category: QuestCategoryRow) => {
     const categoryName =
       locale === "zh-CN" ? category.name_zh || category.name_en : category.name_en;
 
@@ -192,7 +192,7 @@ export default function CategoryManagement({
     }
   };
 
-  const getCategoryName = (category: QuestCategory) => {
+  const getCategoryName = (category: QuestCategoryRow) => {
     return locale === "zh-CN"
       ? category.name_zh || category.name_en
       : category.name_en;

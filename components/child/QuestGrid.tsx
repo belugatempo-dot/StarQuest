@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { Database } from "@/types/database";
 import { scopeLabels } from "@/types/quest";
+import { getQuestName } from "@/lib/localization";
 import RequestStarsModal from "./RequestStarsModal";
 
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
@@ -25,12 +26,6 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
     family: quests.filter((q) => q.scope === "family"),
     self: quests.filter((q) => q.scope === "self"),
     other: quests.filter((q) => q.scope === "other"),
-  };
-
-  const getQuestName = (quest: Quest) => {
-    return locale === "zh-CN"
-      ? quest.name_zh || quest.name_en
-      : quest.name_en;
   };
 
   const getScopeTitle = (scope: "family" | "self" | "other") => {
@@ -71,7 +66,7 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
 
         {/* Quest Name */}
         <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition">
-          {getQuestName(quest)}
+          {getQuestName(quest, locale)}
         </h3>
 
         {/* Category Badge */}
