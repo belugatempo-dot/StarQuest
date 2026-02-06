@@ -6,7 +6,7 @@
 
 import type {
   UnifiedActivityItem,
-  RawStarTransaction,
+  StarTransaction,
   RawRedemption,
   RawCreditTransaction,
 } from "@/types/activity";
@@ -16,7 +16,7 @@ import { toLocalDateString } from "@/lib/date-utils";
  * Transform a star transaction to unified activity format
  */
 export function transformStarTransaction(
-  tx: RawStarTransaction,
+  tx: StarTransaction,
   includeChildInfo: boolean = true
 ): UnifiedActivityItem {
   // Determine icon: use quest icon, or default based on stars (⭐ for positive, ⚠️ for negative)
@@ -128,24 +128,6 @@ export function transformCreditTransaction(
     questId: null,
     quests: null,
   };
-}
-
-/**
- * Transform any activity to unified format based on type
- */
-export function transformToUnifiedActivity(
-  data: RawStarTransaction | RawRedemption | RawCreditTransaction,
-  type: "star_transaction" | "redemption" | "credit_transaction",
-  includeChildInfo: boolean = true
-): UnifiedActivityItem {
-  switch (type) {
-    case "star_transaction":
-      return transformStarTransaction(data as RawStarTransaction, includeChildInfo);
-    case "redemption":
-      return transformRedemption(data as RawRedemption, includeChildInfo);
-    case "credit_transaction":
-      return transformCreditTransaction(data as RawCreditTransaction, includeChildInfo);
-  }
 }
 
 /**

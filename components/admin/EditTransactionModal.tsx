@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
+import { getQuestName } from "@/lib/localization";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 
@@ -73,17 +74,7 @@ export default function EditTransactionModal({
     }
   };
 
-  const getQuestName = () => {
-    if (transaction.custom_description) {
-      return transaction.custom_description;
-    }
-    if (transaction.quests) {
-      return locale === "zh-CN"
-        ? transaction.quests.name_zh || transaction.quests.name_en
-        : transaction.quests.name_en;
-    }
-    return t("editTransaction.unknownQuest");
-  };
+  const questDisplayName = transaction.custom_description || getQuestName(transaction.quests, locale);
 
   return (
     <ModalFrame
@@ -99,7 +90,7 @@ export default function EditTransactionModal({
             {t("editTransaction.quest")}
           </label>
           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-            {getQuestName()}
+            {questDisplayName}
           </div>
           {!transaction.quest_id && (
             <p className="text-xs text-gray-500 mt-1">

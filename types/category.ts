@@ -5,7 +5,7 @@
  * Represents a configurable quest category from the database.
  * Each family can have their own set of categories.
  */
-export interface QuestCategory {
+export interface QuestCategoryRow {
   id: string;
   family_id: string;
   name: string;          // Internal key (lowercase, no spaces)
@@ -67,7 +67,7 @@ export const DEFAULT_CATEGORIES: Omit<QuestCategoryInsert, 'family_id'>[] = [
  * Helper function to get the display name based on locale
  */
 export function getCategoryDisplayName(
-  category: QuestCategory,
+  category: QuestCategoryRow,
   locale: string
 ): string {
   if (locale === 'zh-CN' && category.name_zh) {
@@ -80,7 +80,7 @@ export function getCategoryDisplayName(
  * Helper function to format category for display with icon
  */
 export function formatCategoryWithIcon(
-  category: QuestCategory,
+  category: QuestCategoryRow,
   locale: string
 ): string {
   const name = getCategoryDisplayName(category, locale);

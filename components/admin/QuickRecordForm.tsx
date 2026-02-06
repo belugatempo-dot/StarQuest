@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import { getTodayString } from "@/lib/date-utils";
+import { getQuestName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
@@ -51,12 +52,6 @@ export default function QuickRecordForm({
     setRecordDate(today);
     setMaxDate(today);
   }, []);
-
-  const getQuestName = (quest: Quest) => {
-    return locale === "zh-CN"
-      ? quest.name_zh || quest.name_en
-      : quest.name_en;
-  };
 
   const selectedQuestData = quests.find((q) => q.id === selectedQuest);
   const isCustom = !selectedQuest && customDescription;
@@ -243,7 +238,7 @@ export default function QuickRecordForm({
                   <div className="flex items-center space-x-2">
                     <span className="text-2xl">{quest.icon || "⭐"}</span>
                     <span className="font-medium text-sm">
-                      {getQuestName(quest)}
+                      {getQuestName(quest, locale)}
                     </span>
                   </div>
                   <span className="text-success font-bold">+{quest.stars}</span>
@@ -281,7 +276,7 @@ export default function QuickRecordForm({
                   <div className="flex items-center space-x-2">
                     <span className="text-2xl">{quest.icon || "📋"}</span>
                     <span className="font-medium text-sm">
-                      {getQuestName(quest)}
+                      {getQuestName(quest, locale)}
                     </span>
                   </div>
                   <span className="text-warning font-bold">{quest.stars}</span>
@@ -319,7 +314,7 @@ export default function QuickRecordForm({
                   <div className="flex items-center space-x-2">
                     <span className="text-2xl">{quest.icon || "⚠️"}</span>
                     <span className="font-medium text-sm">
-                      {getQuestName(quest)}
+                      {getQuestName(quest, locale)}
                     </span>
                   </div>
                   <span className="text-danger font-bold">{quest.stars}</span>

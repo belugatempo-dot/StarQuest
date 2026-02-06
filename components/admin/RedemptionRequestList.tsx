@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
-import { getTodayString } from "@/lib/date-utils";
+import { getTodayString, formatDateTime } from "@/lib/date-utils";
+import { getRewardName } from "@/lib/localization";
+import { useBatchSelection } from "@/lib/hooks/useBatchSelection";
 
 interface RedemptionRequestListProps {
   requests: any[];
@@ -31,14 +33,12 @@ export default function RedemptionRequestList({
   const [approvalDate, setApprovalDate] = useState<string>("");
   const [maxDate, setMaxDate] = useState<string>("");
 
-  // Batch selection state
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Batch selection state (shared hook)
+  const batch = useBatchSelection();
+
+  // Redemption-specific batch approval date state
   const [showBatchApproveModal, setShowBatchApproveModal] = useState(false);
   const [batchApprovalDate, setBatchApprovalDate] = useState<string>("");
-  const [showBatchRejectModal, setShowBatchRejectModal] = useState(false);
-  const [batchRejectReason, setBatchRejectReason] = useState("");
-  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   // Initialize date on client mount to avoid SSR timezone issues
   useEffect(() => {
@@ -47,62 +47,6 @@ export default function RedemptionRequestList({
     setBatchApprovalDate(today);
     setMaxDate(today);
   }, []);
-
-  // Clear selection when exiting selection mode
-  useEffect(() => {
-    if (!selectionMode) {
-      setSelectedIds(new Set());
-    }
-  }, [selectionMode]);
-
-  const getRewardName = (request: any) => {
-    if (request.rewards) {
-      return locale === "zh-CN"
-        ? request.rewards.name_zh || request.rewards.name_en
-        : request.rewards.name_en;
-    }
-    return "Unknown Reward";
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString(locale === "zh-CN" ? "zh-CN" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Toggle individual selection
-  const toggleSelection = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  // Select all
-  const selectAll = () => {
-    setSelectedIds(new Set(requests.map((r) => r.id)));
-  };
-
-  // Clear selection
-  const clearSelection = () => {
-    setSelectedIds(new Set());
-  };
-
-  // Exit selection mode
-  const exitSelectionMode = () => {
-    setSelectionMode(false);
-    setSelectedIds(new Set());
-  };
 
   const handleApprove = (requestId: string) => {
     // Reset date to today when opening modal
@@ -167,7 +111,7 @@ export default function RedemptionRequestList({
 
   // Open batch approve modal
   const handleBatchApprove = () => {
-    if (selectedIds.size === 0) return;
+    if (batch.selectedIds.size === 0) return;
     // Reset date to today when opening modal
     setBatchApprovalDate(getTodayString());
     setShowBatchApproveModal(true);
@@ -175,11 +119,11 @@ export default function RedemptionRequestList({
 
   // Confirm batch approve
   const confirmBatchApprove = async () => {
-    if (selectedIds.size === 0) return;
+    if (batch.selectedIds.size === 0) return;
 
-    setIsBatchProcessing(true);
+    batch.setIsBatchProcessing(true);
     try {
-      const ids = Array.from(selectedIds);
+      const ids = Array.from(batch.selectedIds);
       // Convert date to ISO timestamp (noon UTC to avoid timezone day-shifting)
       const dateToUse = batchApprovalDate
         ? new Date(batchApprovalDate + "T12:00:00Z").toISOString()
@@ -194,41 +138,41 @@ export default function RedemptionRequestList({
       if (error) throw error;
 
       setShowBatchApproveModal(false);
-      exitSelectionMode();
+      batch.exitSelectionMode();
       router.refresh();
     } catch (err) {
       console.error("Batch approve error:", err);
       alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed");
     } finally {
-      setIsBatchProcessing(false);
+      batch.setIsBatchProcessing(false);
     }
   };
 
   // Batch reject handler
   const handleBatchReject = async () => {
-    if (selectedIds.size === 0) return;
+    if (batch.selectedIds.size === 0) return;
 
-    setIsBatchProcessing(true);
+    batch.setIsBatchProcessing(true);
     try {
-      const ids = Array.from(selectedIds);
+      const ids = Array.from(batch.selectedIds);
       const { error } = await typedUpdate(supabase, "redemptions", {
           status: "rejected",
-          parent_response: batchRejectReason.trim() || null,
+          parent_response: batch.batchRejectReason.trim() || null,
           reviewed_at: new Date().toISOString(),
         })
         .in("id", ids);
 
       if (error) throw error;
 
-      setShowBatchRejectModal(false);
-      setBatchRejectReason("");
-      exitSelectionMode();
+      batch.setShowBatchRejectModal(false);
+      batch.setBatchRejectReason("");
+      batch.exitSelectionMode();
       router.refresh();
     } catch (err) {
       console.error("Batch reject error:", err);
       alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed");
     } finally {
-      setIsBatchProcessing(false);
+      batch.setIsBatchProcessing(false);
     }
   };
 
@@ -250,27 +194,27 @@ export default function RedemptionRequestList({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => setSelectionMode(!selectionMode)}
+            onClick={() => batch.setSelectionMode(!batch.selectionMode)}
             className={`px-4 py-2 rounded-lg transition font-medium ${
-              selectionMode
+              batch.selectionMode
                 ? "bg-purple-500 text-white"
                 : "bg-purple-100 text-purple-700 hover:bg-purple-200"
             }`}
           >
-            {selectionMode ? "✅ " : "☐ "}
-            {selectionMode ? t("admin.exitSelectMode") : t("admin.selectMode")}
+            {batch.selectionMode ? "✅ " : "☐ "}
+            {batch.selectionMode ? t("admin.exitSelectMode") : t("admin.selectMode")}
           </button>
-          {selectionMode && (
+          {batch.selectionMode && (
             <>
               <button
-                onClick={selectAll}
+                onClick={() => batch.selectAll(requests.map((r: any) => r.id))}
                 className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
               >
                 {t("admin.selectAll")} ({requests.length})
               </button>
-              {selectedIds.size > 0 && (
+              {batch.selectedIds.size > 0 && (
                 <button
-                  onClick={clearSelection}
+                  onClick={batch.clearSelection}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
                 >
                   {t("admin.clearSelection")}
@@ -279,11 +223,11 @@ export default function RedemptionRequestList({
             </>
           )}
         </div>
-        {selectionMode && selectedIds.size > 0 && (
+        {batch.selectionMode && batch.selectedIds.size > 0 && (
           <span className="text-sm font-medium text-purple-700">
             {locale === "zh-CN"
-              ? `已选择 ${selectedIds.size} 项`
-              : `${selectedIds.size} selected`}
+              ? `已选择 ${batch.selectedIds.size} 项`
+              : `${batch.selectedIds.size} selected`}
           </span>
         )}
       </div>
@@ -293,7 +237,7 @@ export default function RedemptionRequestList({
           <div
             key={request.id}
             className={`border-2 border-primary/30 rounded-lg p-6 hover:shadow-md transition ${
-              selectionMode && selectedIds.has(request.id)
+              batch.selectionMode && batch.selectedIds.has(request.id)
                 ? "ring-2 ring-purple-500 border-purple-300"
                 : ""
             }`}
@@ -304,11 +248,11 @@ export default function RedemptionRequestList({
                 {/* Child Info */}
                 <div className="flex items-center space-x-3 mb-4">
                   {/* Checkbox for selection mode */}
-                  {selectionMode && (
+                  {batch.selectionMode && (
                     <input
                       type="checkbox"
-                      checked={selectedIds.has(request.id)}
-                      onChange={() => toggleSelection(request.id)}
+                      checked={batch.selectedIds.has(request.id)}
+                      onChange={() => batch.toggleSelection(request.id)}
                       className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                     />
                   )}
@@ -320,7 +264,7 @@ export default function RedemptionRequestList({
                       {request.users?.name}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {formatDate(request.created_at)}
+                      {formatDateTime(request.created_at, locale)}
                     </p>
                   </div>
                 </div>
@@ -331,7 +275,7 @@ export default function RedemptionRequestList({
                     {request.rewards?.icon || "🎁"}
                   </span>
                   <div>
-                    <h4 className="font-semibold">{getRewardName(request)}</h4>
+                    <h4 className="font-semibold">{getRewardName(request.rewards, locale)}</h4>
                     {request.rewards?.category && (
                       <span className="text-xs text-gray-500">
                         {t(`rewards.category.${request.rewards.category}` as any)}
@@ -365,7 +309,7 @@ export default function RedemptionRequestList({
                   <div className="text-xs text-gray-500">stars</div>
                 </div>
 
-                {!selectionMode && (
+                {!batch.selectionMode && (
                   <div className="space-y-2 mt-4">
                     <button
                       onClick={() => handleApprove(request.id)}
@@ -386,7 +330,7 @@ export default function RedemptionRequestList({
                   </div>
                 )}
 
-                {!selectionMode && (
+                {!batch.selectionMode && (
                   <p className="text-xs text-gray-500 mt-3">
                     Stars will be deducted upon approval
                   </p>
@@ -398,33 +342,33 @@ export default function RedemptionRequestList({
       </div>
 
       {/* Floating Batch Action Bar */}
-      {selectedIds.size > 0 && (
+      {batch.selectedIds.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-purple-300 shadow-lg p-4 z-50">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <span className="font-medium text-purple-700">
               {locale === "zh-CN"
-                ? `已选择 ${selectedIds.size} 项`
-                : `${selectedIds.size} items selected`}
+                ? `已选择 ${batch.selectedIds.size} 项`
+                : `${batch.selectedIds.size} items selected`}
             </span>
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleBatchApprove}
-                disabled={isBatchProcessing}
+                disabled={batch.isBatchProcessing}
                 className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 font-medium"
               >
-                {isBatchProcessing
+                {batch.isBatchProcessing
                   ? t("admin.batchProcessing")
                   : `✅ ${t("admin.batchApprove")}`}
               </button>
               <button
-                onClick={() => setShowBatchRejectModal(true)}
-                disabled={isBatchProcessing}
+                onClick={() => batch.setShowBatchRejectModal(true)}
+                disabled={batch.isBatchProcessing}
                 className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 font-medium"
               >
                 {`❌ ${t("admin.batchReject")}`}
               </button>
               <button
-                onClick={exitSelectionMode}
+                onClick={batch.exitSelectionMode}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
               >
                 {t("admin.clearSelection")}
@@ -513,8 +457,8 @@ export default function RedemptionRequestList({
               <h2 className="text-xl font-bold">{t("admin.batchApprove")}</h2>
               <p className="text-sm text-gray-600 mt-1">
                 {locale === "zh-CN"
-                  ? `将批准 ${selectedIds.size} 条待审批请求`
-                  : `Approving ${selectedIds.size} pending requests`}
+                  ? `将批准 ${batch.selectedIds.size} 条待审批请求`
+                  : `Approving ${batch.selectedIds.size} pending requests`}
               </p>
             </div>
             <div className="p-6 space-y-4">
@@ -539,10 +483,10 @@ export default function RedemptionRequestList({
                 </button>
                 <button
                   onClick={confirmBatchApprove}
-                  disabled={isBatchProcessing}
+                  disabled={batch.isBatchProcessing}
                   className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
                 >
-                  {isBatchProcessing
+                  {batch.isBatchProcessing
                     ? t("admin.batchProcessing")
                     : t("admin.approve")}
                 </button>
@@ -553,15 +497,15 @@ export default function RedemptionRequestList({
       )}
 
       {/* Batch Reject Modal */}
-      {showBatchRejectModal && (
+      {batch.showBatchRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6 border-b">
               <h2 className="text-xl font-bold">{t("admin.batchReject")}</h2>
               <p className="text-sm text-gray-600 mt-1">
                 {locale === "zh-CN"
-                  ? `将拒绝 ${selectedIds.size} 条待审批请求`
-                  : `Rejecting ${selectedIds.size} pending requests`}
+                  ? `将拒绝 ${batch.selectedIds.size} 条待审批请求`
+                  : `Rejecting ${batch.selectedIds.size} pending requests`}
               </p>
             </div>
             <div className="p-6 space-y-4">
@@ -570,8 +514,8 @@ export default function RedemptionRequestList({
                   {t("admin.batchRejectReason")} ({locale === "zh-CN" ? "可选" : "optional"})
                 </label>
                 <textarea
-                  value={batchRejectReason}
-                  onChange={(e) => setBatchRejectReason(e.target.value)}
+                  value={batch.batchRejectReason}
+                  onChange={(e) => batch.setBatchRejectReason(e.target.value)}
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   placeholder={
@@ -585,8 +529,8 @@ export default function RedemptionRequestList({
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    setShowBatchRejectModal(false);
-                    setBatchRejectReason("");
+                    batch.setShowBatchRejectModal(false);
+                    batch.setBatchRejectReason("");
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
                 >
@@ -594,10 +538,10 @@ export default function RedemptionRequestList({
                 </button>
                 <button
                   onClick={handleBatchReject}
-                  disabled={isBatchProcessing}
+                  disabled={batch.isBatchProcessing}
                   className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
                 >
-                  {isBatchProcessing
+                  {batch.isBatchProcessing
                     ? t("admin.batchProcessing")
                     : t("admin.reject")}
                 </button>

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import { getTodayString } from "@/lib/date-utils";
+import { getQuestName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
@@ -40,10 +41,6 @@ export default function RequestStarsModal({
     setRequestDate(today);
     setMaxDate(today);
   }, []);
-
-  const getQuestName = (q: Quest) => {
-    return locale === "zh-CN" ? q.name_zh || q.name_en : q.name_en;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,7 +166,7 @@ export default function RequestStarsModal({
                 <div className="text-3xl">{quest.icon || "⭐"}</div>
                 <div>
                   <h3 className="font-semibold text-lg">
-                    {getQuestName(quest)}
+                    {getQuestName(quest, locale)}
                   </h3>
                   {quest.category && (
                     <p className="text-sm text-gray-600">

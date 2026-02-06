@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (1036 tests, ~55% coverage)
+# Testing (1093 tests, ~55% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -118,6 +118,21 @@ components/
 
 **Rule:** Components using Supabase must be Client Components (`"use client"`)
 
+### Shared Utilities
+```
+lib/
+├── localization.ts          # getLocalizedName(), getQuestName(), getRewardName()
+├── date-utils.ts            # formatDateTime(), formatDateOnly() + existing utils
+├── hooks/useBatchSelection.ts # Batch selection state hook (StarRequestList, RedemptionRequestList, UnifiedActivityList)
+├── api/cron-auth.ts         # verifyCronAuth() for cron route authorization
+└── reports/report-utils.ts  # fetchReportBaseData(), buildChildrenStats() shared by weekly/monthly reports
+```
+
+**Key Types** (`types/`):
+- `QuestCategoryRow` (in `category.ts`) — database row type (renamed from `QuestCategory` to avoid collision with union type in `quest.ts`)
+- `StarTransaction` (in `activity.ts`) — consolidated from duplicate `RawStarTransaction`
+- `UnifiedActivityItem.originalData` — typed as `StarTransaction | RawRedemption | RawCreditTransaction`
+
 ---
 
 ## Key Features
@@ -172,6 +187,25 @@ Parents can manage quest categories from the Manage Quests page (below quest lis
 - 14 default categories seeded per family (Health, Study, Chores, etc.)
 - CRUD operations: add, edit, toggle active/inactive, delete
 - Categories used in quest forms and displayed as badges on quest cards
+
+### Invite Parent (`components/admin/InviteParentCard.tsx`)
+Email-based invitation flow for adding a co-parent to the family.
+- Parent enters email → clicks "Send Invitation" → system generates invite code and emails it
+- API route: `POST /api/invite-parent` (authenticates user, calls `create_family_invite` RPC, sends email via Resend)
+- Email template: `lib/email/templates/invite-parent.ts` — branded email with "Join Family" CTA button, fallback invite code, 7-day expiry note
+- Bilingual support (EN/中文)
+
+### Email System (`lib/email/`)
+Transactional email infrastructure using Resend.
+- `lib/email/resend.ts` — Singleton Resend client, `sendEmail()` function
+- `lib/email/templates/` — Branded HTML templates using `baseLayout()`:
+  - `invite-parent.ts` — Parent invitation email
+  - `weekly-report.ts` — Weekly star activity summary
+  - `monthly-report.ts` — Monthly report with settlement data
+  - `settlement-notice.ts` — Credit settlement notification
+- Report data generation: `lib/reports/generate-weekly.ts`, `lib/reports/generate-monthly.ts`
+- Cron endpoint: `GET /api/cron/daily-jobs` — handles settlements, weekly/monthly reports
+- Settings page: `/admin/settings` — report preferences (email, timezone, enabled reports)
 
 ---
 
@@ -267,6 +301,8 @@ await waitFor(() => { /* assert completion */ });
 NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key  # Optional, for admin operations
+RESEND_API_KEY=your_resend_key              # For invitation & report emails
+RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender override
 ```
 
 ---
@@ -334,4 +370,4 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_key  # Optional, for admin operations
 
 ---
 
-**Last Updated:** 2026-01-29 | **Tests:** 1036 passing | **Coverage:** ~55%
+**Last Updated:** 2026-02-06 | **Tests:** 1093 passing | **Coverage:** ~55%

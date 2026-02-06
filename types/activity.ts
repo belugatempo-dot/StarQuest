@@ -7,22 +7,8 @@
 
 import type { Database } from "@/types/database";
 
-// Base transaction type from database
+/** Star transaction from Supabase query with joined relations */
 export type StarTransaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
-  quests?: {
-    name_en: string;
-    name_zh: string | null;
-    icon: string | null;
-    category: string | null;
-  } | null;
-  children?: {
-    name: string;
-    avatar_url: string | null;
-  } | null;
-};
-
-/** Raw star transaction from Supabase query with joined relations */
-export type RawStarTransaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
   quests?: {
     name_en: string;
     name_zh: string | null;
@@ -72,7 +58,7 @@ export interface UnifiedActivityItem {
   parentResponse: string | null;
   source: "parent_record" | "child_request" | null;
   createdAt: string;
-  originalData?: any;
+  originalData?: StarTransaction | RawRedemption | RawCreditTransaction;
   questId: string | null;
   quests?: {
     name_en: string;

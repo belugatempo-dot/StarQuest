@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
+import { getRewardName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 import RewardFormModal from "./RewardFormModal";
 
@@ -89,12 +90,6 @@ export default function RewardManagement({
     }
   };
 
-  const getRewardName = (reward: Reward) => {
-    return locale === "zh-CN"
-      ? reward.name_zh || reward.name_en
-      : reward.name_en;
-  };
-
   const getCategoryColor = (category: string | null) => {
     return CATEGORY_COLORS[category || "other"] || CATEGORY_COLORS.other;
   };
@@ -148,7 +143,7 @@ export default function RewardManagement({
       {filteredRewards.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRewards.map((reward) => {
-            const rewardName = getRewardName(reward);
+            const rewardName = getRewardName(reward, locale);
 
             return (
               <div

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { Database } from "@/types/database";
+import { getRewardName } from "@/lib/localization";
 import RedeemRewardModal from "./RedeemRewardModal";
 
 type Reward = Database["public"]["Tables"]["rewards"]["Row"];
@@ -53,12 +54,6 @@ export default function RewardGrid({
     filterCategory === "all"
       ? rewards
       : rewards.filter((r) => r.category === filterCategory);
-
-  const getRewardName = (reward: Reward) => {
-    return locale === "zh-CN"
-      ? reward.name_zh || reward.name_en
-      : reward.name_en;
-  };
 
   const canAfford = (reward: Reward) => {
     return effectiveSpendable >= reward.stars_cost;
@@ -146,7 +141,7 @@ export default function RewardGrid({
                         : "text-gray-500"
                     }`}
                   >
-                    {getRewardName(reward)}
+                    {getRewardName(reward, locale)}
                   </h3>
 
                   {/* Description */}

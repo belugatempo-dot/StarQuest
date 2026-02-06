@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { verifyCronAuth } from "@/lib/api/cron-auth";
 import { sendEmail, isEmailServiceAvailable } from "@/lib/email/resend";
 import type { Database } from "@/types/database";
 import {
@@ -38,16 +39,8 @@ import type {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify the request is from Vercel Cron or has valid authorization
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    const isVercelCron = request.headers.get("x-vercel-cron") === "true";
-    const hasValidAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
-
-    if (!isVercelCron && !hasValidAuth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const adminClient = createAdminClient();
     const today = new Date();

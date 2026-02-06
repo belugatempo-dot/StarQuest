@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { verifyCronAuth } from "@/lib/api/cron-auth";
 
 // Vercel Cron Job - runs monthly on the 1st at 00:01 UTC
 // Configured in vercel.json
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify the request is from Vercel Cron or has valid authorization
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    // Check if this is a Vercel Cron request or has valid auth
-    const isVercelCron = request.headers.get("x-vercel-cron") === "true";
-    const hasValidAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
-
-    if (!isVercelCron && !hasValidAuth) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const adminClient = createAdminClient();
 
