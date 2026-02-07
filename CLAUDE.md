@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (1093 tests, ~55% coverage)
+# Testing (2476 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -109,11 +109,16 @@ app/[locale]/
 ### Component Organization
 ```
 components/
-├── ui/        # Shared UI (LanguageSwitcher)
+├── ui/        # Shared UI (LanguageSwitcher, ModalFrame)
 ├── auth/      # Login/register (use hard navigation!)
 ├── child/     # Child UI (bonus quests only)
 ├── admin/     # Parent UI (all quest types)
-└── shared/    # Cross-role components (UnifiedActivityList)
+└── shared/    # Cross-role components
+    ├── UnifiedActivityList.tsx  # Main list orchestrator
+    ├── ActivityItem.tsx         # Single activity row
+    ├── ActivityDateGroup.tsx    # Date-grouped activity section
+    ├── ActivityFilterBar.tsx    # Filter/search controls
+    └── BatchActionBar.tsx       # Batch action toolbar
 ```
 
 **Rule:** Components using Supabase must be Client Components (`"use client"`)
@@ -121,11 +126,14 @@ components/
 ### Shared Utilities
 ```
 lib/
-├── localization.ts          # getLocalizedName(), getQuestName(), getRewardName()
-├── date-utils.ts            # formatDateTime(), formatDateOnly() + existing utils
-├── hooks/useBatchSelection.ts # Batch selection state hook (StarRequestList, RedemptionRequestList, UnifiedActivityList)
-├── api/cron-auth.ts         # verifyCronAuth() for cron route authorization
-└── reports/report-utils.ts  # fetchReportBaseData(), buildChildrenStats() shared by weekly/monthly reports
+├── localization.ts              # getLocalizedName(), getQuestName(), getRewardName()
+├── date-utils.ts                # formatDateTime(), formatDateOnly() + existing utils
+├── activity-utils.ts            # Activity list helpers
+├── batch-operations.ts          # Batch approve/reject operations
+├── hooks/useBatchSelection.ts   # Batch selection state hook
+├── hooks/useActivityFilters.ts  # Activity filter/search state hook
+├── api/cron-auth.ts             # verifyCronAuth() for cron route authorization
+└── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
 ```
 
 **Key Types** (`types/`):
@@ -264,9 +272,13 @@ export default getRequestConfig(async ({ requestLocale }) => {
 ### Structure
 ```
 __tests__/
-├── components/{admin,auth,child,ui}/
+├── api/{admin,cron,invite-parent}/
+├── app/{admin,auth,child}/
+├── components/{admin,auth,child,shared,ui}/
+├── hooks/
 ├── integration/
-├── lib/
+├── lib/{api,email,hooks,reports,supabase}/
+├── middleware.test.ts
 └── types/
 ```
 
@@ -358,7 +370,7 @@ RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender over
 - [ ] Family-scoped queries (RLS)
 - [ ] Hard navigation for post-auth
 - [ ] Error handling and loading states
-- [ ] Test coverage >70%
+- [ ] Test coverage maintained (currently ~99%)
 
 ---
 
@@ -370,4 +382,4 @@ RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender over
 
 ---
 
-**Last Updated:** 2026-02-06 | **Tests:** 1093 passing | **Coverage:** ~55%
+**Last Updated:** 2026-02-07 | **Tests:** 2476 passing | **Coverage:** ~99%
