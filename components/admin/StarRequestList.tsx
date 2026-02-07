@@ -5,6 +5,11 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
+import {
+  handleBatchOperation,
+  buildApprovalPayload,
+  buildRejectionPayload,
+} from "@/lib/batch-operations";
 import { getQuestName } from "@/lib/localization";
 import { formatDateTime } from "@/lib/date-utils";
 import { useBatchSelection } from "@/lib/hooks/useBatchSelection";
@@ -91,55 +96,32 @@ export default function StarRequestList({
 
     if (!confirm(confirmMessage)) return;
 
-    batch.setIsBatchProcessing(true);
-    try {
-      const ids = Array.from(batch.selectedIds);
-      const { error } = await typedUpdate(supabase, "star_transactions", {
-          status: "approved",
-          reviewed_by: parentId,
-          reviewed_at: new Date().toISOString(),
-        })
-        .in("id", ids);
-
-      if (error) throw error;
-
-      batch.exitSelectionMode();
-      router.refresh();
-    } catch (err) {
-      console.error("Batch approve error:", err);
-      alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed");
-    } finally {
-      batch.setIsBatchProcessing(false);
-    }
+    await handleBatchOperation({
+      batch,
+      supabase,
+      router,
+      table: "star_transactions",
+      data: buildApprovalPayload(parentId),
+      onError: () => alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed"),
+    });
   };
 
   // Batch reject handler
   const handleBatchReject = async () => {
     if (batch.selectedIds.size === 0) return;
 
-    batch.setIsBatchProcessing(true);
-    try {
-      const ids = Array.from(batch.selectedIds);
-      const { error } = await typedUpdate(supabase, "star_transactions", {
-          status: "rejected",
-          parent_response: batch.batchRejectReason.trim() || null,
-          reviewed_by: parentId,
-          reviewed_at: new Date().toISOString(),
-        })
-        .in("id", ids);
-
-      if (error) throw error;
-
-      batch.setShowBatchRejectModal(false);
-      batch.setBatchRejectReason("");
-      batch.exitSelectionMode();
-      router.refresh();
-    } catch (err) {
-      console.error("Batch reject error:", err);
-      alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed");
-    } finally {
-      batch.setIsBatchProcessing(false);
-    }
+    await handleBatchOperation({
+      batch,
+      supabase,
+      router,
+      table: "star_transactions",
+      data: buildRejectionPayload(batch.batchRejectReason, parentId),
+      onSuccess: () => {
+        batch.setShowBatchRejectModal(false);
+        batch.setBatchRejectReason("");
+      },
+      onError: () => alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed"),
+    });
   };
 
   if (requests.length === 0) {

@@ -502,6 +502,412 @@ describe('RegisterForm', () => {
     })
   })
 
+  describe('Invite Code - Additional Branch Coverage', () => {
+    it('returns early and clears state when invite code is cleared to empty', async () => {
+      const user = userEvent.setup()
+      render(<RegisterForm />)
+
+      const inviteInput = screen.getByLabelText(/invite code/i)
+      // Type something short (will trigger error)
+      await user.type(inviteInput, 'AB')
+
+      await waitFor(() => {
+        expect(screen.getByText(/invite code should be 8 characters/i)).toBeInTheDocument()
+      })
+
+      // Clear the input entirely - triggers code.trim().length === 0 branch (line 41)
+      await user.clear(inviteInput)
+
+      await waitFor(() => {
+        expect(screen.queryByText(/invite code should be 8 characters/i)).not.toBeInTheDocument()
+      })
+    })
+
+    it('shows error when invite code validation RPC throws an exception', async () => {
+      const user = userEvent.setup()
+
+      mockRpc.mockRejectedValue(new Error('Network failure'))
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/invite code/i), 'ABCD1234')
+
+      await waitFor(() => {
+        expect(screen.getByText(/failed to validate invite code/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese error when invite code validation RPC throws (zh-CN)', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockRpc.mockRejectedValue(new Error('Network failure'))
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邀请码/i), 'ABCD1234')
+
+      await waitFor(() => {
+        expect(screen.getByText(/验证邀请码失败/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese error for invalid invite code length (zh-CN)', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邀请码/i), 'SHORT')
+
+      await waitFor(() => {
+        expect(screen.getByText(/邀请码应为8位/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese error for invalid or expired invite code (zh-CN)', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockRpc.mockResolvedValue({
+        data: [{ is_valid: false }],
+        error: null,
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邀请码/i), 'INVALID1')
+
+      await waitFor(() => {
+        expect(screen.getByText(/邀请码无效或已过期/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows error when RPC returns error during invite validation', async () => {
+      const user = userEvent.setup()
+
+      mockRpc.mockResolvedValue({
+        data: null,
+        error: { message: 'RPC failed' },
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/invite code/i), 'ABCD1234')
+
+      await waitFor(() => {
+        expect(screen.getByText(/failed to validate invite code/i)).toBeInTheDocument()
+      })
+    })
+
+    it('handles invite code validation when data is empty array', async () => {
+      const user = userEvent.setup()
+
+      mockRpc.mockResolvedValue({
+        data: [],
+        error: null,
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/invite code/i), 'ABCD1234')
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid or expired invite code/i)).toBeInTheDocument()
+      })
+    })
+
+    it('handles invite code validation when data is null', async () => {
+      const user = userEvent.setup()
+
+      mockRpc.mockResolvedValue({
+        data: null,
+        error: null,
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/invite code/i), 'ABCD1234')
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid or expired invite code/i)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Registration - Join Family Error Handling', () => {
+    it('shows error when join_family_with_invite RPC fails', async () => {
+      const user = userEvent.setup()
+
+      // First RPC: validate invite code (success)
+      // Second RPC: join_family_with_invite (fails)
+      mockRpc
+        .mockResolvedValueOnce({
+          data: [{ is_valid: true, family_name: 'Existing Family', family_id: 'family-123' }],
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: null,
+          error: { message: 'Join family failed' },
+        })
+
+      mockSignUp.mockResolvedValue({
+        data: { user: { id: 'joining-user-id' } },
+        error: null,
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/invite code/i), 'JOINCODE')
+
+      await waitFor(() => {
+        expect(screen.getByText(/✓ joining family:/i)).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByLabelText(/email/i), 'parent2@example.com')
+      await user.type(screen.getByLabelText(/^password$/i), 'password123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'password123')
+      await user.type(screen.getByLabelText(/your name \(parent\)/i), 'Jane Smith')
+
+      fireEvent.submit(screen.getByRole('button', { name: /register/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/join family failed/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows error when signUp returns no user', async () => {
+      const user = userEvent.setup()
+
+      mockSignUp.mockResolvedValue({
+        data: { user: null },
+        error: null,
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^password$/i), 'password123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'password123')
+      await user.type(screen.getByLabelText(/family name/i), 'Smith Family')
+      await user.type(screen.getByLabelText(/your name \(parent\)/i), 'John')
+
+      fireEvent.submit(screen.getByRole('button', { name: /register/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/no user returned from signup/i)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Error Handling - Additional Branches', () => {
+    it('shows "different account" error when error contains Email and different account', async () => {
+      const user = userEvent.setup()
+
+      mockSignUp.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      mockRpc.mockRejectedValue(new Error('Email belongs to a different account'))
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^password$/i), 'password123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'password123')
+      await user.type(screen.getByLabelText(/family name/i), 'Smith Family')
+      await user.type(screen.getByLabelText(/your name \(parent\)/i), 'John')
+
+      fireEvent.submit(screen.getByRole('button', { name: /register/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/this email belongs to a different account/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese "different account" error in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockSignUp.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      mockRpc.mockRejectedValue(new Error('Email belongs to a different account'))
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/家庭名称/i), '张家')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/此邮箱已被其他账号使用/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese "already registered" error in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockSignUp.mockResolvedValue({
+        data: null,
+        error: { message: 'duplicate key violation' },
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/家庭名称/i), '张家')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/此邮箱已被注册/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese generic error for unknown errors in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockSignUp.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      mockRpc.mockRejectedValue(new Error())
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/家庭名称/i), '张家')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/注册失败/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese password mismatch error in zh-CN locale (short password)', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), '12345')
+      await user.type(screen.getByLabelText(/确认密码/i), '12345')
+      await user.type(screen.getByLabelText(/家庭名称/i), '张家')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/密码至少需要6个字符/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese parent name error in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/家庭名称/i), '张家')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/请输入您的名字/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese family name error in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/请输入家庭名称/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese invite code validation error in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockRpc.mockResolvedValue({
+        data: [{ is_valid: false }],
+        error: null,
+      })
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+      await user.type(screen.getByLabelText(/邀请码/i), 'INVALID1')
+
+      // Wait for validation to complete
+      await waitFor(() => {
+        expect(screen.getByText(/邀请码无效或已过期/)).toBeInTheDocument()
+      })
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/请输入有效的邀请码/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows Chinese loading state text in zh-CN locale', async () => {
+      const user = userEvent.setup()
+      mockPathname = '/zh-CN/register'
+
+      mockSignUp.mockImplementation(() => new Promise(() => {})) // Never resolves
+
+      render(<RegisterForm />)
+
+      await user.type(screen.getByLabelText(/邮箱/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^密码$/i), 'password123')
+      await user.type(screen.getByLabelText(/确认密码/i), 'password123')
+      await user.type(screen.getByLabelText(/家庭名称/i), '张家')
+      await user.type(screen.getByLabelText(/您的名字（家长）/i), '张三')
+
+      fireEvent.submit(screen.getByRole('button', { name: /注册/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/注册中.../)).toBeInTheDocument()
+      })
+    })
+  })
+
   describe('Loading States', () => {
     it('disables form while submitting', async () => {
       const user = userEvent.setup()

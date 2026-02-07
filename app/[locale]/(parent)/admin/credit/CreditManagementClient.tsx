@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import CreditSettingsModal from "@/components/admin/CreditSettingsModal";
 import InterestTierManager from "@/components/admin/InterestTierManager";
 import SettlementHistoryTable from "@/components/admin/SettlementHistoryTable";
-import type { ChildBalanceWithCredit, ChildCreditSettings } from "@/types/credit";
+import type { ChildBalanceWithCredit } from "@/types/credit";
 
 interface Child {
   id: string;
@@ -47,11 +47,6 @@ export default function CreditManagementClient({
     const balance = balances.find((b: any) => b.child_id === childId);
     if (!balance) return null;
     return balance as ChildBalanceWithCredit;
-  };
-
-  // Get credit settings for a child
-  const getCreditSettings = (childId: string): ChildCreditSettings | null => {
-    return creditSettings.find((s: any) => s.child_id === childId) || null;
   };
 
   const handleOpenSettings = (child: Child) => {

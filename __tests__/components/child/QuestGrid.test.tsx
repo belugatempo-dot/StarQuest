@@ -265,3 +265,230 @@ describe("QuestGrid Component", () => {
     });
   });
 });
+
+// --- Additional coverage tests ---
+
+// Mock RequestStarsModal for interaction tests
+jest.mock("@/components/child/RequestStarsModal", () => {
+  return function MockRequestStarsModal({ quest, onClose, onSuccess }: any) {
+    return (
+      <div data-testid="request-stars-modal">
+        <span>Modal for {quest.name_en}</span>
+        <button onClick={onClose}>Close Modal</button>
+        <button onClick={onSuccess}>Submit Request</button>
+      </div>
+    );
+  };
+});
+
+// Re-import after mock
+const QuestGridWithModal =
+  jest.requireActual("@/components/child/QuestGrid").default;
+
+// Need fireEvent for click tests
+import { fireEvent } from "@testing-library/react";
+
+const mockRefresh = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    refresh: mockRefresh,
+  }),
+}));
+
+describe("QuestGrid - Quest Card Interactions", () => {
+  const renderComponent = (quests: Quest[], locale = "en") => {
+    return render(
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <QuestGrid quests={quests} locale={locale} userId="user1" />
+      </NextIntlClientProvider>
+    );
+  };
+
+  beforeEach(() => {
+    mockRefresh.mockClear();
+  });
+
+  it("opens RequestStarsModal when clicking a quest card", () => {
+    renderComponent(mockBonusQuests);
+
+    // Click on a quest card - the quest name text is inside the card div
+    const questCard = screen.getByText("Help wash dishes").closest(".group");
+    expect(questCard).toBeTruthy();
+    fireEvent.click(questCard!);
+
+    // Modal should appear
+    expect(screen.getByTestId("request-stars-modal")).toBeInTheDocument();
+    expect(screen.getByText("Modal for Help wash dishes")).toBeInTheDocument();
+  });
+
+  it("closes modal when onClose is called", () => {
+    renderComponent(mockBonusQuests);
+
+    // Open modal
+    const questCard = screen.getByText("Help wash dishes").closest(".group");
+    fireEvent.click(questCard!);
+    expect(screen.getByTestId("request-stars-modal")).toBeInTheDocument();
+
+    // Close modal
+    fireEvent.click(screen.getByText("Close Modal"));
+    expect(screen.queryByTestId("request-stars-modal")).not.toBeInTheDocument();
+  });
+
+  it("closes modal and calls router.refresh() on success", () => {
+    renderComponent(mockBonusQuests);
+
+    // Open modal
+    const questCard = screen.getByText("Help wash dishes").closest(".group");
+    fireEvent.click(questCard!);
+    expect(screen.getByTestId("request-stars-modal")).toBeInTheDocument();
+
+    // Trigger success
+    fireEvent.click(screen.getByText("Submit Request"));
+    expect(screen.queryByTestId("request-stars-modal")).not.toBeInTheDocument();
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("shows default icon when quest.icon is null", () => {
+    const questsWithNoIcon: Quest[] = [
+      {
+        id: "10",
+        family_id: "fam1",
+        name_en: "No Icon Quest",
+        name_zh: "无图标任务",
+        stars: 5,
+        type: "bonus",
+        scope: "self",
+        category: "learning",
+        icon: null,
+        is_positive: true,
+        is_active: true,
+        max_per_day: 1,
+        sort_order: 1,
+        created_at: "2025-01-01T00:00:00Z",
+      },
+    ];
+
+    const { container } = renderComponent(questsWithNoIcon);
+
+    // Default icon should be "⭐" when quest.icon is null
+    // The 4xl icon div should contain ⭐
+    const iconDiv = container.querySelector(".text-4xl");
+    expect(iconDiv?.textContent).toBe("⭐");
+  });
+
+  it("shows quest icon when quest.icon is set", () => {
+    const { container } = renderComponent([mockBonusQuests[0]]);
+
+    const iconDiv = container.querySelector(".text-4xl");
+    expect(iconDiv?.textContent).toBe("🍳");
+  });
+
+  it("does not render category badge when quest.category is null", () => {
+    const questsWithNoCategory: Quest[] = [
+      {
+        id: "11",
+        family_id: "fam1",
+        name_en: "No Category Quest",
+        name_zh: "无分类任务",
+        stars: 5,
+        type: "bonus",
+        scope: "self",
+        category: null,
+        icon: "🎯",
+        is_positive: true,
+        is_active: true,
+        max_per_day: 1,
+        sort_order: 1,
+        created_at: "2025-01-01T00:00:00Z",
+      },
+    ];
+
+    const { container } = renderComponent(questsWithNoCategory);
+
+    // Category badge uses rounded-full class
+    const badges = container.querySelectorAll(".rounded-full");
+    expect(badges.length).toBe(0);
+  });
+
+  it("renders category badge when quest.category is set", () => {
+    const { container } = renderComponent([mockBonusQuests[0]]);
+
+    // Category badge uses rounded-full class
+    const badges = container.querySelectorAll(".rounded-full");
+    expect(badges.length).toBe(1);
+  });
+});
+
+describe("QuestGrid - getCategoryColor", () => {
+  const renderComponent = (quests: Quest[], locale = "en") => {
+    return render(
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <QuestGrid quests={quests} locale={locale} userId="user1" />
+      </NextIntlClientProvider>
+    );
+  };
+
+  const makeQuestWithCategory = (category: string | null): Quest[] => [
+    {
+      id: "color-test",
+      family_id: "fam1",
+      name_en: "Color Test Quest",
+      name_zh: "颜色测试",
+      stars: 5,
+      type: "bonus",
+      scope: "self",
+      category: category,
+      icon: "🎯",
+      is_positive: true,
+      is_active: true,
+      max_per_day: 1,
+      sort_order: 1,
+      created_at: "2025-01-01T00:00:00Z",
+    },
+  ];
+
+  it("applies learning color classes", () => {
+    const { container } = renderComponent(makeQuestWithCategory("learning"));
+    const badge = container.querySelector(".rounded-full");
+    expect(badge?.className).toContain("bg-blue-100");
+    expect(badge?.className).toContain("text-blue-700");
+  });
+
+  it("applies chores color classes", () => {
+    const { container } = renderComponent(makeQuestWithCategory("chores"));
+    const badge = container.querySelector(".rounded-full");
+    expect(badge?.className).toContain("bg-green-100");
+    expect(badge?.className).toContain("text-green-700");
+  });
+
+  it("applies hygiene color classes", () => {
+    const { container } = renderComponent(makeQuestWithCategory("hygiene"));
+    const badge = container.querySelector(".rounded-full");
+    expect(badge?.className).toContain("bg-cyan-100");
+    expect(badge?.className).toContain("text-cyan-700");
+  });
+
+  it("applies health color classes", () => {
+    const { container } = renderComponent(makeQuestWithCategory("health"));
+    const badge = container.querySelector(".rounded-full");
+    expect(badge?.className).toContain("bg-pink-100");
+    expect(badge?.className).toContain("text-pink-700");
+  });
+
+  it("applies social color classes", () => {
+    const { container } = renderComponent(makeQuestWithCategory("social"));
+    const badge = container.querySelector(".rounded-full");
+    expect(badge?.className).toContain("bg-purple-100");
+    expect(badge?.className).toContain("text-purple-700");
+  });
+
+  it("applies default (other) color for unknown category", () => {
+    const { container } = renderComponent(
+      makeQuestWithCategory("unknownCategory")
+    );
+    const badge = container.querySelector(".rounded-full");
+    expect(badge?.className).toContain("bg-gray-100");
+    expect(badge?.className).toContain("text-gray-700");
+  });
+});

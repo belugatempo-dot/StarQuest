@@ -530,4 +530,245 @@ describe('QuestManagement', () => {
       expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
     })
   })
+
+  describe('Group Collapse/Expand - content visibility', () => {
+    it('hides group content when group header is clicked to collapse', async () => {
+      const user = userEvent.setup()
+      render(
+        <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
+      )
+
+      // All quests should be visible initially
+      expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
+
+      // Find the collapse icons (▼) - these are inside group header buttons
+      const collapseIcons = screen.getAllByText('▼')
+      // Click the first group header button (the one containing the first ▼)
+      const firstGroupHeaderButton = collapseIcons[0].closest('button')!
+      await user.click(firstGroupHeaderButton)
+
+      // After collapsing, the icon should change to ▶ for that group
+      // The first group is "duties" which contains "Brush Teeth"
+      // After collapse, "Brush Teeth" should no longer be visible in the duties group content
+      // But it depends on which group is first - let's check what groups exist
+      // From groupQuests: duties (Brush Teeth), family bonus (Help Mom Cook), violations (Fighting)
+      // The first ▼ corresponds to "My Duties" group containing "Brush Teeth"
+      expect(screen.queryByText('Brush Teeth')).not.toBeInTheDocument()
+      // The expand icon ▶ should now appear
+      expect(screen.getByText('▶')).toBeInTheDocument()
+    })
+
+    it('re-expands group content when collapsed group header is clicked again', async () => {
+      const user = userEvent.setup()
+      render(
+        <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
+      )
+
+      // Collapse first group
+      const collapseIcons = screen.getAllByText('▼')
+      const firstGroupHeaderButton = collapseIcons[0].closest('button')!
+      await user.click(firstGroupHeaderButton)
+
+      // Verify collapsed
+      expect(screen.queryByText('Brush Teeth')).not.toBeInTheDocument()
+
+      // Re-expand by clicking the same header (now has ▶)
+      const expandIcon = screen.getByText('▶')
+      const expandButton = expandIcon.closest('button')!
+      await user.click(expandButton)
+
+      // Content should be visible again
+      expect(screen.getByText('Brush Teeth')).toBeInTheDocument()
+      // All icons should be ▼ again
+      expect(screen.queryByText('▶')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Category display with categories prop', () => {
+    const mockCategories: import('@/types/category').QuestCategoryRow[] = [
+      {
+        id: 'cat-1',
+        family_id: 'family-1',
+        name: 'hygiene',
+        name_en: 'Hygiene',
+        name_zh: '卫生',
+        icon: '🧼',
+        is_active: true,
+        sort_order: 1,
+        created_at: '2024-01-01',
+      },
+      {
+        id: 'cat-2',
+        family_id: 'family-1',
+        name: 'chores',
+        name_en: 'Chores',
+        name_zh: '家务',
+        icon: '🧹',
+        is_active: true,
+        sort_order: 2,
+        created_at: '2024-01-01',
+      },
+      {
+        id: 'cat-3',
+        family_id: 'family-1',
+        name: 'other',
+        name_en: 'Other',
+        name_zh: '其他',
+        icon: '📦',
+        is_active: true,
+        sort_order: 3,
+        created_at: '2024-01-01',
+      },
+    ]
+
+    it('displays category with icon and English name when categories prop is provided', () => {
+      render(
+        <QuestManagement
+          quests={mockQuests}
+          locale="en"
+          familyId="family-1"
+          categories={mockCategories}
+        />
+      )
+
+      // Quest 1 has category "hygiene" which matches cat-1
+      // Should display "🧼 Hygiene" instead of just "hygiene"
+      expect(screen.getByText('🧼 Hygiene')).toBeInTheDocument()
+      // Quest 2 has category "chores" which matches cat-2
+      expect(screen.getByText('🧹 Chores')).toBeInTheDocument()
+    })
+
+    it('displays category with icon and Chinese name in zh-CN locale', () => {
+      render(
+        <QuestManagement
+          quests={mockQuests}
+          locale="zh-CN"
+          familyId="family-1"
+          categories={mockCategories}
+        />
+      )
+
+      // In zh-CN, should show Chinese names
+      expect(screen.getByText('🧼 卫生')).toBeInTheDocument()
+      expect(screen.getByText('🧹 家务')).toBeInTheDocument()
+    })
+
+    it('falls back to raw category name when category not found in categories array', () => {
+      // Use a quest with a category that doesn't exist in categories array
+      const questWithUnknownCategory: Quest[] = [
+        {
+          id: '99',
+          family_id: 'family-1',
+          name_en: 'Special Quest',
+          name_zh: '特殊任务',
+          description_en: 'test',
+          description_zh: 'test',
+          stars: 5,
+          type: 'bonus',
+          scope: 'self',
+          category: 'unknowncat',
+          icon: '🎯',
+          is_active: true,
+          is_template: true,
+          created_at: '2024-01-01',
+        },
+      ]
+
+      render(
+        <QuestManagement
+          quests={questWithUnknownCategory}
+          locale="en"
+          familyId="family-1"
+          categories={mockCategories}
+        />
+      )
+
+      // Should fall back to raw category name
+      expect(screen.getByText('unknowncat')).toBeInTheDocument()
+    })
+  })
+
+  describe('Empty state add button', () => {
+    it('opens modal when clicking add button in empty state', async () => {
+      const user = userEvent.setup()
+      render(<QuestManagement quests={[]} locale="en" familyId="family-1" />)
+
+      // The empty state has a specific "add first quest" button
+      // It contains ➕ and the translation key quests.addFirstQuest
+      const emptyStateButton = screen.getByRole('button', {
+        name: /quests\.addFirstQuest/i,
+      })
+      await user.click(emptyStateButton)
+
+      expect(screen.getByTestId('quest-form-modal')).toBeInTheDocument()
+      expect(screen.getByTestId('modal-mode')).toHaveTextContent('add')
+    })
+  })
+
+  describe('Branch coverage', () => {
+    it('falls back to English name when name_zh is null for zh-CN locale in quest display', () => {
+      const questsWithNullZh: Quest[] = [
+        {
+          ...mockQuests[1],
+          name_zh: null,
+        },
+      ]
+
+      render(
+        <QuestManagement
+          quests={questsWithNullZh}
+          locale="zh-CN"
+          familyId="family-1"
+        />
+      )
+
+      // Should display English name as fallback
+      expect(screen.getByText('Help Mom Cook')).toBeInTheDocument()
+    })
+
+    it('falls back to 📝 icon when quest icon is null', () => {
+      const questWithNullIcon: Quest[] = [
+        {
+          ...mockQuests[1],
+          icon: null,
+        },
+      ]
+
+      render(
+        <QuestManagement
+          quests={questWithNullIcon}
+          locale="en"
+          familyId="family-1"
+        />
+      )
+
+      // The fallback icon "📝" should be displayed
+      expect(screen.getByText('📝')).toBeInTheDocument()
+    })
+  })
+
+  describe('Edit quest close handler', () => {
+    it('closes edit modal when cancel is clicked without refreshing', async () => {
+      const user = userEvent.setup()
+      render(
+        <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
+      )
+
+      // Open edit modal
+      const editButtons = screen.getAllByRole('button', { name: /edit/i })
+      await user.click(editButtons[0])
+
+      expect(screen.getByTestId('quest-form-modal')).toBeInTheDocument()
+      expect(screen.getByTestId('modal-mode')).toHaveTextContent('edit')
+
+      // Click cancel (the onClose handler)
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      // Modal should be closed
+      expect(screen.queryByTestId('quest-form-modal')).not.toBeInTheDocument()
+      // router.refresh should NOT have been called (cancel doesn't refresh)
+      expect(mockRefresh).not.toHaveBeenCalled()
+    })
+  })
 })

@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LevelFormModal from "@/components/admin/LevelFormModal";
 import type { Database } from "@/types/database";
@@ -242,6 +242,60 @@ describe("LevelFormModal", () => {
       await waitFor(() => {
         expect(mockUpdate).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe("Form Validation", () => {
+    it("should show error when English name is whitespace only", async () => {
+      const user = userEvent.setup();
+      render(<LevelFormModal {...defaultProps} />);
+
+      const nameEnInput = screen.getByPlaceholderText("e.g., Star Master");
+      await user.clear(nameEnInput);
+      await user.type(nameEnInput, "   ");
+
+      const form = screen.getByRole("button", { name: "Save Changes" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("English name is required")).toBeInTheDocument();
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error when name is empty with zh-CN locale", async () => {
+      const user = userEvent.setup();
+      render(<LevelFormModal {...defaultProps} locale="zh-CN" />);
+
+      const nameEnInput = screen.getByPlaceholderText("e.g., Star Master");
+      await user.clear(nameEnInput);
+      await user.type(nameEnInput, "   ");
+
+      const form = screen.getByRole("button", { name: "保存更改" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("请输入英文名称")).toBeInTheDocument();
+    });
+
+    it("should show error when stars required is negative", async () => {
+      const user = userEvent.setup();
+      const levelWithNegativeStars = { ...mockLevel, stars_required: -5 };
+      render(<LevelFormModal {...defaultProps} level={levelWithNegativeStars} />);
+
+      const form = screen.getByRole("button", { name: "Save Changes" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("Stars required cannot be negative")).toBeInTheDocument();
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error when stars is negative with zh-CN locale", async () => {
+      const user = userEvent.setup();
+      const levelWithNegativeStars = { ...mockLevel, stars_required: -5 };
+      render(<LevelFormModal {...defaultProps} level={levelWithNegativeStars} locale="zh-CN" />);
+
+      const form = screen.getByRole("button", { name: "保存更改" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("星星要求不能为负数")).toBeInTheDocument();
     });
   });
 

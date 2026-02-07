@@ -422,12 +422,12 @@ export default function QuickRecordForm({
 
       {/* Submit Button */}
       <div className="space-y-2">
-        {!selectedChild && (
+        {!selectedChild && !success && (
           <div className="text-sm text-red-600 text-center">
             ⚠️ {locale === "zh-CN" ? "请先选择一个孩子" : "Please select a child first"}
           </div>
         )}
-        {selectedChild && !selectedQuest && !customDescription && (
+        {selectedChild && !selectedQuest && !customDescription && !success && (
           <div className="text-sm text-red-600 text-center">
             ⚠️ {locale === "zh-CN" ? "请选择一个任务或输入自定义描述" : "Please select a quest or enter custom description"}
           </div>

@@ -93,10 +93,12 @@ const translations: Record<string, BilingualText> = {
 
 /**
  * Get localized text
+ * @internal Exported as _settlementT for testing only
  */
 function t(key: string, locale: ReportLocale): string {
   return translations[key]?.[locale] || translations[key]?.en || key;
 }
+export { t as _settlementT };
 
 /**
  * Format date for display

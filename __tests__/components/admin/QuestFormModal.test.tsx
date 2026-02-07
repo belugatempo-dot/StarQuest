@@ -758,6 +758,218 @@ describe("QuestFormModal", () => {
     });
   });
 
+  describe("Category Handling", () => {
+    const mockCategories = [
+      {
+        id: "cat-1",
+        family_id: "family-123",
+        name: "health",
+        name_en: "Health",
+        name_zh: "健康",
+        icon: "💪",
+        is_active: true,
+        sort_order: 2,
+        created_at: "2025-01-01",
+      },
+      {
+        id: "cat-2",
+        family_id: "family-123",
+        name: "study",
+        name_en: "Study",
+        name_zh: "学业",
+        icon: "✍️",
+        is_active: false,
+        sort_order: 1,
+        created_at: "2025-01-01",
+      },
+      {
+        id: "cat-3",
+        family_id: "family-123",
+        name: "chores",
+        name_en: "Chores",
+        name_zh: "家务",
+        icon: "🧹",
+        is_active: true,
+        sort_order: 3,
+        created_at: "2025-01-01",
+      },
+    ];
+
+    it("should render DEFAULT_CATEGORY_NAMES when categories array is empty", () => {
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="en"
+          categories={[]}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const categorySelect = screen.getByRole("combobox");
+      // DEFAULT_CATEGORY_NAMES has 14 items + 1 placeholder option = 15 options
+      const options = categorySelect.querySelectorAll("option");
+      expect(options.length).toBe(15); // 1 placeholder + 14 default
+
+      // Verify specific default categories are present as option elements (capitalized)
+      const optionTexts = Array.from(options).map((o) => o.textContent);
+      expect(optionTexts).toContain("Health");
+      expect(optionTexts).toContain("Study");
+      expect(optionTexts).toContain("Chores");
+      expect(optionTexts).toContain("Other");
+    });
+
+    it("should render DEFAULT_CATEGORY_NAMES when all categories are inactive", () => {
+      const allInactive = mockCategories.map((c) => ({ ...c, is_active: false }));
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="en"
+          categories={allInactive}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const categorySelect = screen.getByRole("combobox");
+      const options = categorySelect.querySelectorAll("option");
+      // Should fall back to DEFAULT_CATEGORY_NAMES (14) + 1 placeholder
+      expect(options.length).toBe(15);
+
+      // Verify default category names are rendered (capitalized first letter)
+      expect(screen.getByText("Hygiene")).toBeInTheDocument();
+      expect(screen.getByText("Creativity")).toBeInTheDocument();
+    });
+
+    it("should filter out inactive categories and only render active ones", () => {
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="en"
+          categories={mockCategories}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const categorySelect = screen.getByRole("combobox");
+      const options = categorySelect.querySelectorAll("option");
+      // 2 active categories + 1 placeholder = 3 options
+      expect(options.length).toBe(3);
+
+      // Active categories should be present (with icons)
+      expect(screen.getByText(/Health/)).toBeInTheDocument();
+      expect(screen.getByText(/Chores/)).toBeInTheDocument();
+
+      // Inactive category (Study) should NOT be in the dropdown
+      // The option text format is "icon name_en", so check for "✍️ Study"
+      const optionTexts = Array.from(options).map((o) => o.textContent);
+      expect(optionTexts.some((t) => t?.includes("Study"))).toBe(false);
+    });
+
+    it("should sort active categories by sort_order", () => {
+      // Health has sort_order 2, Chores has sort_order 3
+      // After filtering inactive (Study sort_order 1), order should be Health, Chores
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="en"
+          categories={mockCategories}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const categorySelect = screen.getByRole("combobox");
+      const options = categorySelect.querySelectorAll("option");
+      // Skip placeholder (index 0), check order of active categories
+      expect(options[1].textContent).toContain("Health");
+      expect(options[2].textContent).toContain("Chores");
+    });
+
+    it("should display Chinese category names when locale is zh-CN", () => {
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="zh-CN"
+          categories={mockCategories}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const categorySelect = screen.getByRole("combobox");
+      const options = categorySelect.querySelectorAll("option");
+
+      // Active categories should show Chinese names
+      expect(options[1].textContent).toContain("健康");
+      expect(options[2].textContent).toContain("家务");
+    });
+
+    it("should render DEFAULT_CATEGORY_NAMES when categories prop is not provided", () => {
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="en"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      // categories defaults to [], which means activeCategories.length === 0
+      // so DEFAULT_CATEGORY_NAMES should be used
+      const categorySelect = screen.getByRole("combobox");
+      const options = categorySelect.querySelectorAll("option");
+      expect(options.length).toBe(15); // 1 placeholder + 14 defaults
+    });
+  });
+
+  describe("Branch coverage", () => {
+    it("should show Chinese save failure error on insert failure with zh-CN locale", async () => {
+      const user = userEvent.setup();
+
+      mockFrom.mockReturnValue({
+        insert: jest.fn().mockResolvedValue({
+          error: { message: "Disk full" },
+        }),
+      });
+
+      render(
+        <QuestFormModal
+          familyId="family-123"
+          locale="zh-CN"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      await user.type(screen.getByPlaceholderText("e.g., Make the bed"), "Test");
+
+      const submitButton = screen.getByRole("button", { name: "创建任务" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("保存失败: Disk full")).toBeInTheDocument();
+      });
+
+      expect(mockOnSuccess).not.toHaveBeenCalled();
+    });
+
+    it("should render edit mode title in zh-CN as '编辑任务'", () => {
+      render(
+        <QuestFormModal
+          quest={mockQuest}
+          familyId="family-123"
+          locale="zh-CN"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByText("编辑任务")).toBeInTheDocument();
+    });
+  });
+
   describe("Localization", () => {
     it("should display Chinese labels when locale is zh-CN", () => {
       render(

@@ -214,6 +214,14 @@ describe("LevelManagement", () => {
       ).toBeInTheDocument();
     });
 
+    it("should show empty state in Chinese when no levels and locale is zh-CN", () => {
+      render(<LevelManagement levels={[]} locale="zh-CN" />);
+
+      expect(
+        screen.getByText(/还没有配置等级/)
+      ).toBeInTheDocument();
+    });
+
     it("should display fallback icon when level has no icon", () => {
       const levelsWithoutIcon = [{ ...mockLevels[0], icon: null }];
       render(<LevelManagement levels={levelsWithoutIcon} locale="en" />);

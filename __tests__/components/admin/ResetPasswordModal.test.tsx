@@ -515,6 +515,29 @@ describe("ResetPasswordModal", () => {
     });
   });
 
+  describe("Branch coverage", () => {
+    it("should show 'Failed to reset password' fallback when API error message is empty", async () => {
+      const user = userEvent.setup();
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: "" }),
+      });
+
+      render(<ResetPasswordModal child={mockChild} locale="en" onClose={mockOnClose} />);
+
+      const passwordInput = screen.getByPlaceholderText("family.newPasswordPlaceholder");
+      await user.type(passwordInput, "ValidPassword123");
+
+      const resetButton = screen.getByRole("button", { name: "family.resetPasswordButton" });
+      await user.click(resetButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Failed to reset password")).toBeInTheDocument();
+      });
+    });
+  });
+
   describe("Password Display", () => {
     it("should display password in large monospace font after success", async () => {
       const user = userEvent.setup();

@@ -4,27 +4,28 @@ import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { typedUpdate } from "@/lib/supabase/helpers";
+import {
+  handleBatchOperation,
+  buildApprovalPayload,
+  buildRejectionPayload,
+} from "@/lib/batch-operations";
 import { useBatchSelection } from "@/lib/hooks/useBatchSelection";
+import { useActivityFilters } from "@/lib/hooks/useActivityFilters";
+import ActivityItem from "@/components/shared/ActivityItem";
+import ActivityFilterBar from "@/components/shared/ActivityFilterBar";
+import ActivityDateGroup from "@/components/shared/ActivityDateGroup";
+import BatchActionBar from "@/components/shared/BatchActionBar";
 import CalendarView from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
-import { toLocalDateString } from "@/lib/date-utils";
 import type {
   UnifiedActivityItem,
   UnifiedActivityListProps,
-  ActivityFilterType,
-  ActivityStatusFilter,
 } from "@/types/activity";
 import { getPermissions } from "@/types/activity";
 import {
   getActivityDescription,
-  getStatusBadge,
-  getTypeBadge,
-  formatActivityDate,
-  formatDateShort,
-  getDailyTotal,
   groupActivitiesByDate,
   calculateActivityStats,
 } from "@/lib/activity-utils";
@@ -48,12 +49,25 @@ export default function UnifiedActivityList({
     role === "parent" ? "calendar" : "list"
   );
 
-  // Filter state - different defaults based on role
-  const [filterType, setFilterType] = useState<ActivityFilterType>("all");
-  const [statusFilter, setStatusFilter] = useState<ActivityStatusFilter>("all");
-  const [filterDate, setFilterDate] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  // Filter state
+  const {
+    filterType,
+    setFilterType,
+    statusFilter,
+    setStatusFilter,
+    filterDate,
+    setFilterDate,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    filteredActivities,
+    hasActiveFilters,
+    clearFilters,
+  } = useActivityFilters({
+    activities,
+    canFilterByType: permissions.canFilterByType,
+  });
 
   // Pagination state (child only)
   const [showCount, setShowCount] = useState(20);
@@ -78,69 +92,6 @@ export default function UnifiedActivityList({
     () => calculateActivityStats(activities),
     [activities]
   );
-
-  // Filter activities
-  const filteredActivities = useMemo(() => {
-    let filtered = [...activities];
-
-    // Filter by type (parent only)
-    if (permissions.canFilterByType) {
-      if (filterType === "positive") {
-        filtered = filtered.filter((a) => a.stars > 0);
-      } else if (filterType === "negative") {
-        filtered = filtered.filter((a) => a.stars < 0);
-      } else if (filterType === "stars") {
-        filtered = filtered.filter((a) => a.type === "star_transaction");
-      } else if (filterType === "redemptions") {
-        filtered = filtered.filter((a) => a.type === "redemption");
-      }
-    }
-
-    // Filter by status (both roles)
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((a) => a.status === statusFilter);
-    }
-
-    // Filter by single date
-    if (filterDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate === filterDate;
-      });
-    }
-
-    // Filter by date range (parent only in list view)
-    if (startDate && endDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate >= startDate && activityDate <= endDate;
-      });
-    } else if (startDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate >= startDate;
-      });
-    } else if (endDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate <= endDate;
-      });
-    }
-
-    return filtered;
-  }, [
-    activities,
-    filterType,
-    statusFilter,
-    filterDate,
-    startDate,
-    endDate,
-    permissions.canFilterByType,
-  ]);
 
   // Apply pagination (child only)
   const displayedActivities = permissions.usePagination
@@ -170,55 +121,37 @@ export default function UnifiedActivityList({
 
     if (!confirm(t("activity.confirmBatchApprove", { count: batch.selectedIds.size }))) return;
 
-    batch.setIsBatchProcessing(true);
-    try {
-      const ids = Array.from(batch.selectedIds);
-      const { error } = await typedUpdate(supabase, "star_transactions", {
-        status: "approved",
-        reviewed_at: new Date().toISOString(),
-      }).in("id", ids);
-
-      if (error) throw error;
-
-      batch.exitSelectionMode();
-      router.refresh();
-    } catch (err) {
-      console.error("Batch approve error:", err);
-      alert(t("activity.batchApproveFailed"));
-    } finally {
-      batch.setIsBatchProcessing(false);
-    }
+    await handleBatchOperation({
+      batch,
+      supabase,
+      router,
+      table: "star_transactions",
+      data: buildApprovalPayload(),
+      onError: () => alert(t("activity.batchApproveFailed")),
+    });
   };
 
   // Batch reject handler (parent only)
   const handleBatchReject = async () => {
     if (batch.selectedIds.size === 0 || !batch.batchRejectReason.trim()) return;
 
-    batch.setIsBatchProcessing(true);
-    try {
-      const ids = Array.from(batch.selectedIds);
-      const { error } = await typedUpdate(supabase, "star_transactions", {
-        status: "rejected",
-        parent_response: batch.batchRejectReason.trim(),
-        reviewed_at: new Date().toISOString(),
-      }).in("id", ids);
-
-      if (error) throw error;
-
-      batch.setShowBatchRejectModal(false);
-      batch.setBatchRejectReason("");
-      batch.exitSelectionMode();
-      router.refresh();
-    } catch (err) {
-      console.error("Batch reject error:", err);
-      alert(t("activity.batchRejectFailed"));
-    } finally {
-      batch.setIsBatchProcessing(false);
-    }
+    await handleBatchOperation({
+      batch,
+      supabase,
+      router,
+      table: "star_transactions",
+      data: buildRejectionPayload(batch.batchRejectReason),
+      onSuccess: () => {
+        batch.setShowBatchRejectModal(false);
+        batch.setBatchRejectReason("");
+      },
+      onError: () => alert(t("activity.batchRejectFailed")),
+    });
   };
 
   // Delete handler (parent only)
   const handleDelete = async (activity: UnifiedActivityItem) => {
+    /* istanbul ignore next -- defensive guard: UI only shows delete for star_transactions */
     if (activity.type !== "star_transaction") {
       alert(t("activity.canOnlyDeleteStars"));
       return;
@@ -249,15 +182,6 @@ export default function UnifiedActivityList({
     }
   };
 
-  // Clear filters
-  const clearFilters = () => {
-    setFilterType("all");
-    setStatusFilter("all");
-    setFilterDate("");
-    setStartDate("");
-    setEndDate("");
-  };
-
   // Convert activities to transaction format for CalendarView
   const transactionsForCalendar = useMemo(() => {
     return activities.map((a) => ({
@@ -267,14 +191,6 @@ export default function UnifiedActivityList({
       created_at: a.createdAt,
     }));
   }, [activities]);
-
-  // Check if any filters are active
-  const hasActiveFilters =
-    filterType !== "all" ||
-    statusFilter !== "all" ||
-    filterDate ||
-    startDate ||
-    endDate;
 
   return (
     <div className="space-y-6">
@@ -300,224 +216,31 @@ export default function UnifiedActivityList({
 
         {/* Filters and List - Right Side or Full Width */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-            {/* Header with view mode toggle */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">
-                {t("activity.filters")}
-              </h2>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    viewMode === "list"
-                      ? "bg-secondary text-white"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  📋 {t("activity.list")}
-                </button>
-                <button
-                  onClick={() => setViewMode("calendar")}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    viewMode === "calendar"
-                      ? "bg-secondary text-white"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  📅 {t("activity.calendar")}
-                </button>
-              </div>
-            </div>
-
-            {/* Type Filter (parent only) */}
-            {permissions.canFilterByType && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("activity.type")}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { key: "all", label: t("common.all") },
-                    {
-                      key: "stars",
-                      label: `⭐ ${t("activity.starsType")}`,
-                      bgActive: "bg-yellow-500",
-                    },
-                    {
-                      key: "redemptions",
-                      label: `🎁 ${t("activity.redemptionsType")}`,
-                      bgActive: "bg-purple-500",
-                    },
-                    {
-                      key: "positive",
-                      label: `➕ ${t("activity.positiveType")}`,
-                      bgActive: "bg-green-500",
-                    },
-                    {
-                      key: "negative",
-                      label: `➖ ${t("activity.negativeType")}`,
-                      bgActive: "bg-red-500",
-                    },
-                  ].map((filter) => (
-                    <button
-                      key={filter.key}
-                      onClick={() =>
-                        setFilterType(filter.key as ActivityFilterType)
-                      }
-                      className={`px-4 py-2 rounded-lg transition ${
-                        filterType === filter.key
-                          ? `${filter.bgActive || "bg-blue-500"} text-white`
-                          : "bg-gray-100 hover:bg-gray-200"
-                      }`}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Status Filter (both roles) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t("common.status")}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  {
-                    key: "all",
-                    label: t("history.allTransactions"),
-                    count: stats.all,
-                  },
-                  {
-                    key: "approved",
-                    label: t("status.approved"),
-                    count: stats.approved,
-                  },
-                  {
-                    key: "pending",
-                    label: t("status.pending"),
-                    count: stats.pending,
-                  },
-                  {
-                    key: "rejected",
-                    label: t("status.rejected"),
-                    count: stats.rejected,
-                  },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() =>
-                      setStatusFilter(tab.key as ActivityStatusFilter)
-                    }
-                    className={`px-4 py-2 rounded-lg font-medium transition ${
-                      statusFilter === tab.key
-                        ? "bg-primary text-gray-900"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {tab.label}
-                    <span className="ml-2 text-sm opacity-75">({tab.count})</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Date Filters (Input fields - parent list view only) */}
-            {viewMode === "list" && permissions.canFilterByType && (
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("activity.singleDate")}
-                  </label>
-                  <input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => {
-                      setFilterDate(e.target.value);
-                      setStartDate("");
-                      setEndDate("");
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("activity.startDate")}
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      setFilterDate("");
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("activity.endDate")}
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => {
-                      setEndDate(e.target.value);
-                      setFilterDate("");
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Clear Filters Button */}
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
-              >
-                🔄 {t("activity.clearFilters")}
-              </button>
-            )}
-
-            {/* Results Count */}
-            <div className="text-sm text-gray-600">
-              {t("activity.showingRecords", { displayed: displayedActivities.length, total: activities.length })}
-            </div>
-
-            {/* Batch Selection Controls (parent only) */}
-            {permissions.canBatchApprove && pendingTransactions.length > 0 && (
-              <div className="flex items-center space-x-3 pt-2 border-t">
-                <button
-                  onClick={() => batch.setSelectionMode(!batch.selectionMode)}
-                  className={`px-4 py-2 rounded-lg transition font-medium ${
-                    batch.selectionMode
-                      ? "bg-purple-500 text-white"
-                      : "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                  }`}
-                >
-                  {batch.selectionMode ? "✅ " : "☐ "}
-                  {t("activity.selectionMode")}
-                </button>
-                {batch.selectionMode && (
-                  <button
-                    onClick={() => batch.selectAll(pendingTransactions.map((t) => t.id))}
-                    className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
-                  >
-                    {t("activity.selectAllPending", { count: pendingTransactions.length })}
-                  </button>
-                )}
-                {batch.selectionMode && batch.selectedIds.size > 0 && (
-                  <span className="text-sm text-gray-600">
-                    {t("activity.selectedItems", { count: batch.selectedIds.size })}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+          <ActivityFilterBar
+            filterType={filterType}
+            setFilterType={setFilterType}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            filterDate={filterDate}
+            setFilterDate={setFilterDate}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            hasActiveFilters={hasActiveFilters}
+            clearFilters={clearFilters}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            stats={stats}
+            displayedCount={displayedActivities.length}
+            totalCount={activities.length}
+            permissions={permissions}
+            pendingCount={pendingTransactions.length}
+            selectionMode={batch.selectionMode}
+            setSelectionMode={batch.setSelectionMode}
+            selectedCount={batch.selectedIds.size}
+            onSelectAll={() => batch.selectAll(pendingTransactions.map((t) => t.id))}
+          />
 
           {/* List View */}
           {viewMode === "list" && (
@@ -565,71 +288,28 @@ export default function UnifiedActivityList({
                   </p>
                 </div>
               ) : (
-                groupedByDate.map(([date, dayActivities]) => {
-                  const dailyTotal = getDailyTotal(dayActivities);
-                  return (
-                    <div
-                      key={date}
-                      className="bg-white rounded-lg shadow-md overflow-hidden"
-                    >
-                      {/* Date Header - Night Theme */}
-                      <div className="night-date-header px-6 py-4 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-xl font-bold text-white">
-                            ✨ {formatDateShort(date, locale)}
-                          </h3>
-                          <p className="text-sm text-white/70">
-                            {dayActivities.length}{" "}
-                            {t("activity.records")}
-                          </p>
-                        </div>
-                        <div
-                          className={`text-2xl font-bold star-glow ${
-                            dailyTotal > 0
-                              ? "text-green-400"
-                              : dailyTotal < 0
-                                ? "text-red-400"
-                                : "text-white/60"
-                          }`}
-                        >
-                          {dailyTotal > 0 ? "+" : ""}
-                          {dailyTotal} ⭐
-                        </div>
-                      </div>
-
-                      {/* Activities for this date */}
-                      <div className="p-6 space-y-3">
-                        {dayActivities.map((activity) => (
-                          <ActivityItem
-                            key={`${activity.type}-${activity.id}`}
-                            activity={activity}
-                            locale={locale}
-                            permissions={permissions}
-                            selectionMode={batch.selectionMode}
-                            isSelected={batch.selectedIds.has(activity.id)}
-                            onToggleSelection={() =>
-                              batch.toggleSelection(activity.id)
-                            }
-                            onEdit={() => {
-                              if (activity.type === "redemption") {
-                                setEditingRedemption(activity.originalData);
-                              } else {
-                                setEditingTransaction(activity.originalData);
-                              }
-                            }}
-                            onDelete={() => handleDelete(activity)}
-                            onResubmit={() =>
-                              setResubmitTransaction(activity.originalData)
-                            }
-                            deletingId={deletingId}
-                            showChildName={permissions.canSeeAllChildren}
-                            variant="calendar"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })
+                groupedByDate.map(([date, dayActivities]) => (
+                  <ActivityDateGroup
+                    key={date}
+                    date={date}
+                    activities={dayActivities}
+                    locale={locale}
+                    permissions={permissions}
+                    selectionMode={batch.selectionMode}
+                    selectedIds={batch.selectedIds}
+                    onToggleSelection={(id) => batch.toggleSelection(id)}
+                    onEdit={(activity) => {
+                      if (activity.type === "redemption") {
+                        setEditingRedemption(activity.originalData);
+                      } else {
+                        setEditingTransaction(activity.originalData);
+                      }
+                    }}
+                    onDelete={(activity) => handleDelete(activity)}
+                    onResubmit={(activity) => setResubmitTransaction(activity.originalData)}
+                    deletingId={deletingId}
+                  />
+                ))
               )}
             </div>
           )}
@@ -677,339 +357,25 @@ export default function UnifiedActivityList({
         />
       )}
 
-      {/* Floating Action Bar for Batch Operations (parent only) */}
+      {/* Floating Action Bar + Reject Modal (parent only) */}
       {batch.selectedIds.size > 0 && permissions.canBatchApprove && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-purple-300 shadow-lg p-4 z-50">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <span className="font-medium text-purple-700">
-              {t("activity.itemsSelected", { count: batch.selectedIds.size })}
-            </span>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleBatchApprove}
-                disabled={batch.isBatchProcessing}
-                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 font-medium"
-              >
-                {batch.isBatchProcessing
-                  ? t("activity.processing")
-                  : `✅ ${t("activity.batchApprove")}`}
-              </button>
-              <button
-                onClick={() => batch.setShowBatchRejectModal(true)}
-                disabled={batch.isBatchProcessing}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 font-medium"
-              >
-                {`❌ ${t("activity.batchReject")}`}
-              </button>
-              <button
-                onClick={batch.exitSelectionMode}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-              >
-                {t("activity.clear")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Batch Reject Modal (parent only) */}
-      {batch.showBatchRejectModal && permissions.canBatchApprove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-bold">
-                {t("activity.batchRejectTitle")}
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {t("activity.rejectingCount", { count: batch.selectedIds.size })}
-              </p>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("activity.rejectionReason")}
-                </label>
-                <textarea
-                  value={batch.batchRejectReason}
-                  onChange={(e) => batch.setBatchRejectReason(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                  placeholder={t("activity.rejectionPlaceholder")}
-                  required
-                />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    batch.setShowBatchRejectModal(false);
-                    batch.setBatchRejectReason("");
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-                >
-                  {t("common.cancel")}
-                </button>
-                <button
-                  onClick={handleBatchReject}
-                  disabled={batch.isBatchProcessing || !batch.batchRejectReason.trim()}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
-                >
-                  {batch.isBatchProcessing
-                    ? t("activity.processing")
-                    : t("activity.confirmReject")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <BatchActionBar
+          selectedCount={batch.selectedIds.size}
+          isBatchProcessing={batch.isBatchProcessing}
+          showBatchRejectModal={batch.showBatchRejectModal}
+          batchRejectReason={batch.batchRejectReason}
+          onBatchApprove={handleBatchApprove}
+          onBatchReject={handleBatchReject}
+          onShowRejectModal={() => batch.setShowBatchRejectModal(true)}
+          onHideRejectModal={() => {
+            batch.setShowBatchRejectModal(false);
+            batch.setBatchRejectReason("");
+          }}
+          onRejectReasonChange={(reason) => batch.setBatchRejectReason(reason)}
+          onExitSelectionMode={batch.exitSelectionMode}
+        />
       )}
     </div>
   );
 }
 
-// Unified sub-component for both list and calendar view items
-interface ActivityItemProps {
-  activity: UnifiedActivityItem;
-  locale: string;
-  permissions: ReturnType<typeof getPermissions>;
-  selectionMode: boolean;
-  isSelected: boolean;
-  onToggleSelection: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onResubmit: () => void;
-  deletingId: string | null;
-  showChildName: boolean;
-  variant: "list" | "calendar";
-}
-
-function ActivityItem({
-  activity,
-  locale,
-  permissions,
-  selectionMode,
-  isSelected,
-  onToggleSelection,
-  onEdit,
-  onDelete,
-  onResubmit,
-  deletingId,
-  showChildName,
-  variant,
-}: ActivityItemProps) {
-  const t = useTranslations();
-  const statusBadge = getStatusBadge(activity.status, locale);
-  const typeBadge = getTypeBadge(activity.type, locale);
-
-  const canSelectForBatch =
-    selectionMode &&
-    activity.type === "star_transaction" &&
-    activity.status === "pending";
-
-  // Stars color class
-  const getStarsColorClass = () => {
-    if (activity.status === "rejected") return "text-gray-400 line-through";
-    if (activity.status === "pending") return "text-yellow-600";
-    if (variant === "list") {
-      return activity.stars > 0 ? "text-success" : "text-danger";
-    }
-    return activity.stars > 0 ? "text-green-600" : "text-red-600";
-  };
-
-  // Card background/border classes
-  const getCardClasses = () => {
-    if (variant === "list") {
-      if (activity.status === "rejected") return "bg-danger/5 border-danger/20";
-      if (activity.status === "pending") return "bg-warning/5 border-warning/20";
-      if (activity.type === "redemption") return "border-purple-200 bg-purple-50";
-      if (activity.type === "credit_transaction") return "border-blue-200 bg-blue-50";
-      return "bg-gray-50 border-gray-200";
-    }
-    // calendar variant
-    if (activity.status === "rejected") return "border-gray-300 bg-gray-50";
-    if (activity.status === "pending") return "border-yellow-200 bg-yellow-50";
-    if (activity.type === "redemption") return "border-purple-200 bg-purple-50";
-    if (activity.type === "credit_transaction") return "border-blue-200 bg-blue-50";
-    return activity.stars > 0
-      ? "border-green-200 bg-green-50"
-      : "border-red-200 bg-red-50";
-  };
-
-  // Selection checkbox (shared)
-  const checkbox = canSelectForBatch && (
-    <input
-      type="checkbox"
-      checked={isSelected}
-      onChange={onToggleSelection}
-      className={`w-5 h-5 ${variant === "list" ? "mt-1" : ""} rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer`}
-    />
-  );
-
-  // Action buttons (parent only, shared logic)
-  const canShowActions = permissions.canEdit && (activity.type === "star_transaction" || activity.type === "redemption");
-
-  const actionButtons = canShowActions && (
-    <div className={variant === "list" ? "flex flex-col space-y-1 mt-2" : "flex space-x-1"}>
-      <button
-        onClick={onEdit}
-        className={variant === "list"
-          ? "px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
-          : "px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"}
-      >
-        {variant === "list" ? `✏️ ${t("common.edit")}` : "✏️"}
-      </button>
-      {activity.type === "star_transaction" && (
-        <button
-          onClick={onDelete}
-          disabled={deletingId === activity.id}
-          className={variant === "list"
-            ? "px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
-            : "px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"}
-        >
-          {variant === "list" ? `🗑️ ${t("common.delete")}` : "🗑️"}
-        </button>
-      )}
-    </div>
-  );
-
-  if (variant === "calendar") {
-    return (
-      <div
-        className={`p-4 rounded-lg border-2 ${getCardClasses()} ${isSelected ? "ring-2 ring-purple-500" : ""}`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {checkbox}
-            <span className="text-2xl">{activity.icon}</span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-semibold">
-                  {getActivityDescription(activity, locale)}
-                </h4>
-                {permissions.canFilterByType && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeBadge.className}`}
-                  >
-                    {typeBadge.icon}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-600">
-                {showChildName && `👤 ${activity.childName} • `}
-                {new Date(activity.createdAt).toLocaleTimeString(
-                  locale === "zh-CN" ? "zh-CN" : "en-US",
-                  { hour: "2-digit", minute: "2-digit" }
-                )}
-                {" • "}
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge.className}`}
-                >
-                  {statusBadge.label}
-                </span>
-              </p>
-              {activity.parentResponse && (
-                <p className="text-sm text-gray-600 mt-1">
-                  💬 {activity.parentResponse}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className={`text-xl font-bold ${getStarsColorClass()}`}>
-              {activity.stars > 0 ? "+" : ""}
-              {activity.stars}⭐
-            </div>
-            {actionButtons}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // List variant
-  return (
-    <div
-      className={`p-4 rounded-lg border-2 transition hover:shadow-md ${getCardClasses()} ${isSelected ? "ring-2 ring-purple-500" : ""}`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex items-start space-x-3 flex-1">
-          {checkbox}
-          <div className="text-3xl mt-1">{activity.icon}</div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg">
-              {getActivityDescription(activity, locale)}
-            </h3>
-            {permissions.canFilterByType && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeBadge.className}`}
-              >
-                {typeBadge.icon} {typeBadge.label}
-              </span>
-            )}
-            <p className="text-sm text-gray-500">
-              {formatActivityDate(activity.createdAt, locale)}
-            </p>
-
-            {/* Source (child view) */}
-            {!permissions.canFilterByType && activity.source && (
-              <p className="text-xs text-gray-600 mt-1">
-                {activity.source === "parent_record"
-                  ? t("history.parentRecorded")
-                  : t("history.youRequested")}
-              </p>
-            )}
-
-            {/* Child Note */}
-            {activity.childNote && (
-              <p className="text-sm text-gray-700 mt-2 italic">
-                &quot;{activity.childNote}&quot;
-              </p>
-            )}
-
-            {/* Parent Response (for rejected) */}
-            {activity.status === "rejected" && activity.parentResponse && (
-              <div className="mt-2 p-2 bg-danger/10 rounded border border-danger/20">
-                <p className="text-xs font-semibold text-danger">
-                  {t("history.rejectionReason")}:
-                </p>
-                <p className="text-sm text-danger">{activity.parentResponse}</p>
-              </div>
-            )}
-
-            {/* Pending indicator (child view) */}
-            {activity.status === "pending" && !permissions.canFilterByType && (
-              <p className="text-xs text-warning mt-2 flex items-center">
-                <span className="mr-1">⏳</span>
-                {t("history.waitingApproval")}
-              </p>
-            )}
-
-            {/* Resubmit button (child only for rejected requests) */}
-            {permissions.canResubmit &&
-              activity.status === "rejected" &&
-              activity.source === "child_request" && (
-                <button
-                  onClick={onResubmit}
-                  className="mt-2 px-3 py-1 text-sm bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition font-medium"
-                >
-                  {t("activity.editResubmit")}
-                </button>
-              )}
-          </div>
-        </div>
-
-        <div className="text-right ml-4 flex-shrink-0">
-          <div className={`text-2xl font-bold mb-2 ${getStarsColorClass()}`}>
-            {activity.stars > 0 ? "+" : ""}
-            {activity.stars}
-          </div>
-          <span
-            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${statusBadge.className}`}
-          >
-            {t(`status.${activity.status}` as any)}
-          </span>
-          {actionButtons}
-        </div>
-      </div>
-    </div>
-  );
-}

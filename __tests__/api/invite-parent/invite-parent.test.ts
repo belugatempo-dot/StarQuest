@@ -1,9 +1,408 @@
 /**
  * Tests for invite-parent API route logic
  *
- * Since NextRequest/NextResponse are not available in Jest,
- * we test the validation and business logic patterns.
+ * Unit tests for validation logic + integration tests calling the handler.
  */
+
+// Mock next/server before any imports
+jest.mock("next/server", () => {
+  class MockHeaders {
+    private _headers: Map<string, string>;
+    constructor(init?: Record<string, string>) {
+      this._headers = new Map(Object.entries(init || {}));
+    }
+    get(name: string) {
+      return this._headers.get(name) || null;
+    }
+  }
+  class MockNextRequest {
+    private _headers: MockHeaders;
+    url: string;
+    nextUrl: { searchParams: URLSearchParams };
+    _body: any;
+    constructor(
+      url: string,
+      init?: {
+        headers?: Record<string, string>;
+        method?: string;
+        body?: string;
+      }
+    ) {
+      this.url = url;
+      this._headers = new MockHeaders(init?.headers);
+      this.nextUrl = {
+        searchParams: new URLSearchParams(new URL(url).search),
+      };
+      this._body = init?.body ? JSON.parse(init.body) : null;
+    }
+    get headers() {
+      return this._headers;
+    }
+    async json() {
+      return this._body;
+    }
+  }
+  class MockNextResponse {
+    status: number;
+    body: any;
+    constructor(body: any, init?: { status?: number }) {
+      this.body = body;
+      this.status = init?.status || 200;
+    }
+    static json(body: any, init?: { status?: number }) {
+      return new MockNextResponse(body, init);
+    }
+  }
+  return { NextRequest: MockNextRequest, NextResponse: MockNextResponse };
+});
+
+const mockGetUser = jest.fn();
+const mockFrom = jest.fn();
+const mockRpc = jest.fn();
+const mockCreateClient = jest.fn();
+
+jest.mock("@/lib/supabase/server", () => ({
+  createClient: (...args: any[]) => mockCreateClient(...args),
+  createAdminClient: jest.fn(),
+}));
+
+const mockSendEmail = jest.fn();
+const mockIsEmailServiceAvailable = jest.fn();
+jest.mock("@/lib/email/resend", () => ({
+  sendEmail: (...args: any[]) => mockSendEmail(...args),
+  isEmailServiceAvailable: (...args: any[]) =>
+    mockIsEmailServiceAvailable(...args),
+}));
+
+jest.mock("@/lib/email/templates/invite-parent", () => ({
+  generateInviteParentHtml: jest.fn().mockReturnValue("<html>test</html>"),
+  getInviteParentSubject: jest.fn().mockReturnValue("Test Subject"),
+}));
+
+import { POST } from "@/app/api/invite-parent/route";
+const { NextRequest } = require("next/server");
+
+function makeChain(finalResult: any) {
+  const chain: any = {};
+  chain.select = jest.fn().mockReturnValue(chain);
+  chain.eq = jest.fn().mockReturnValue(chain);
+  chain.maybeSingle = jest.fn().mockResolvedValue(finalResult);
+  chain.single = jest.fn().mockResolvedValue(finalResult);
+  return chain;
+}
+
+function makeRequest(body: any) {
+  return new NextRequest("http://localhost/api/invite-parent", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+describe("Invite Parent API - Handler Integration Tests", () => {
+  let profileChain: any;
+  let familyChain: any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    profileChain = makeChain({
+      data: { name: "Parent", role: "parent", family_id: "family-1" },
+      error: null,
+    });
+
+    familyChain = makeChain({
+      data: { name: "Smith Family" },
+      error: null,
+    });
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "users") return profileChain;
+      if (table === "families") return familyChain;
+      return makeChain({ data: null, error: null });
+    });
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-1" } },
+    });
+
+    mockRpc.mockResolvedValue({ data: "INVITE-CODE-123", error: null });
+
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: mockGetUser },
+      from: mockFrom,
+      rpc: mockRpc,
+    });
+
+    mockIsEmailServiceAvailable.mockReturnValue(true);
+    mockSendEmail.mockResolvedValue({ success: true });
+  });
+
+  it("returns 500 when RPC throws an exception (non-Error)", async () => {
+    // This covers the rpcErr instanceof Error branch (false path) at lines 99-100
+    mockRpc.mockRejectedValue("string-error");
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain("RPC exception: string-error");
+  });
+
+  it("returns 500 when RPC throws an Error instance", async () => {
+    // This covers the rpcErr instanceof Error branch (true path) at lines 99-100
+    mockRpc.mockRejectedValue(new Error("Connection refused"));
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain("RPC exception: Connection refused");
+  });
+
+  it("returns 500 with error message when outer catch receives a non-Error", async () => {
+    // This covers the outer catch at lines 136-138 with non-Error
+    // Make request.json() throw a non-Error value
+    const badRequest = {
+      async json() {
+        throw "unexpected-string-thrown";
+      },
+    };
+
+    const response = await POST(badRequest as any);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain("unexpected-string-thrown");
+  });
+
+  it("returns 500 with error message when outer catch receives an Error", async () => {
+    // This covers the outer catch at lines 136-138 with Error instance
+    const badRequest = {
+      async json() {
+        throw new Error("JSON parse failed");
+      },
+    };
+
+    const response = await POST(badRequest as any);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain("JSON parse failed");
+  });
+
+  it("uses fallback family name when family query returns null", async () => {
+    familyChain.single.mockResolvedValue({
+      data: null,
+      error: null,
+    });
+
+    mockIsEmailServiceAvailable.mockReturnValue(true);
+    mockSendEmail.mockResolvedValue({ success: true });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "test@example.com",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+  });
+
+  it("uses fallback inviter name when profile name is empty", async () => {
+    profileChain.single.mockResolvedValue({
+      data: { name: "", role: "parent", family_id: "family-1" },
+      error: null,
+    });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "test@example.com",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+  });
+
+  it("returns 403 when profile is null", async () => {
+    profileChain.single.mockResolvedValue({
+      data: null,
+      error: null,
+    });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe("Unauthorized");
+  });
+
+  it("handles zh-CN locale for email template", async () => {
+    mockIsEmailServiceAvailable.mockReturnValue(true);
+    mockSendEmail.mockResolvedValue({ success: true });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "zh-CN",
+      email: "test@example.com",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.emailSent).toBe(true);
+  });
+
+  it("handles email with whitespace by trimming", async () => {
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "  test@example.com  ",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+  });
+
+  it("handles sendEmail returning success: false", async () => {
+    mockIsEmailServiceAvailable.mockReturnValue(true);
+    mockSendEmail.mockResolvedValue({ success: false, error: "Domain not verified" });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "test@example.com",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.emailSent).toBe(false);
+  });
+
+  it("returns 400 when familyId is missing", async () => {
+    const request = makeRequest({ locale: "en" });
+    const response = await POST(request);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Missing required fields");
+  });
+
+  it("returns 400 when locale is missing", async () => {
+    const request = makeRequest({ familyId: "family-1" });
+    const response = await POST(request);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Missing required fields");
+  });
+
+  it("returns 400 for invalid email format", async () => {
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "not-an-email",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Invalid email address");
+  });
+
+  it("returns 401 when user is not authenticated", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("Unauthorized");
+  });
+
+  it("returns 500 when RPC returns error object", async () => {
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "RPC function failed" },
+    });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain("RPC error");
+  });
+
+  it("returns 500 when RPC returns null data (no invite code)", async () => {
+    mockRpc.mockResolvedValue({ data: null, error: null });
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain("RPC returned no invite code");
+  });
+
+  it("returns emailSent=false when sendEmail throws", async () => {
+    mockIsEmailServiceAvailable.mockReturnValue(true);
+    mockSendEmail.mockRejectedValue(new Error("SMTP down"));
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "test@example.com",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.emailSent).toBe(false);
+  });
+
+  it("returns emailSent=false when email service is not available", async () => {
+    mockIsEmailServiceAvailable.mockReturnValue(false);
+
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+      email: "test@example.com",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.emailSent).toBe(false);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("does not attempt email when no email is provided", async () => {
+    const request = makeRequest({
+      familyId: "family-1",
+      locale: "en",
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.emailSent).toBe(false);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+});
 
 describe("Invite Parent API - Unit Tests", () => {
   describe("Input validation", () => {

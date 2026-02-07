@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import EditChildModal from "@/components/admin/EditChildModal";
 import type { User } from "@/lib/auth";
@@ -181,7 +181,7 @@ describe("EditChildModal", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("should show error when name is only whitespace", async () => {
+    it("should show nameRequired error when submitting whitespace-only name", async () => {
       const user = userEvent.setup();
 
       render(
@@ -198,8 +198,12 @@ describe("EditChildModal", () => {
       await user.clear(nameInput);
       await user.type(nameInput, "   ");
 
-      // Let's just verify the input has whitespace
-      expect(nameInput).toHaveValue("   ");
+      // Use fireEvent.submit to bypass HTML5 required validation
+      const form = screen.getByRole("button", { name: "common.save" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("family.nameRequired")).toBeInTheDocument();
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should allow submission with valid name", async () => {
@@ -433,6 +437,35 @@ describe("EditChildModal", () => {
 
       await user.clear(nameInput);
       await user.type(nameInput, "Grace");
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("family.updateChildError")).toBeInTheDocument();
+      });
+
+      expect(mockOnSuccess).not.toHaveBeenCalled();
+    });
+
+    it("should show generic error when catch has no message", async () => {
+      const user = userEvent.setup();
+
+      // Mock error without .message property (not an Error instance)
+      mockFetch.mockRejectedValue({ code: "UNKNOWN" });
+
+      render(
+        <EditChildModal
+          child={mockChild}
+          locale="en"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const nameInput = screen.getByPlaceholderText("family.childNamePlaceholder");
+      const saveButton = screen.getByRole("button", { name: "common.save" });
+
+      await user.clear(nameInput);
+      await user.type(nameInput, "Valid");
       await user.click(saveButton);
 
       await waitFor(() => {

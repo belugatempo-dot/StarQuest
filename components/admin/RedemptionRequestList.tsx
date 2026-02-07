@@ -5,6 +5,11 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate } from "@/lib/supabase/helpers";
+import {
+  handleBatchOperation,
+  buildApprovalPayload,
+  buildRejectionPayload,
+} from "@/lib/batch-operations";
 import { getTodayString, formatDateTime } from "@/lib/date-utils";
 import { getRewardName } from "@/lib/localization";
 import { useBatchSelection } from "@/lib/hooks/useBatchSelection";
@@ -121,59 +126,38 @@ export default function RedemptionRequestList({
   const confirmBatchApprove = async () => {
     if (batch.selectedIds.size === 0) return;
 
-    batch.setIsBatchProcessing(true);
-    try {
-      const ids = Array.from(batch.selectedIds);
-      // Convert date to ISO timestamp (noon UTC to avoid timezone day-shifting)
-      const dateToUse = batchApprovalDate
-        ? new Date(batchApprovalDate + "T12:00:00Z").toISOString()
-        : new Date().toISOString();
+    // Convert date to ISO timestamp (noon UTC to avoid timezone day-shifting)
+    const dateToUse = batchApprovalDate
+      ? new Date(batchApprovalDate + "T12:00:00Z").toISOString()
+      : new Date().toISOString();
 
-      const { error } = await typedUpdate(supabase, "redemptions", {
-          status: "approved",
-          reviewed_at: dateToUse,
-        })
-        .in("id", ids);
-
-      if (error) throw error;
-
-      setShowBatchApproveModal(false);
-      batch.exitSelectionMode();
-      router.refresh();
-    } catch (err) {
-      console.error("Batch approve error:", err);
-      alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed");
-    } finally {
-      batch.setIsBatchProcessing(false);
-    }
+    await handleBatchOperation({
+      batch,
+      supabase,
+      router,
+      table: "redemptions",
+      data: buildApprovalPayload(undefined, dateToUse),
+      onSuccess: () => setShowBatchApproveModal(false),
+      onError: () => alert(locale === "zh-CN" ? "批量批准失败" : "Batch approve failed"),
+    });
   };
 
   // Batch reject handler
   const handleBatchReject = async () => {
     if (batch.selectedIds.size === 0) return;
 
-    batch.setIsBatchProcessing(true);
-    try {
-      const ids = Array.from(batch.selectedIds);
-      const { error } = await typedUpdate(supabase, "redemptions", {
-          status: "rejected",
-          parent_response: batch.batchRejectReason.trim() || null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .in("id", ids);
-
-      if (error) throw error;
-
-      batch.setShowBatchRejectModal(false);
-      batch.setBatchRejectReason("");
-      batch.exitSelectionMode();
-      router.refresh();
-    } catch (err) {
-      console.error("Batch reject error:", err);
-      alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed");
-    } finally {
-      batch.setIsBatchProcessing(false);
-    }
+    await handleBatchOperation({
+      batch,
+      supabase,
+      router,
+      table: "redemptions",
+      data: buildRejectionPayload(batch.batchRejectReason),
+      onSuccess: () => {
+        batch.setShowBatchRejectModal(false);
+        batch.setBatchRejectReason("");
+      },
+      onError: () => alert(locale === "zh-CN" ? "批量拒绝失败" : "Batch reject failed"),
+    });
   };
 
   if (requests.length === 0) {

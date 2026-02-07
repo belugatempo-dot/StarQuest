@@ -126,6 +126,31 @@ describe("Email Service", () => {
       expect(result.error).toBe("API rate limit exceeded");
     });
 
+    it("handles non-Error exceptions with fallback message", async () => {
+      process.env.RESEND_API_KEY = "test-api-key";
+
+      const mockSend = jest.fn().mockRejectedValue("string error");
+
+      jest.doMock("resend", () => ({
+        Resend: jest.fn().mockImplementation(() => ({
+          emails: {
+            send: mockSend,
+          },
+        })),
+      }));
+
+      const { sendEmail } = require("@/lib/email/resend");
+
+      const result = await sendEmail({
+        to: "test@example.com",
+        subject: "Test Subject",
+        html: "<p>Test content</p>",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Unknown error sending email");
+    });
+
     it("handles exceptions gracefully", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
 

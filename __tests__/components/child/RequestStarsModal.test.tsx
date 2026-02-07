@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor, within, act } from "@testing-library/react";
+import { render, screen, waitFor, within, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RequestStarsModal from "@/components/child/RequestStarsModal";
 import type { Database } from "@/types/database";
@@ -1026,6 +1026,97 @@ describe("RequestStarsModal", () => {
 
       // Button should be re-enabled so user can close or try again
       expect(submitButton).not.toBeDisabled();
+    });
+
+    it("should block submission when rate limited (more than 2 requests per minute)", async () => {
+      const user = userEvent.setup();
+      // No pending requests for this quest
+      mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+      // No rapid-fire for same quest (first .select("id") call)
+      // But rate limited overall (second .select("id") call returns >= 2)
+      mockRapidFireCheckResult
+        .mockReturnValueOnce({ data: [], error: null })
+        .mockReturnValueOnce({ data: [{ id: "req-1" }, { id: "req-2" }], error: null });
+
+      render(<RequestStarsModal {...defaultProps} />);
+
+      const textarea = screen.getByPlaceholderText("Tell your parents how you completed this quest...");
+      await user.type(textarea, "I did this!");
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/You can only submit up to 2 requests per minute/)).toBeInTheDocument();
+      });
+
+      expect(mockInsert).not.toHaveBeenCalled();
+      expect(defaultProps.onSuccess).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error message for rate limit when locale is zh-CN", async () => {
+      const user = userEvent.setup();
+      mockDuplicateCheckResult.mockReturnValue({ data: [], error: null });
+      mockRapidFireCheckResult
+        .mockReturnValueOnce({ data: [], error: null })
+        .mockReturnValueOnce({ data: [{ id: "req-1" }, { id: "req-2" }], error: null });
+
+      render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
+
+      const textarea = screen.getByPlaceholderText("告诉爸爸妈妈你完成了什么...");
+      await user.type(textarea, "我做完了!");
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/一分钟内最多只能提交2个请求/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Empty Note Validation", () => {
+    it("should show English validation error when form is submitted with empty note", async () => {
+      // Lines 52-57: The handleSubmit validates note.trim() is empty.
+      // The submit button is disabled when note is empty, but we can bypass
+      // by directly submitting the form element via fireEvent.submit.
+      render(<RequestStarsModal {...defaultProps} locale="en" />);
+
+      // Wait for date to be initialized
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
+
+      // Submit the form directly (bypasses disabled button)
+      const form = screen.getByRole("button", { name: "common.submit" }).closest("form")!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Please provide a note describing what you did")
+        ).toBeInTheDocument();
+      });
+
+      // Should NOT proceed to fetch family or insert
+      expect(mockMaybeSingle).not.toHaveBeenCalled();
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese validation error when form is submitted with empty note in zh-CN locale", async () => {
+      render(<RequestStarsModal {...defaultProps} locale="zh-CN" />);
+
+      // Wait for date to be initialized
+      await waitFor(() => {
+        expect(screen.getByLabelText("quests.requestDate")).toHaveValue(getLocalDateString());
+      });
+
+      // Submit the form directly
+      const form = screen.getByRole("button", { name: "common.submit" }).closest("form")!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(screen.getByText("请填写说明")).toBeInTheDocument();
+      });
     });
   });
 });
