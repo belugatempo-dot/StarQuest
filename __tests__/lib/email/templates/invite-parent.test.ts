@@ -117,5 +117,17 @@ describe("invite-parent email template", () => {
         "https://custom.example.com/en/register?invite=ABC123"
       );
     });
+
+    it("uses default appUrl when appUrl is not provided", () => {
+      const dataWithoutAppUrl: InviteParentEmailData = {
+        inviterName: "Jane",
+        familyName: "Smith Family",
+        inviteCode: "ABC123",
+        locale: "en",
+        // no appUrl — falls through to process.env.NEXT_PUBLIC_APP_URL || default
+      };
+      const html = generateInviteParentHtml(dataWithoutAppUrl);
+      expect(html).toContain("/en/register?invite=ABC123");
+    });
   });
 });

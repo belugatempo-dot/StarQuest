@@ -17,14 +17,13 @@ jest.mock("next/navigation", () => ({
 }));
 
 // Mock Supabase client
-const mockUpdate = jest.fn().mockReturnValue({
-  eq: jest.fn().mockResolvedValue({ error: null }),
-});
+const mockSelect = jest.fn().mockResolvedValue({ data: [{ settlement_day: 15 }], error: null });
+const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
+const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+const mockFrom = jest.fn().mockReturnValue({ update: mockUpdate });
 jest.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
-    from: () => ({
-      update: mockUpdate,
-    }),
+    from: mockFrom,
   }),
 }));
 
@@ -340,5 +339,119 @@ describe("CreditManagementClient", () => {
       expect(screen.getByTestId("interest-tier-manager")).toBeInTheDocument();
       expect(screen.getByTestId("settlement-history-table")).toBeInTheDocument();
     });
+  });
+
+  describe("settlement day change", () => {
+    it("updates settlement day on successful save", async () => {
+      const user = userEvent.setup();
+
+      // Mock successful update
+      mockSelect.mockResolvedValueOnce({ data: [{ settlement_day: 15 }], error: null });
+
+      render(<CreditManagementClient {...defaultProps} />);
+
+      const select = screen.getByRole("combobox");
+      expect(select).toHaveValue("1"); // initial value
+
+      await user.selectOptions(select, "15");
+
+      await waitFor(() => {
+        expect(mockFrom).toHaveBeenCalledWith("families");
+      });
+
+      await waitFor(() => {
+        expect(mockUpdate).toHaveBeenCalledWith({ settlement_day: 15 });
+      });
+
+      await waitFor(() => {
+        expect(mockEq).toHaveBeenCalledWith("id", "family-123");
+      });
+
+      await waitFor(() => {
+        expect(mockRefresh).toHaveBeenCalled();
+      });
+    });
+
+    it("shows error message when update fails", async () => {
+      const user = userEvent.setup();
+
+      // Mock failed update
+      mockSelect.mockResolvedValueOnce({ data: null, error: { message: "DB error" } });
+
+      render(<CreditManagementClient {...defaultProps} />);
+
+      const select = screen.getByRole("combobox");
+      await user.selectOptions(select, "10");
+
+      await waitFor(() => {
+        expect(screen.getByText("credit.settlementDaySaveError")).toBeInTheDocument();
+      });
+    });
+
+    it("shows saving state during update", async () => {
+      // Mock a delayed update so we can observe loading state
+      let resolveUpdate: (value: any) => void;
+      const pendingPromise = new Promise((resolve) => { resolveUpdate = resolve; });
+      mockSelect.mockReturnValueOnce(pendingPromise);
+
+      const user = userEvent.setup();
+      render(<CreditManagementClient {...defaultProps} />);
+
+      const select = screen.getByRole("combobox");
+      await user.selectOptions(select, "20");
+
+      // During save: saving text appears and select is disabled
+      await waitFor(() => {
+        expect(screen.getByText("common.saving")).toBeInTheDocument();
+      });
+      expect(select).toBeDisabled();
+
+      // Resolve the update
+      resolveUpdate!({ data: [{ settlement_day: 20 }], error: null });
+
+      // After save: saving text disappears and select is re-enabled
+      await waitFor(() => {
+        expect(screen.queryByText("common.saving")).not.toBeInTheDocument();
+      });
+      expect(select).not.toBeDisabled();
+    });
+
+    it("selects last day of month option (value 0)", async () => {
+      mockSelect.mockResolvedValueOnce({ data: [{ settlement_day: 0 }], error: null });
+
+      const user = userEvent.setup();
+      render(<CreditManagementClient {...defaultProps} />);
+
+      const select = screen.getByRole("combobox");
+      await user.selectOptions(select, "0");
+
+      await waitFor(() => {
+        expect(mockUpdate).toHaveBeenCalledWith({ settlement_day: 0 });
+      });
+    });
+  });
+
+  describe("getCreditSettings coverage", () => {
+    it("returns null when no credit settings exist for a child", () => {
+      const props = {
+        ...defaultProps,
+        creditSettings: [], // Empty credit settings
+      };
+      render(<CreditManagementClient {...props} />);
+
+      // Bob has no credit settings and no balance credit_enabled
+      // The component should render without errors and show disabled state
+      expect(screen.getByText("Bob")).toBeInTheDocument();
+      expect(screen.getAllByText("credit.enableCredit").length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("uses credit settings when they exist for a child", () => {
+      render(<CreditManagementClient {...defaultProps} />);
+
+      // Alice has credit settings, which means the balance is used for display
+      expect(screen.getByText("credit.enabled")).toBeInTheDocument();
+      expect(screen.getByText("credit.editSettings")).toBeInTheDocument();
+    });
+
   });
 });

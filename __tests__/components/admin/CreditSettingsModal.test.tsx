@@ -9,22 +9,25 @@ jest.mock("next-intl", () => ({
 }));
 
 // Mock Supabase client
+const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
+const mockFromEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+const mockFromSelect = jest.fn().mockReturnValue({ eq: mockFromEq });
 const mockSupabase = {
-  from: jest.fn(() => ({
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        maybeSingle: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
-    })),
-    update: jest.fn(() => ({
-      eq: jest.fn(() => Promise.resolve({ error: null })),
-    })),
-    insert: jest.fn(() => Promise.resolve({ error: null })),
-  })),
+  from: jest.fn().mockReturnValue({ select: mockFromSelect }),
 };
 
 jest.mock("@/lib/supabase/client", () => ({
   createClient: () => mockSupabase,
+}));
+
+// Mock typed helpers
+const mockTypedUpdateEq = jest.fn();
+const mockTypedUpdate = jest.fn(() => ({ eq: mockTypedUpdateEq }));
+const mockTypedInsert = jest.fn();
+
+jest.mock("@/lib/supabase/helpers", () => ({
+  typedUpdate: (...args: any[]) => mockTypedUpdate(...args),
+  typedInsert: (...args: any[]) => mockTypedInsert(...args),
 }));
 
 describe("CreditSettingsModal", () => {
@@ -57,6 +60,15 @@ describe("CreditSettingsModal", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Restore default mock chain for supabase.from().select().eq().maybeSingle()
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockFromEq.mockReturnValue({ maybeSingle: mockMaybeSingle });
+    mockFromSelect.mockReturnValue({ eq: mockFromEq });
+    mockSupabase.from.mockReturnValue({ select: mockFromSelect });
+    // Restore default mock for typed helpers
+    mockTypedUpdateEq.mockResolvedValue({ error: null });
+    mockTypedUpdate.mockReturnValue({ eq: mockTypedUpdateEq });
+    mockTypedInsert.mockResolvedValue({ error: null });
   });
 
   describe("rendering", () => {
@@ -224,14 +236,8 @@ describe("CreditSettingsModal", () => {
 
   describe("form submission", () => {
     it("disables save button while loading", async () => {
-      // Setup mock to hang
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            maybeSingle: jest.fn(() => new Promise(() => {})), // Never resolves
-          })),
-        })),
-      });
+      // Setup mock to hang - never-resolving promise
+      mockMaybeSingle.mockReturnValue(new Promise(() => {}));
 
       render(<CreditSettingsModal {...defaultProps} />);
 
@@ -260,6 +266,308 @@ describe("CreditSettingsModal", () => {
       rerender(<CreditSettingsModal {...defaultProps} balance={newBalance} />);
 
       expect(screen.getByRole("checkbox")).toBeChecked();
+    });
+  });
+
+  describe("handleSubmit - update path", () => {
+    it("calls typedUpdate when existing settings found", async () => {
+      // Mock: existing settings found
+      mockMaybeSingle.mockResolvedValueOnce({ data: { id: "settings-1" }, error: null });
+      // Mock: typedUpdate succeeds
+      mockTypedUpdateEq.mockResolvedValueOnce({ error: null });
+
+      const onSuccess = jest.fn();
+      render(
+        <CreditSettingsModal {...defaultProps} onSuccess={onSuccess} />
+      );
+
+      // Enable credit and set limit
+      const toggle = screen.getByRole("checkbox");
+      fireEvent.click(toggle);
+
+      const input = screen.getByRole("spinbutton");
+      fireEvent.change(input, { target: { value: "100" } });
+
+      // Submit form
+      const saveButton = screen.getByText("common.save");
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalledWith(
+          mockSupabase,
+          "child_credit_settings",
+          expect.objectContaining({
+            credit_enabled: true,
+            credit_limit: 100,
+            original_credit_limit: 100,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        expect(mockTypedUpdateEq).toHaveBeenCalledWith("child_id", "child-1");
+      });
+
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalled();
+      });
+    });
+
+    it("sets original_credit_limit to 0 when credit disabled on update", async () => {
+      // Mock: existing settings found
+      mockMaybeSingle.mockResolvedValueOnce({ data: { id: "settings-1" }, error: null });
+      // Mock: typedUpdate succeeds
+      mockTypedUpdateEq.mockResolvedValueOnce({ error: null });
+
+      const balanceWithCredit: ChildBalanceWithCredit = {
+        ...mockBalance,
+        credit_enabled: true,
+        credit_limit: 50,
+      };
+
+      render(
+        <CreditSettingsModal
+          {...defaultProps}
+          balance={balanceWithCredit}
+        />
+      );
+
+      // Disable credit
+      const toggle = screen.getByRole("checkbox");
+      fireEvent.click(toggle);
+
+      // Submit form
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalledWith(
+          mockSupabase,
+          "child_credit_settings",
+          expect.objectContaining({
+            credit_enabled: false,
+            original_credit_limit: 0,
+          })
+        );
+      });
+    });
+
+    it("shows error when typedUpdate returns an error", async () => {
+      // Mock: existing settings found
+      mockMaybeSingle.mockResolvedValueOnce({ data: { id: "settings-1" }, error: null });
+      // Mock: typedUpdate returns error
+      mockTypedUpdateEq.mockResolvedValueOnce({ error: new Error("Update failed") });
+
+      const onSuccess = jest.fn();
+      render(
+        <CreditSettingsModal {...defaultProps} onSuccess={onSuccess} />
+      );
+
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Update failed")).toBeInTheDocument();
+      });
+
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("handleSubmit - insert path", () => {
+    it("calls typedInsert when no existing settings found", async () => {
+      // Mock: no existing settings
+      mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+      // Mock: typedInsert succeeds
+      mockTypedInsert.mockResolvedValueOnce({ error: null });
+
+      const onSuccess = jest.fn();
+      render(
+        <CreditSettingsModal {...defaultProps} onSuccess={onSuccess} />
+      );
+
+      // Enable credit and set limit
+      const toggle = screen.getByRole("checkbox");
+      fireEvent.click(toggle);
+
+      const input = screen.getByRole("spinbutton");
+      fireEvent.change(input, { target: { value: "75" } });
+
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedInsert).toHaveBeenCalledWith(
+          mockSupabase,
+          "child_credit_settings",
+          expect.objectContaining({
+            family_id: "family-1",
+            child_id: "child-1",
+            credit_enabled: true,
+            credit_limit: 75,
+            original_credit_limit: 75,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalled();
+      });
+    });
+
+    it("sets original_credit_limit to 0 when credit disabled on insert", async () => {
+      // Mock: no existing settings
+      mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+      // Mock: typedInsert succeeds
+      mockTypedInsert.mockResolvedValueOnce({ error: null });
+
+      render(<CreditSettingsModal {...defaultProps} />);
+
+      // Credit is already disabled, just submit
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedInsert).toHaveBeenCalledWith(
+          mockSupabase,
+          "child_credit_settings",
+          expect.objectContaining({
+            credit_enabled: false,
+            original_credit_limit: 0,
+          })
+        );
+      });
+    });
+
+    it("shows error when typedInsert returns an error", async () => {
+      // Mock: no existing settings
+      mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+      // Mock: typedInsert returns error
+      mockTypedInsert.mockResolvedValueOnce({ error: new Error("Insert failed") });
+
+      const onSuccess = jest.fn();
+      render(
+        <CreditSettingsModal {...defaultProps} onSuccess={onSuccess} />
+      );
+
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Insert failed")).toBeInTheDocument();
+      });
+
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("handleSubmit - error handling", () => {
+    it("handles non-Error object in catch block", async () => {
+      // Mock: existence check throws a non-Error object
+      mockMaybeSingle.mockRejectedValueOnce("string error");
+
+      const onSuccess = jest.fn();
+      render(
+        <CreditSettingsModal {...defaultProps} onSuccess={onSuccess} />
+      );
+
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        // Should use the t("credit.saveError") fallback since the thrown value is not an Error instance
+        expect(screen.getByText("credit.saveError")).toBeInTheDocument();
+      });
+
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+
+    it("handles Error object in catch block", async () => {
+      // Mock: existence check throws an Error
+      mockMaybeSingle.mockRejectedValueOnce(new Error("Network error"));
+
+      const onSuccess = jest.fn();
+      render(
+        <CreditSettingsModal {...defaultProps} onSuccess={onSuccess} />
+      );
+
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Network error")).toBeInTheDocument();
+      });
+
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+
+    it("re-enables save button after error", async () => {
+      // Mock: existence check throws
+      mockMaybeSingle.mockRejectedValueOnce(new Error("Failed"));
+
+      render(<CreditSettingsModal {...defaultProps} />);
+
+      const saveButton = screen.getByText("common.save");
+      fireEvent.click(saveButton);
+
+      // Wait for error to appear and loading to finish
+      await waitFor(() => {
+        expect(screen.getByText("Failed")).toBeInTheDocument();
+      });
+
+      // Save button should be re-enabled (loading = false via finally)
+      await waitFor(() => {
+        expect(screen.getByText("common.save")).not.toBeDisabled();
+      });
+    });
+  });
+
+  describe("Branch coverage", () => {
+    it("shows warning when credit limit prop is initially below current debt", () => {
+      // Render with credit_limit already below credit_used from the initial balance
+      const balanceWithLimitBelowDebt: ChildBalanceWithCredit = {
+        ...mockBalance,
+        credit_enabled: true,
+        credit_limit: 10,
+        credit_used: 30,
+        current_stars: -20,
+      };
+      render(
+        <CreditSettingsModal {...defaultProps} balance={balanceWithLimitBelowDebt} />
+      );
+
+      // The warning should appear immediately since credit_limit (10) < credit_used (30)
+      expect(screen.getByText("credit.limitBelowDebtWarning")).toBeInTheDocument();
+    });
+  });
+
+  describe("limit below debt warning", () => {
+    it("shows warning when credit enabled and limit is below current debt", () => {
+      const balanceWithDebt: ChildBalanceWithCredit = {
+        ...mockBalance,
+        credit_enabled: true,
+        credit_limit: 50,
+        credit_used: 30,
+        current_stars: -10,
+      };
+      render(
+        <CreditSettingsModal {...defaultProps} balance={balanceWithDebt} />
+      );
+
+      // Set credit limit below the current debt (30)
+      const input = screen.getByRole("spinbutton");
+      fireEvent.change(input, { target: { value: "20" } });
+
+      expect(screen.getByText("credit.limitBelowDebtWarning")).toBeInTheDocument();
+    });
+
+    it("does not show warning when limit is above current debt", () => {
+      const balanceWithDebt: ChildBalanceWithCredit = {
+        ...mockBalance,
+        credit_enabled: true,
+        credit_limit: 50,
+        credit_used: 30,
+        current_stars: -10,
+      };
+      render(
+        <CreditSettingsModal {...defaultProps} balance={balanceWithDebt} />
+      );
+
+      // Limit (50) is already above debt (30), no warning
+      expect(screen.queryByText("credit.limitBelowDebtWarning")).not.toBeInTheDocument();
     });
   });
 });

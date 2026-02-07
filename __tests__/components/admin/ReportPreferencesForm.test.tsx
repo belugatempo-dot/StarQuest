@@ -46,6 +46,14 @@ describe("ReportPreferencesForm", () => {
     expect(emailInput).toHaveAttribute("placeholder", "parent@example.com");
   });
 
+  it("shows translation key as placeholder when parentEmail is empty", () => {
+    render(<ReportPreferencesForm {...defaultProps} parentEmail="" />);
+
+    const emailInput = screen.getByLabelText(/emailOverride/i);
+    // When parentEmail is empty, it should fall back to t("emailPlaceholder")
+    expect(emailInput).toHaveAttribute("placeholder", "emailPlaceholder");
+  });
+
   it("populates form with existing preferences", () => {
     const preferences = {
       id: "pref-123",
@@ -213,5 +221,124 @@ describe("ReportPreferencesForm", () => {
     render(<ReportPreferencesForm {...defaultProps} locale="zh-CN" />);
 
     expect(screen.getByLabelText(/reportLanguage/i)).toHaveValue("zh-CN");
+  });
+
+  it("can change email override", async () => {
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    const emailInput = screen.getByLabelText(/emailOverride/i);
+    await user.clear(emailInput);
+    await user.type(emailInput, "new@example.com");
+    expect(emailInput).toHaveValue("new@example.com");
+  });
+
+  it("can toggle monthly report checkbox", async () => {
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    const monthlyCheckbox = checkboxes[1]; // weekly=0, monthly=1, settlement=2
+    expect(monthlyCheckbox).toBeChecked();
+
+    await user.click(monthlyCheckbox);
+    expect(monthlyCheckbox).not.toBeChecked();
+  });
+
+  it("can toggle settlement email checkbox", async () => {
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    const settlementCheckbox = checkboxes[2];
+    expect(settlementCheckbox).toBeChecked();
+
+    await user.click(settlementCheckbox);
+    expect(settlementCheckbox).not.toBeChecked();
+  });
+
+  it("can change timezone", async () => {
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    const timezoneSelect = screen.getByLabelText(/timezone/i);
+    await user.selectOptions(timezoneSelect, "Asia/Shanghai");
+    expect(timezoneSelect).toHaveValue("Asia/Shanghai");
+  });
+
+  it("can change report language", async () => {
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    const localeSelect = screen.getByLabelText(/reportLanguage/i);
+    expect(localeSelect).toHaveValue("en");
+
+    await user.selectOptions(localeSelect, "zh-CN");
+    expect(localeSelect).toHaveValue("zh-CN");
+  });
+
+  it("submits form with modified values", async () => {
+    const mockInsert = jest.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({
+      insert: mockInsert,
+    });
+
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    // Modify email
+    const emailInput = screen.getByLabelText(/emailOverride/i);
+    await user.type(emailInput, "custom@test.com");
+
+    // Change timezone
+    const timezoneSelect = screen.getByLabelText(/timezone/i);
+    await user.selectOptions(timezoneSelect, "Asia/Tokyo");
+
+    // Change locale
+    const localeSelect = screen.getByLabelText(/reportLanguage/i);
+    await user.selectOptions(localeSelect, "zh-CN");
+
+    // Toggle off settlement email
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[2]);
+
+    // Submit
+    const submitButton = screen.getByRole("button", { name: /save/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          report_email: "custom@test.com",
+          timezone: "Asia/Tokyo",
+          report_locale: "zh-CN",
+          settlement_email_enabled: false,
+          weekly_report_enabled: true,
+          monthly_report_enabled: true,
+        })
+      );
+    });
+  });
+
+  it("trims email and sends null when empty", async () => {
+    const mockInsert = jest.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({
+      insert: mockInsert,
+    });
+
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    // Submit with empty email
+    const submitButton = screen.getByRole("button", { name: /save/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          report_email: null,
+        })
+      );
+    });
   });
 });

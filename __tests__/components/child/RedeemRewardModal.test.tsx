@@ -664,4 +664,485 @@ describe("RedeemRewardModal", () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
   });
+
+  describe("Parent Mode", () => {
+    it("should show parent title when isParent is true", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+        />
+      );
+
+      expect(screen.getByText("admin.redeemForChild")).toBeInTheDocument();
+      expect(screen.queryByText("rewards.requestRedemption")).not.toBeInTheDocument();
+    });
+
+    it("should show auto-approve info box instead of pending info for parent", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+        />
+      );
+
+      expect(screen.getByText(/admin\.autoApproveInfo/)).toBeInTheDocument();
+      expect(screen.queryByText(/credit\.redemptionPendingInfo/)).not.toBeInTheDocument();
+    });
+
+    it("should show redeemNow button text for parent", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+        />
+      );
+
+      expect(screen.getByRole("button", { name: "admin.redeemNow" })).toBeInTheDocument();
+    });
+
+    it("should create approved redemption in parent mode with provided familyId", async () => {
+      const user = userEvent.setup();
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-456"
+          familyId="family-789"
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "admin.redeemNow" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockInsert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            family_id: "family-789",
+            child_id: "child-456",
+            status: "approved",
+            uses_credit: false,
+            credit_amount: 0,
+            reviewed_at: expect.any(String),
+          })
+        );
+      });
+
+      // Should NOT query users table since familyId is provided
+      expect(mockMaybeSingle).not.toHaveBeenCalled();
+      expect(mockOnSuccess).toHaveBeenCalled();
+    });
+
+    it("should not show credit info for parent mode even when credit is enabled", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+          creditEnabled={true}
+          availableCredit={100}
+        />
+      );
+
+      // Credit sections should not render for parent
+      expect(screen.queryByText(/credit\.availableCredit/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/credit\.canSpend/)).not.toBeInTheDocument();
+    });
+
+    it("should not show CreditUsageWarning for parent mode", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+          creditEnabled={true}
+          availableCredit={100}
+        />
+      );
+
+      expect(screen.queryByText(/credit\.borrowingWarningTitle/)).not.toBeInTheDocument();
+    });
+
+    it("should not record credit transaction in parent mode", async () => {
+      const user = userEvent.setup();
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+          creditEnabled={true}
+          availableCredit={100}
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "admin.redeemNow" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockOnSuccess).toHaveBeenCalled();
+      });
+
+      // Should NOT call rpc for credit
+      expect(mockRpc).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Credit System", () => {
+    it("should show credit info when creditEnabled and availableCredit > 0", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={30}
+        />
+      );
+
+      expect(screen.getByText(/credit\.availableCredit/)).toBeInTheDocument();
+      expect(screen.getByText("+30 ⭐")).toBeInTheDocument();
+      expect(screen.getByText(/credit\.canSpend/)).toBeInTheDocument();
+    });
+
+    it("should show canSpend section when creditEnabled even with 0 availableCredit", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={0}
+        />
+      );
+
+      // canSpend is shown whenever creditEnabled, but availableCredit line only when > 0
+      expect(screen.queryByText(/credit\.availableCredit/)).not.toBeInTheDocument();
+      expect(screen.getByText(/credit\.canSpend/)).toBeInTheDocument();
+    });
+
+    it("should show confirmBorrow button text when credit will be used and not yet confirmed", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={50}
+          creditLimit={100}
+        />
+      );
+
+      // willUseCredit = true (cost 50 > currentStars 20), creditToUse = 30
+      expect(screen.getByRole("button", { name: "credit.confirmBorrow" })).toBeInTheDocument();
+    });
+
+    it("should show credit confirmation step before actually submitting", async () => {
+      const user = userEvent.setup();
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={50}
+          creditLimit={100}
+        />
+      );
+
+      // First click should trigger confirmation, not submission
+      const submitButton = screen.getByRole("button", { name: "credit.confirmBorrow" });
+      await user.click(submitButton);
+
+      // After first click, button should change to common.submit (confirmCredit is now true)
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "common.submit" })).toBeInTheDocument();
+      });
+
+      // Should NOT have called insert yet
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("should submit with credit after confirming", async () => {
+      const user = userEvent.setup();
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={50}
+          creditLimit={100}
+          creditUsed={5}
+        />
+      );
+
+      // First click: confirm credit
+      const confirmButton = screen.getByRole("button", { name: "credit.confirmBorrow" });
+      await user.click(confirmButton);
+
+      // Second click: actual submit
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "common.submit" })).toBeInTheDocument();
+      });
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockInsert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            uses_credit: true,
+            credit_amount: 30, // cost 50 - currentStars 20 = 30
+            status: "pending",
+          })
+        );
+      });
+
+      // Should also call rpc for credit transaction
+      await waitFor(() => {
+        expect(mockRpc).toHaveBeenCalledWith("record_credit_usage", {
+          p_child_id: "user-123",
+          p_redemption_id: "redemption-123",
+          p_credit_amount: 30,
+        });
+      });
+
+      expect(mockOnSuccess).toHaveBeenCalled();
+    });
+
+    it("should show CreditUsageWarning when using credit in child mode", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={50}
+          creditLimit={100}
+          creditUsed={5}
+        />
+      );
+
+      expect(screen.getByText(/credit\.borrowingWarningTitle/)).toBeInTheDocument();
+    });
+
+    it("should show cannot afford warning when insufficient spendable stars", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={10}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={false}
+        />
+      );
+
+      // actualSpendable = 10 (no credit), cost = 50
+      expect(screen.getByText(/credit\.cannotAfford/)).toBeInTheDocument();
+      expect(screen.getByText(/credit\.needMoreStars/)).toBeInTheDocument();
+    });
+
+    it("should disable submit button when cannot afford", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={10}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={false}
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      expect(submitButton).toBeDisabled();
+    });
+
+    it("should use spendableStars prop when provided", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={10}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={100}
+          spendableStars={200}
+        />
+      );
+
+      // With spendableStars=200 provided, canAfford should be true (200 >= 50)
+      const submitButton = screen.getByRole("button", { name: "credit.confirmBorrow" });
+      expect(submitButton).not.toBeDisabled();
+    });
+  });
+
+  describe("Rendering Edge Cases", () => {
+    it("should show default icon when reward has no icon", () => {
+      const rewardNoIcon = { ...mockReward, icon: null };
+      render(
+        <RedeemRewardModal
+          reward={rewardNoIcon}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByText("🎁")).toBeInTheDocument();
+    });
+
+    it("should not show description when reward has no description", () => {
+      const rewardNoDesc = { ...mockReward, description: null };
+      render(
+        <RedeemRewardModal
+          reward={rewardNoDesc}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.queryByText("Extra 30 minutes of screen time")).not.toBeInTheDocument();
+    });
+
+    it("should show negative balance in danger style", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={-10}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const balanceText = screen.getByText("-10 ⭐");
+      expect(balanceText.className).toContain("text-danger");
+    });
+
+    it("should show Chinese placeholder when locale is zh-CN", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="zh-CN"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByPlaceholderText("你想什么时候获得这个奖励？")).toBeInTheDocument();
+    });
+
+    it("should apply warning button style when credit confirmation is pending", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={50}
+          creditLimit={100}
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "credit.confirmBorrow" });
+      expect(submitButton.className).toContain("bg-warning");
+    });
+
+    it("should apply success button style for parent mode", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "admin.redeemNow" });
+      expect(submitButton.className).toContain("bg-success");
+    });
+  });
 });

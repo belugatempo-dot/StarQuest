@@ -306,6 +306,86 @@ describe("SettlementHistoryTable", () => {
       });
     });
 
+    it("shows negative balance with danger class in expanded details", async () => {
+      const user = userEvent.setup();
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("▼")).toHaveLength(2);
+      });
+
+      // Expand first row (Alice, balance_before: -30)
+      const expandButtons = screen.getAllByText("▼");
+      await user.click(expandButtons[0]);
+
+      await waitFor(() => {
+        const balanceValue = screen.getByText(/-30 common\.stars/);
+        expect(balanceValue.className).toContain("text-danger");
+      });
+    });
+
+    it("shows positive balance without danger class in expanded details", async () => {
+      const user = userEvent.setup();
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("▼")).toHaveLength(2);
+      });
+
+      // Expand second row (Bob, balance_before: 50)
+      const expandButtons = screen.getAllByText("▼");
+      await user.click(expandButtons[1]);
+
+      await waitFor(() => {
+        const balanceText = screen.getByText(/50 common\.stars/);
+        expect(balanceText.className).not.toContain("text-danger");
+      });
+    });
+
+    it("shows settled time formatted for zh-CN locale", async () => {
+      const user = userEvent.setup();
+      render(<SettlementHistoryTable {...defaultProps} locale="zh-CN" />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("▼")).toHaveLength(2);
+      });
+
+      const expandButtons = screen.getAllByText("▼");
+      await user.click(expandButtons[0]);
+
+      await waitFor(() => {
+        expect(screen.getByText(/credit\.settledAt/)).toBeInTheDocument();
+      });
+    });
+
+    it("shows infinity symbol for null max_debt in interest breakdown", async () => {
+      const user = userEvent.setup();
+      const settlementsWithNullMaxDebt = [{
+        ...mockSettlements[0],
+        interest_breakdown: [{
+          min_debt: 0,
+          max_debt: null,
+          debt_in_tier: 30,
+          interest_rate: 0.05,
+          interest_amount: 2,
+        }],
+      }];
+      mockLimit.mockResolvedValue({ data: settlementsWithNullMaxDebt, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("▼")).toHaveLength(1);
+      });
+
+      const expandButton = screen.getByText("▼");
+      await user.click(expandButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("0-∞")).toBeInTheDocument();
+      });
+    });
+
     it("shows no interest message when no interest was charged", async () => {
       const user = userEvent.setup();
       render(<SettlementHistoryTable {...defaultProps} />);
@@ -353,6 +433,128 @@ describe("SettlementHistoryTable", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Failed to load settlements")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Branch coverage", () => {
+    it("shows 'Unknown' when settlement has null users", async () => {
+      const settlementsWithNullUsers = [
+        {
+          ...mockSettlements[0],
+          users: null,
+        },
+      ];
+      mockLimit.mockResolvedValue({ data: settlementsWithNullUsers, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Unknown")).toBeInTheDocument();
+      });
+    });
+
+    it("shows text-success class for positive credit_limit_adjustment", async () => {
+      const settlement = [{
+        ...mockSettlements[0],
+        credit_limit_adjustment: 5,
+        credit_limit_before: 40,
+        credit_limit_after: 45,
+      }];
+      mockLimit.mockResolvedValue({ data: settlement, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        const limitChange = screen.getByText("+5");
+        expect(limitChange).toHaveClass("text-success");
+      });
+    });
+
+    it("shows text-danger class for negative credit_limit_adjustment", async () => {
+      const settlement = [{
+        ...mockSettlements[0],
+        credit_limit_adjustment: -3,
+        credit_limit_before: 50,
+        credit_limit_after: 47,
+      }];
+      mockLimit.mockResolvedValue({ data: settlement, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        const limitChange = screen.getByText("-3");
+        expect(limitChange).toHaveClass("text-danger");
+      });
+    });
+
+    it("shows no color class for zero credit_limit_adjustment", async () => {
+      const settlement = [{
+        ...mockSettlements[0],
+        credit_limit_adjustment: 0,
+        credit_limit_before: 50,
+        credit_limit_after: 50,
+      }];
+      mockLimit.mockResolvedValue({ data: settlement, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        // Zero adjustment should display as "0" with no color class
+        const cells = screen.getAllByText("0");
+        // Find the credit_limit_adjustment cell (not debt or interest which may also be 0)
+        // The limit change cell is followed by the (before → after) text
+        const limitChangeCell = screen.getByText("(50 → 50)").previousElementSibling;
+        expect(limitChangeCell?.className).not.toContain("text-success");
+        expect(limitChangeCell?.className).not.toContain("text-danger");
+      });
+    });
+
+    it("shows text-danger class for negative balance_before in expanded details", async () => {
+      const user = userEvent.setup();
+      const settlement = [{
+        ...mockSettlements[0],
+        balance_before: -10,
+      }];
+      mockLimit.mockResolvedValue({ data: settlement, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("▼")).toHaveLength(1);
+      });
+
+      const expandButton = screen.getByText("▼");
+      await user.click(expandButton);
+
+      await waitFor(() => {
+        const balanceValue = screen.getByText(/-10 common\.stars/);
+        expect(balanceValue.className).toContain("text-danger");
+      });
+    });
+
+    it("shows no text-danger class for non-negative balance_before in expanded details", async () => {
+      const user = userEvent.setup();
+      const settlement = [{
+        ...mockSettlements[0],
+        balance_before: 5,
+        interest_breakdown: [],
+        interest_calculated: 0,
+      }];
+      mockLimit.mockResolvedValue({ data: settlement, error: null });
+
+      render(<SettlementHistoryTable {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("▼")).toHaveLength(1);
+      });
+
+      const expandButton = screen.getByText("▼");
+      await user.click(expandButton);
+
+      await waitFor(() => {
+        const balanceValue = screen.getByText(/5 common\.stars/);
+        expect(balanceValue.className).not.toContain("text-danger");
       });
     });
   });

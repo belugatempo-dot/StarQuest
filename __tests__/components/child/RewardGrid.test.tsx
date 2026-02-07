@@ -494,4 +494,85 @@ describe("RewardGrid", () => {
       expect(activitiesBadge.className).toContain("text-green-700");
     });
   });
+
+  describe("Branch coverage", () => {
+    it("should apply default fallback color for unknown category", () => {
+      const unknownCategoryReward: Reward[] = [
+        {
+          id: "reward-unknown",
+          family_id: "family-123",
+          name_en: "Mystery reward",
+          name_zh: "神秘奖励",
+          description: null,
+          stars_cost: 10,
+          icon: "🎁",
+          category: "unknown_category",
+          is_active: true,
+          created_at: "2025-01-01",
+        },
+      ];
+      render(
+        <RewardGrid rewards={unknownCategoryReward} currentStars={100} locale="en" userId="user-123" />
+      );
+
+      // The category text appears in both the filter button and the badge.
+      // Scope to the reward card to find the badge span (which has border class).
+      const rewardCard = screen.getByText("Mystery reward").closest(".bg-white");
+      const badge = within(rewardCard!).getByText("rewards.category.unknown_category");
+      // getCategoryColor returns colors.other for unknown categories
+      expect(badge.className).toContain("bg-gray-100");
+      expect(badge.className).toContain("text-gray-700");
+    });
+
+    it("should apply fallback color when category is null", () => {
+      const nullCategoryReward: Reward[] = [
+        {
+          id: "reward-null-cat",
+          family_id: "family-123",
+          name_en: "No category reward",
+          name_zh: "无分类奖励",
+          description: null,
+          stars_cost: 10,
+          icon: "🎯",
+          category: null,
+          is_active: true,
+          created_at: "2025-01-01",
+        },
+      ];
+      render(
+        <RewardGrid rewards={nullCategoryReward} currentStars={100} locale="en" userId="user-123" />
+      );
+
+      // When category is null, the badge is not rendered (reward.category && ...)
+      // So the getCategoryColor function is not called from the badge
+      // but the card still renders correctly
+      expect(screen.getByText("No category reward")).toBeInTheDocument();
+      // No category badge should be rendered
+      expect(screen.queryByText(/rewards\.category\./)).not.toBeInTheDocument();
+    });
+
+    it("should render default gift emoji when icon is null", () => {
+      const nullIconReward: Reward[] = [
+        {
+          id: "reward-null-icon",
+          family_id: "family-123",
+          name_en: "No icon reward",
+          name_zh: "无图标奖励",
+          description: null,
+          stars_cost: 10,
+          icon: null,
+          category: "treats",
+          is_active: true,
+          created_at: "2025-01-01",
+        },
+      ];
+      render(
+        <RewardGrid rewards={nullIconReward} currentStars={100} locale="en" userId="user-123" />
+      );
+
+      // reward.icon || "🎁" should render the fallback emoji
+      expect(screen.getByText("🎁")).toBeInTheDocument();
+      expect(screen.getByText("No icon reward")).toBeInTheDocument();
+    });
+  });
 });

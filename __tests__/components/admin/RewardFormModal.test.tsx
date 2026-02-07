@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RewardFormModal from "@/components/admin/RewardFormModal";
 import type { Database } from "@/types/database";
@@ -328,6 +328,65 @@ describe("RewardFormModal", () => {
 
       const iconInput = screen.getByPlaceholderText("🎁");
       expect(iconInput).toHaveAttribute("maxLength", "4");
+    });
+  });
+
+  describe("Form Validation", () => {
+    it("should show error when English name is whitespace only", async () => {
+      const user = userEvent.setup();
+      render(<RewardFormModal {...defaultProps} />);
+
+      const nameEnInput = screen.getByPlaceholderText("e.g., 30 mins screen time");
+      await user.type(nameEnInput, "   ");
+
+      const starsInput = screen.getByRole("spinbutton");
+      await user.clear(starsInput);
+      await user.type(starsInput, "10");
+
+      const form = screen.getByRole("button", { name: "Create Reward" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("English name is required")).toBeInTheDocument();
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error when name is empty with zh-CN locale", async () => {
+      const user = userEvent.setup();
+      render(<RewardFormModal {...defaultProps} locale="zh-CN" />);
+
+      const nameEnInput = screen.getByPlaceholderText("e.g., 30 mins screen time");
+      await user.type(nameEnInput, "   ");
+
+      const form = screen.getByRole("button", { name: "创建奖励" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("请输入英文名称")).toBeInTheDocument();
+    });
+
+    it("should show error when stars cost is 0", async () => {
+      const user = userEvent.setup();
+      render(<RewardFormModal {...defaultProps} />);
+
+      await user.type(screen.getByPlaceholderText("e.g., 30 mins screen time"), "Reward");
+      // starsCost defaults to 0
+
+      const form = screen.getByRole("button", { name: "Create Reward" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("Stars cost must be greater than 0")).toBeInTheDocument();
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("should show Chinese error when stars cost is 0 with zh-CN locale", async () => {
+      const user = userEvent.setup();
+      render(<RewardFormModal {...defaultProps} locale="zh-CN" />);
+
+      await user.type(screen.getByPlaceholderText("e.g., 30 mins screen time"), "Reward");
+
+      const form = screen.getByRole("button", { name: "创建奖励" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("星星消耗必须大于0")).toBeInTheDocument();
     });
   });
 

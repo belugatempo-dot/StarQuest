@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import EditParentModal from "@/components/admin/EditParentModal";
 import type { User } from "@/lib/auth";
@@ -194,6 +194,31 @@ describe("EditParentModal", () => {
       expect(nameInput).toHaveAttribute('required');
 
       // With HTML required attribute, browser prevents submission
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it("should show nameRequired error when submitting whitespace-only name", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <EditParentModal
+          parent={mockParent}
+          locale="en"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const nameInput = screen.getByPlaceholderText("family.parentNamePlaceholder");
+
+      await user.clear(nameInput);
+      await user.type(nameInput, "   ");
+
+      // Use fireEvent.submit to bypass HTML5 required validation
+      const form = screen.getByRole("button", { name: "common.save" }).closest("form")!;
+      fireEvent.submit(form);
+
+      expect(screen.getByText("family.nameRequired")).toBeInTheDocument();
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 

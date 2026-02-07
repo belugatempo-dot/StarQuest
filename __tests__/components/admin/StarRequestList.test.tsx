@@ -1251,6 +1251,154 @@ describe('StarRequestList', () => {
     })
   })
 
+  describe('Batch error handling', () => {
+    it('shows alert on batch approve error', async () => {
+      const user = userEvent.setup()
+      const mockAlert = jest.fn()
+      global.alert = mockAlert
+      global.confirm = jest.fn(() => true)
+
+      mockFrom.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        in: jest.fn().mockResolvedValue({ error: { message: 'Batch error' } }),
+        eq: jest.fn().mockResolvedValue({ error: null }),
+      })
+
+      render(
+        <StarRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      await waitFor(() => {
+        expect(mockAlert).toHaveBeenCalledWith(
+          expect.stringContaining('Batch approve failed')
+        )
+      })
+    })
+
+    it('shows Chinese alert on batch approve error for zh-CN', async () => {
+      const user = userEvent.setup()
+      const mockAlert = jest.fn()
+      global.alert = mockAlert
+      global.confirm = jest.fn(() => true)
+
+      mockFrom.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        in: jest.fn().mockResolvedValue({ error: { message: 'Batch error' } }),
+        eq: jest.fn().mockResolvedValue({ error: null }),
+      })
+
+      render(
+        <StarRequestList
+          requests={mockRequests}
+          locale="zh-CN"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
+      await user.click(batchApproveButton)
+
+      await waitFor(() => {
+        expect(mockAlert).toHaveBeenCalledWith('批量批准失败')
+      })
+    })
+
+    it('shows alert on batch reject error', async () => {
+      const user = userEvent.setup()
+      const mockAlert = jest.fn()
+      global.alert = mockAlert
+
+      mockFrom.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        in: jest.fn().mockResolvedValue({ error: { message: 'Batch error' } }),
+        eq: jest.fn().mockResolvedValue({ error: null }),
+      })
+
+      render(
+        <StarRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
+      await user.click(batchRejectButton)
+
+      const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
+      const confirmRejectButton = modalButtons.find((btn) => btn.className.includes('bg-red'))
+      await user.click(confirmRejectButton!)
+
+      await waitFor(() => {
+        expect(mockAlert).toHaveBeenCalledWith(
+          expect.stringContaining('Batch reject failed')
+        )
+      })
+    })
+
+    it('shows Chinese alert on batch reject error for zh-CN', async () => {
+      const user = userEvent.setup()
+      const mockAlert = jest.fn()
+      global.alert = mockAlert
+
+      mockFrom.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        in: jest.fn().mockResolvedValue({ error: { message: 'Batch error' } }),
+        eq: jest.fn().mockResolvedValue({ error: null }),
+      })
+
+      render(
+        <StarRequestList
+          requests={mockRequests}
+          locale="zh-CN"
+          parentId="parent-1"
+        />
+      )
+
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
+      await user.click(batchRejectButton)
+
+      const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
+      const confirmRejectButton = modalButtons.find((btn) => btn.className.includes('bg-red'))
+      await user.click(confirmRejectButton!)
+
+      await waitFor(() => {
+        expect(mockAlert).toHaveBeenCalledWith('批量拒绝失败')
+      })
+    })
+  })
+
   describe('Bilingual Batch Support', () => {
     it('displays Chinese text in selection mode for zh-CN locale', async () => {
       const user = userEvent.setup()
@@ -1271,6 +1419,111 @@ describe('StarRequestList', () => {
       // Should display Chinese text for selected count (appears in header and floating bar)
       const chineseTexts = screen.getAllByText(/已选择 1 项/i)
       expect(chineseTexts.length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  describe('Branch coverage', () => {
+    beforeEach(() => {
+      mockFrom.mockReturnValue({
+        update: mockUpdate.mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({ error: null }),
+        in: jest.fn().mockResolvedValue({ error: null }),
+      })
+    })
+
+    it('handleBatchReject guard prevents update when all items deselected', async () => {
+      const user = userEvent.setup()
+      render(
+        <StarRequestList
+          requests={mockRequests}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      // Enter selection mode and select an item
+      const selectButton = screen.getByRole('button', { name: /admin\.selectMode/i })
+      await user.click(selectButton)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+
+      // Open batch reject modal
+      const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
+      await user.click(batchRejectButton)
+
+      // Now deselect the item (checkbox is still in the DOM behind the modal)
+      await user.click(checkboxes[0])
+
+      // Click confirm reject in the modal
+      const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
+      const confirmRejectButton = modalButtons.find((btn) => btn.className.includes('bg-red'))
+      await user.click(confirmRejectButton!)
+
+      // The guard should prevent any update
+      expect(mockUpdate).not.toHaveBeenCalled()
+    })
+
+    it('displays "Custom" fallback when quests is null and custom_description is null', () => {
+      const requestWithNullCustomDesc = [
+        {
+          id: 'request-no-desc',
+          stars: 4,
+          child_note: null,
+          created_at: '2024-01-15T13:00:00Z',
+          users: {
+            name: 'Diana',
+            avatar_url: null,
+          },
+          quests: null,
+          custom_description: null,
+        },
+      ]
+
+      render(
+        <StarRequestList
+          requests={requestWithNullCustomDesc}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      // When quests is null and custom_description is null, should show "Custom"
+      expect(screen.getByText('Custom')).toBeInTheDocument()
+    })
+
+    it('displays fallback icon when quests exists but icon is null', () => {
+      const requestWithNullIcon = [
+        {
+          id: 'request-no-icon',
+          stars: 7,
+          child_note: null,
+          created_at: '2024-01-15T14:00:00Z',
+          users: {
+            name: 'Eve',
+            avatar_url: null,
+          },
+          quests: {
+            name_en: 'Test Quest',
+            name_zh: null,
+            icon: null,
+            category: null,
+          },
+        },
+      ]
+
+      render(
+        <StarRequestList
+          requests={requestWithNullIcon}
+          locale="en"
+          parentId="parent-1"
+        />
+      )
+
+      // Should show the fallback ⭐ icon when quests.icon is null
+      expect(screen.getByText('⭐')).toBeInTheDocument()
+      // Quest name should still display
+      expect(screen.getByText('Test Quest')).toBeInTheDocument()
     })
   })
 })

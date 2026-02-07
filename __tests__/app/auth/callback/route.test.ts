@@ -1,100 +1,293 @@
 /**
  * Email Verification Callback Route Tests
  *
- * Note: Full route handler testing is skipped because Next.js route handlers
- * require a complete Next.js runtime environment to test properly.
- *
- * Instead, we test the core type validation logic that we implemented.
+ * Tests the actual GET route handler for email verification callback.
  */
 
-import type { EmailOtpType } from '@supabase/supabase-js'
+const mockVerifyOtp = jest.fn();
 
-describe('Email Verification Type Validation Logic', () => {
-  const validTypes: EmailOtpType[] = ['email', 'recovery', 'invite', 'email_change']
+jest.mock("@/lib/supabase/server", () => ({
+  createClient: jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      auth: { verifyOtp: (...args: any[]) => mockVerifyOtp(...args) },
+    })
+  ),
+}));
 
-  function validateType(type: string | null): EmailOtpType {
-    if (!type) return 'email'
-    return validTypes.includes(type as EmailOtpType)
-      ? (type as EmailOtpType)
-      : 'email'
+jest.mock("next/server", () => {
+  class MockNextResponse {
+    static redirect(url: string) {
+      return { type: "redirect", url: String(url) };
+    }
   }
+  return { NextResponse: MockNextResponse };
+});
 
-  describe('Valid EmailOtpType values', () => {
-    it('accepts email type', () => {
-      expect(validateType('email')).toBe('email')
-    })
+import { GET } from "@/app/[locale]/(auth)/auth/callback/route";
 
-    it('accepts recovery type', () => {
-      expect(validateType('recovery')).toBe('recovery')
-    })
+function makeRequest(url: string) {
+  return { url } as any;
+}
 
-    it('accepts invite type', () => {
-      expect(validateType('invite')).toBe('invite')
-    })
+describe("auth/callback route handler", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, "log").mockImplementation();
+    jest.spyOn(console, "error").mockImplementation();
+  });
 
-    it('accepts email_change type', () => {
-      expect(validateType('email_change')).toBe('email_change')
-    })
-  })
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-  describe('Invalid or deprecated type values', () => {
-    it('converts deprecated signup to email', () => {
-      expect(validateType('signup')).toBe('email')
-    })
+  describe("successful OTP verification", () => {
+    it("redirects to /en/auth/confirmed on successful OTP verification", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
 
-    it('converts deprecated magiclink to email', () => {
-      expect(validateType('magiclink')).toBe('email')
-    })
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123&type=email"
+      );
+      const result = await GET(request);
 
-    it('defaults to email for invalid type', () => {
-      expect(validateType('invalid')).toBe('email')
-    })
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/en/auth/confirmed",
+      });
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        token_hash: "abc123",
+        type: "email",
+      });
+    });
 
-    it('defaults to email for random string', () => {
-      expect(validateType('xyz123')).toBe('email')
-    })
+    it("logs success message on successful verification", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+      const consoleSpy = jest.spyOn(console, "log");
 
-    it('defaults to email for null', () => {
-      expect(validateType(null)).toBe('email')
-    })
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123&type=email"
+      );
+      await GET(request);
 
-    it('defaults to email for empty string', () => {
-      expect(validateType('')).toBe('email')
-    })
-  })
+      expect(consoleSpy).toHaveBeenCalledWith("✅ Email verification successful");
+    });
+  });
 
-  describe('Type safety', () => {
-    it('only returns valid EmailOtpType values', () => {
-      const testCases = [
-        'email', 'recovery', 'invite', 'email_change',
-        'signup', 'magiclink', 'invalid', null, ''
-      ]
+  describe("verification errors", () => {
+    it("redirects to /en/auth/verify-email?error=invalid_token on verification error", async () => {
+      mockVerifyOtp.mockResolvedValue({
+        error: { message: "Token expired", status: 400 },
+      });
 
-      testCases.forEach(testCase => {
-        const result = validateType(testCase)
-        expect(validTypes).toContain(result)
-      })
-    })
-  })
-})
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=expired123&type=email"
+      );
+      const result = await GET(request);
 
-/**
- * Integration Test Notes:
- *
- * The actual route handler at app/[locale]/(auth)/auth/callback/route.ts
- * implements this logic correctly:
- *
- * 1. Extracts token_hash and type from URL params
- * 2. Validates type using the logic tested above
- * 3. Calls supabase.auth.verifyOtp with validated type
- * 4. Redirects to confirmed page on success
- * 5. Redirects to verify-email with error on failure
- * 6. Logs enhanced error information for debugging
- *
- * Manual testing should verify:
- * - Email links with type=signup convert to type=email
- * - Email links with type=email work directly
- * - Invalid tokens redirect to error page
- * - Successful verification redirects to confirmed page
- * - Locale is preserved in redirects (en/zh-CN)
- */
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/en/auth/verify-email?error=invalid_token",
+      });
+    });
+
+    it("logs enhanced error details on verification error", async () => {
+      const consoleSpy = jest.spyOn(console, "error");
+      mockVerifyOtp.mockResolvedValue({
+        error: { message: "Token expired", status: 400 },
+      });
+
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=expired123&type=recovery"
+      );
+      await GET(request);
+
+      expect(consoleSpy).toHaveBeenCalledWith("❌ Verification error:", {
+        message: "Token expired",
+        status: 400,
+        token_hash_length: 10,
+        type_received: "recovery",
+        type_used: "recovery",
+      });
+    });
+  });
+
+  describe("missing parameters", () => {
+    it("redirects to verify-email when token_hash is missing", async () => {
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?type=email"
+      );
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/en/auth/verify-email?error=invalid_token",
+      });
+      expect(mockVerifyOtp).not.toHaveBeenCalled();
+    });
+
+    it("redirects to verify-email when type is missing", async () => {
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123"
+      );
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/en/auth/verify-email?error=invalid_token",
+      });
+      expect(mockVerifyOtp).not.toHaveBeenCalled();
+    });
+
+    it("redirects to verify-email when both params are missing", async () => {
+      const request = makeRequest("https://example.com/en/auth/callback");
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/en/auth/verify-email?error=invalid_token",
+      });
+      expect(mockVerifyOtp).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("locale extraction", () => {
+    it("extracts zh-CN locale from pathname", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+
+      const request = makeRequest(
+        "https://example.com/zh-CN/auth/callback?token_hash=abc123&type=email"
+      );
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/zh-CN/auth/confirmed",
+      });
+    });
+
+    it("extracts fr locale from pathname", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+
+      const request = makeRequest(
+        "https://example.com/fr/auth/callback?token_hash=abc123&type=email"
+      );
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/fr/auth/confirmed",
+      });
+    });
+
+    it("defaults locale to en when pathname has no locale segment", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+
+      // Pathname is just "/" which after split/filter gives empty array
+      const request = makeRequest(
+        "https://example.com/?token_hash=abc123&type=email"
+      );
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/en/auth/confirmed",
+      });
+    });
+
+    it("uses locale in error redirect for zh-CN", async () => {
+      mockVerifyOtp.mockResolvedValue({
+        error: { message: "Error", status: 400 },
+      });
+
+      const request = makeRequest(
+        "https://example.com/zh-CN/auth/callback?token_hash=abc123&type=email"
+      );
+      const result = await GET(request);
+
+      expect(result).toEqual({
+        type: "redirect",
+        url: "https://example.com/zh-CN/auth/verify-email?error=invalid_token",
+      });
+    });
+  });
+
+  describe("OTP type validation", () => {
+    it.each(["email", "recovery", "invite", "email_change"])(
+      "uses valid type '%s' as-is",
+      async (validType) => {
+        mockVerifyOtp.mockResolvedValue({ error: null });
+
+        const request = makeRequest(
+          `https://example.com/en/auth/callback?token_hash=abc123&type=${validType}`
+        );
+        await GET(request);
+
+        expect(mockVerifyOtp).toHaveBeenCalledWith({
+          token_hash: "abc123",
+          type: validType,
+        });
+      }
+    );
+
+    it("defaults to 'email' type for invalid type param 'signup'", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123&type=signup"
+      );
+      await GET(request);
+
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        token_hash: "abc123",
+        type: "email",
+      });
+    });
+
+    it("defaults to 'email' type for invalid type param 'magiclink'", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123&type=magiclink"
+      );
+      await GET(request);
+
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        token_hash: "abc123",
+        type: "email",
+      });
+    });
+
+    it("defaults to 'email' type for completely random type value", async () => {
+      mockVerifyOtp.mockResolvedValue({ error: null });
+
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123&type=totally_invalid"
+      );
+      await GET(request);
+
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        token_hash: "abc123",
+        type: "email",
+      });
+    });
+
+    it("logs invalid type_received and type_used='email' on error", async () => {
+      const consoleSpy = jest.spyOn(console, "error");
+      mockVerifyOtp.mockResolvedValue({
+        error: { message: "Bad token", status: 400 },
+      });
+
+      const request = makeRequest(
+        "https://example.com/en/auth/callback?token_hash=abc123&type=signup"
+      );
+      await GET(request);
+
+      expect(consoleSpy).toHaveBeenCalledWith("❌ Verification error:", {
+        message: "Bad token",
+        status: 400,
+        token_hash_length: 6,
+        type_received: "signup",
+        type_used: "email",
+      });
+    });
+  });
+});

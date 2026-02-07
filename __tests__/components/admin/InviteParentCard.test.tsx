@@ -436,6 +436,187 @@ describe("InviteParentCard", () => {
     );
   });
 
+  it("opens WhatsApp share URL with Chinese message in zh-CN locale", async () => {
+    jest.useRealTimers();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, inviteCode: "ZHWA1", emailSent: false }),
+    });
+
+    render(<InviteParentCard {...defaultProps} locale="zh-CN" />);
+    fireEvent.click(screen.getByRole("button", { name: "创建邀请" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("ZHWA1")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
+
+    expect(mockWindowOpen).toHaveBeenCalledWith(
+      expect.stringContaining("https://wa.me/?text="),
+      "_blank"
+    );
+    // Chinese share message should contain the invite code
+    const url = mockWindowOpen.mock.calls[0][0] as string;
+    expect(url).toContain(encodeURIComponent("ZHWA1"));
+    // Chinese message should be present
+    expect(decodeURIComponent(url)).toContain("你被邀请加入StarQuest家庭");
+  });
+
+  it("opens mailto link with Chinese content in zh-CN locale", async () => {
+    jest.useRealTimers();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, inviteCode: "ZHEM1", emailSent: false }),
+    });
+
+    render(<InviteParentCard {...defaultProps} locale="zh-CN" />);
+    fireEvent.click(screen.getByRole("button", { name: "创建邀请" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("ZHEM1")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "通过邮件分享" }));
+
+    expect(mockWindowOpen).toHaveBeenCalledWith(
+      expect.stringContaining("mailto:?subject="),
+      "_blank"
+    );
+    const url = mockWindowOpen.mock.calls[0][0] as string;
+    expect(decodeURIComponent(url)).toContain("加入我的StarQuest家庭");
+  });
+
+  it("shows Chinese 'Copied!' text after copy in zh-CN locale", async () => {
+    jest.useRealTimers();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, inviteCode: "ZHCP1", emailSent: false }),
+    });
+
+    render(<InviteParentCard {...defaultProps} locale="zh-CN" />);
+    fireEvent.click(screen.getByRole("button", { name: "创建邀请" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("ZHCP1")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "复制链接" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "已复制!" })).toBeInTheDocument();
+    });
+  });
+
+  it("shows Chinese loading state during creation", async () => {
+    let resolvePromise: (value: any) => void;
+    const promise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+    mockFetch.mockReturnValue(promise);
+
+    render(<InviteParentCard {...defaultProps} locale="zh-CN" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "创建邀请" }));
+
+    expect(screen.getByRole("button", { name: "创建中..." })).toBeDisabled();
+
+    // Resolve to avoid unhandled promise
+    jest.useRealTimers();
+    resolvePromise!({
+      ok: true,
+      json: async () => ({ success: true, inviteCode: "XYZ", emailSent: false }),
+    });
+    await waitFor(() => {
+      expect(screen.getByText("XYZ")).toBeInTheDocument();
+    });
+  });
+
+  it("shows Chinese error on network failure", async () => {
+    jest.useRealTimers();
+    mockFetch.mockRejectedValueOnce(new Error());
+
+    render(<InviteParentCard {...defaultProps} locale="zh-CN" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "创建邀请" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("创建邀请失败")).toBeInTheDocument();
+    });
+  });
+
+  it("shows error with data.error when response not ok and data has custom error", async () => {
+    jest.useRealTimers();
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ success: false }),
+    });
+
+    render(<InviteParentCard {...defaultProps} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Invitation" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Failed to create invitation")).toBeInTheDocument();
+    });
+  });
+
+  it("shows Chinese fallback error when API response has no error message", async () => {
+    jest.useRealTimers();
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ success: false }),
+    });
+
+    render(<InviteParentCard {...defaultProps} locale="zh-CN" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "创建邀请" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("创建邀请失败")).toBeInTheDocument();
+    });
+  });
+
+  it("handles clipboard failure silently", async () => {
+    jest.useRealTimers();
+    mockWriteText.mockRejectedValueOnce(new Error("Clipboard denied"));
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, inviteCode: "CLIPFAIL", emailSent: false }),
+    });
+
+    render(<InviteParentCard {...defaultProps} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Invitation" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("CLIPFAIL")).toBeInTheDocument();
+    });
+
+    // Should not throw
+    fireEvent.click(screen.getByRole("button", { name: "Copy Link" }));
+
+    // Should still show the invite code
+    expect(screen.getByText("CLIPFAIL")).toBeInTheDocument();
+  });
+
+  describe("Branch coverage", () => {
+    it("does not render share buttons when no invite has been created (result is null)", () => {
+      render(<InviteParentCard {...defaultProps} />);
+
+      // Verify that share buttons are not present when result is null
+      expect(screen.queryByRole("button", { name: "Copy Link" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "WhatsApp" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Share via Email" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Create Another" })).not.toBeInTheDocument();
+
+      // The input and create button should be present instead
+      expect(screen.getByPlaceholderText("Email address (optional)")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Create Invitation" })).toBeInTheDocument();
+    });
+  });
+
   it("renders result view in Chinese", async () => {
     jest.useRealTimers();
     mockFetch.mockResolvedValueOnce({
