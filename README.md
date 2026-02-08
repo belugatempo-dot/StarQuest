@@ -50,7 +50,8 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Report preferences settings page
 - [x] Database backup system (manual + automated weekly)
 - [x] Architecture refactoring (UnifiedActivityList → shared components)
-- [x] Comprehensive test coverage (2476 tests, ~99% coverage)
+- [x] Comprehensive test coverage (2505 tests, ~99% coverage)
+- [x] Demo seed API (fully-populated demo family with 30 days of activity)
 
 ---
 
@@ -127,6 +128,7 @@ StarQuest/
 │   ├── reports/           # Report data generation
 │   ├── hooks/             # Custom React hooks (useBatchSelection, useActivityFilters)
 │   ├── api/               # API utilities (cron auth)
+│   ├── demo/              # Demo seed system
 │   ├── auth.ts            # Auth utilities
 │   ├── localization.ts    # Bilingual name helpers
 │   ├── date-utils.ts      # Date formatting utilities
@@ -140,7 +142,7 @@ StarQuest/
 │   └── zh-CN.json
 ├── supabase/
 │   └── migrations/        # Database migration files
-└── __tests__/             # Test files (2476 tests, 110 suites)
+└── __tests__/             # Test files (2505 tests, 113 suites)
 ```
 
 ---
@@ -170,7 +172,7 @@ Background:            #F9FAFB
 ## 🧪 Testing
 
 ```bash
-# Run all tests (2476 tests, 110 suites)
+# Run all tests (2505 tests, 113 suites)
 npm test
 
 # Watch mode
@@ -210,6 +212,14 @@ A GitHub Actions workflow runs every Sunday at midnight UTC, creating a backup a
 
 ---
 
+## 🎭 Demo
+
+A demo seed API creates a fully-populated demo family with 30 days of realistic activity history, including two children with different behavioral profiles, star transactions, redemptions, and credit system usage.
+
+See `demo.md` for full details including credentials and seed command.
+
+---
+
 ## 🌍 Internationalization
 
 The app supports:
@@ -246,13 +256,14 @@ Language can be switched via the UI. User language preference is saved in their 
 6. ✅ Email reports (weekly/monthly), settlement notices, settings page
 7. ✅ Database backup system (manual + weekly GitHub Actions)
 8. ✅ Architecture refactoring (UnifiedActivityList → shared components)
-9. ✅ Comprehensive test coverage (2476 tests, ~99% coverage)
-10. PWA support
+9. ✅ Comprehensive test coverage (2505 tests, ~99% coverage)
+10. ✅ Demo seed API (realistic demo family with 30 days of activity)
+11. PWA support
 11. Data export
 
 ### Phase 5: Polish & Launch
-10. Performance optimization
-11. Production hardening
+12. Performance optimization
+13. Production hardening
 
 ---
 
