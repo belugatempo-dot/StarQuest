@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2476 tests, ~99% coverage)
+# Testing (2505 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -133,7 +133,11 @@ lib/
 ├── hooks/useBatchSelection.ts   # Batch selection state hook
 ├── hooks/useActivityFilters.ts  # Activity filter/search state hook
 ├── api/cron-auth.ts             # verifyCronAuth() for cron route authorization
-└── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
+├── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
+└── demo/                        # Demo seed system
+    ├── demo-config.ts           # Constants, child profiles, behavioral params
+    ├── demo-cleanup.ts          # FK-ordered cleanup of demo family data
+    └── demo-seed.ts             # Deterministic seed with 30 days of activity
 ```
 
 **Key Types** (`types/`):
@@ -272,12 +276,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
 ### Structure
 ```
 __tests__/
-├── api/{admin,cron,invite-parent}/
+├── api/{admin,cron,invite-parent,seed-demo}/
 ├── app/{admin,auth,child}/
 ├── components/{admin,auth,child,shared,ui}/
 ├── hooks/
 ├── integration/
-├── lib/{api,email,hooks,reports,supabase}/
+├── lib/{api,demo,email,hooks,reports,supabase}/
 ├── middleware.test.ts
 └── types/
 ```
@@ -315,6 +319,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key  # Optional, for admin operations
 RESEND_API_KEY=your_resend_key              # For invitation & report emails
 RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender override
+DEMO_SEED_SECRET=<min-32-char-random-token>    # Protects the demo seed endpoint
+DEMO_PARENT_PASSWORD=<strong-password>          # Demo parent login password
 ```
 
 ---
@@ -374,6 +380,43 @@ RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender over
 
 ---
 
+## Demo Seed API
+
+### Endpoint: `POST /api/seed-demo`
+Creates (or resets) a fully-populated demo family with 30 days of realistic activity history.
+
+**Authentication:** `Authorization: Bearer $DEMO_SEED_SECRET`
+
+**Usage:**
+```bash
+curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
+  -H "Authorization: Bearer $DEMO_SEED_SECRET"
+```
+
+### Demo Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Parent | `demo@starquest.app` | `$DEMO_PARENT_PASSWORD` |
+| Emma (child) | `emma.demo@starquest.app` | `EmmaDemo123!` |
+| Lucas (child) | `lucas.demo@starquest.app` | `LucasDemo123!` |
+
+### What Gets Seeded
+- Family with 45 quests, 11 rewards, 7 levels, 14 categories (via `create_family_with_templates` RPC)
+- 2 children: Emma (Level 3, compliant) and Lucas (Level 2, credit enabled)
+- ~30 days of star transactions (duty misses, bonus completions, violations)
+- 7 redemptions (mix of approved/pending, one using credit)
+- Credit system for Lucas (interest tiers, credit settings, credit transaction)
+- Report preferences (weekly + monthly enabled)
+
+### Source Files
+- `lib/demo/demo-config.ts` — Constants and child profiles
+- `lib/demo/demo-cleanup.ts` — FK-ordered cleanup logic
+- `lib/demo/demo-seed.ts` — Core seed with deterministic RNG
+- `app/api/seed-demo/route.ts` — Protected API route
+
+---
+
 ## References
 
 - **Database Schema:** `supabase/migrations/COMPLETE_SCHEMA.sql`
@@ -382,4 +425,4 @@ RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender over
 
 ---
 
-**Last Updated:** 2026-02-07 | **Tests:** 2476 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-07 | **Tests:** 2505 passing | **Coverage:** ~99%
