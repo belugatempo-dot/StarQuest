@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarQuest — Product Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   CSS VARIABLES & RESET
+   ═══════════════════════════════════════════════ */
+:root {
+  --night-deep: #0a0e1a;
+  --night-mid: #0f172a;
+  --night-swirl: #1e3a5f;
+  --night-bright: #2563eb;
+  --cosmic-purple: #312e81;
+  --star-gold: #FFD700;
+  --star-glow: #FEF08A;
+  --star-warm: #FBBF24;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --indigo: #4F46E5;
+  --teal: #81D8D0;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--night-deep);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  cursor: default;
+}
+
+/* ═══════════════════════════════════════════════
+   STARFIELD CANVAS & NEBULA
+   ═══════════════════════════════════════════════ */
+#starfield { position: fixed; inset: 0; z-index: 0; }
+
+.nebula {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 40%, rgba(37,99,235,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 60%, rgba(49,46,129,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 20%, rgba(255,215,0,0.04) 0%, transparent 50%);
+  animation: nebulaDrift 20s ease-in-out infinite alternate;
+}
+
+@keyframes nebulaDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-20px, 10px) scale(1.05); }
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE SYSTEM
+   ═══════════════════════════════════════════════ */
+.scene {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 2rem;
+}
+.scene.active { opacity: 1; pointer-events: auto; }
+
+.scene.active .reveal { animation: revealUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.scene.active .reveal-d1 { animation-delay: 0.15s; }
+.scene.active .reveal-d2 { animation-delay: 0.3s; }
+.scene.active .reveal-d3 { animation-delay: 0.45s; }
+.scene.active .reveal-d4 { animation-delay: 0.6s; }
+.scene.active .reveal-d5 { animation-delay: 0.75s; }
+.scene.active .reveal-d6 { animation-delay: 0.9s; }
+.scene.active .reveal-d7 { animation-delay: 1.05s; }
+.scene.active .reveal-d8 { animation-delay: 1.2s; }
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes revealScale {
+  from { opacity: 0; transform: scale(0.5); filter: blur(12px); }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes revealLeft {
+  from { opacity: 0; transform: translateX(-60px) rotate(-2deg); }
+  to   { opacity: 1; transform: translateX(0) rotate(0); }
+}
+@keyframes revealRight {
+  from { opacity: 0; transform: translateX(60px) rotate(2deg); }
+  to   { opacity: 1; transform: translateX(0) rotate(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════ */
+.font-display { font-family: 'Cinzel', serif; }
+.font-body    { font-family: 'Outfit', sans-serif; }
+.font-cn      { font-family: 'Noto Sans SC', 'Outfit', sans-serif; }
+
+.text-hero {
+  font-size: clamp(3rem, 8vw, 7rem); font-weight: 900;
+  letter-spacing: 0.04em; line-height: 1.1;
+}
+.text-title {
+  font-size: clamp(1.8rem, 4vw, 3.5rem); font-weight: 700;
+  letter-spacing: 0.02em; line-height: 1.2;
+}
+.text-subtitle {
+  font-size: clamp(1rem, 2vw, 1.5rem); font-weight: 300;
+  letter-spacing: 0.06em; line-height: 1.6;
+}
+.text-label {
+  font-size: clamp(0.75rem, 1.2vw, 1rem); font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════
+   GOLDEN TEXT EFFECTS
+   ═══════════════════════════════════════════════ */
+.text-gold {
+  background: linear-gradient(135deg, var(--star-warm) 0%, var(--star-gold) 40%, var(--star-glow) 60%, var(--star-gold) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.text-gold-glow {
+  text-shadow: 0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(255,215,0,0.2), 0 0 80px rgba(255,215,0,0.1);
+}
+
+/* ═══════════════════════════════════════════════
+   GLASS CARD
+   ═══════════════════════════════════════════════ */
+.glass {
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: 16px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.glass-strong {
+  background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 0: COLD OPEN
+   ═══════════════════════════════════════════════ */
+#scene-0 .logo-star {
+  font-size: 6rem; animation: starPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(255,215,0,0.6));
+}
+@keyframes starPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); }
+  50%      { transform: scale(1.15) rotate(8deg); filter: drop-shadow(0 0 50px rgba(255,215,0,0.8)); }
+}
+.brand-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 1rem; border-radius: 999px;
+  background: rgba(79,70,229,0.25); border: 1px solid rgba(79,70,229,0.4);
+  font-size: 0.85rem; font-weight: 500; letter-spacing: 0.08em; color: #a5b4fc;
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 1: TAGLINE
+   ═══════════════════════════════════════════════ */
+.tagline-divider {
+  width: 80px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--star-gold), transparent);
+  margin: 1.5rem auto;
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 2: QUEST TYPES
+   ═══════════════════════════════════════════════ */
+.quest-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 900px; width: 100%; }
+.quest-card {
+  padding: 2rem 1.5rem; text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative; overflow: hidden;
+}
+.quest-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px;
+  background: linear-gradient(135deg, var(--card-accent), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.quest-card .icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+.quest-card .card-title { font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+.quest-card .card-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
+.quest-card.bonus    { --card-accent: var(--star-gold); }
+.quest-card.duty     { --card-accent: var(--warning); }
+.quest-card.violation { --card-accent: var(--danger); }
+
+/* ═══════════════════════════════════════════════
+   SCENE 3: STAR EARNING
+   ═══════════════════════════════════════════════ */
+.star-counter {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1.5rem 3rem; border-radius: 999px;
+  background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2);
+}
+.star-counter .count {
+  font-family: 'Cinzel', serif; font-size: clamp(3rem, 6vw, 5rem); font-weight: 900;
+  font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right;
+}
+.star-counter .star-icon { font-size: 3rem; animation: starPulse 1.5s ease-in-out infinite; }
+.multiplier-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.5rem 1.5rem; border-radius: 999px;
+  font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 900;
+  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+  border: 2px solid var(--star-gold); color: var(--star-gold); transition: all 0.3s ease;
+}
+.multiplier-badge.active {
+  background: linear-gradient(135deg, var(--star-gold), var(--star-warm));
+  color: var(--night-deep); box-shadow: 0 0 30px rgba(255,215,0,0.5); transform: scale(1.1);
+}
+.multiplier-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+
+/* ═══════════════════════════════════════════════
+   SCENE 4: PARENT DASHBOARD
+   ═══════════════════════════════════════════════ */
+.dashboard-mock {
+  width: min(900px, 90vw); border-radius: 20px; overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1);
+}
+.dash-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem; background: rgba(15,23,42,0.95);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.dash-header .logo-sm { display: flex; align-items: center; gap: 0.5rem; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; }
+.dash-header .nav-dots { display: flex; gap: 0.5rem; }
+.dash-header .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+.dash-header .nav-dot.active { background: var(--star-gold); box-shadow: 0 0 8px rgba(255,215,0,0.5); }
+.dash-body { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.5rem; background: rgba(10,14,26,0.95); }
+.dash-stat { padding: 1.25rem; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+.dash-stat .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.dash-stat .stat-label { font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.25rem; }
+.dash-stat .stat-value { font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 700; }
+.dash-stat .stat-value.gold { color: var(--star-gold); }
+.dash-stat .stat-value.green { color: var(--success); }
+.dash-stat .stat-value.blue { color: var(--night-bright); }
+.dash-stat .stat-value.purple { color: #a78bfa; }
+
+/* ═══════════════════════════════════════════════
+   SCENE 5: CHILD QUEST BOARD
+   ═══════════════════════════════════════════════ */
+.quest-board { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; max-width: 700px; width: 100%; }
+.board-quest {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.25rem; border-radius: 14px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s ease;
+}
+.board-quest .q-icon { font-size: 2rem; flex-shrink: 0; }
+.board-quest .q-info { flex: 1; }
+.board-quest .q-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.15rem; }
+.board-quest .q-cat  { font-size: 0.75rem; color: var(--text-secondary); }
+.board-quest .q-stars { font-family: 'Cinzel', serif; font-weight: 700; color: var(--star-gold); font-size: 1.1rem; white-space: nowrap; }
+.board-quest.completing {
+  border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08);
+  box-shadow: 0 0 20px rgba(16,185,129,0.15);
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 6: REWARDS
+   ═══════════════════════════════════════════════ */
+.rewards-showcase { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; max-width: 800px; }
+.reward-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1.5rem 2rem; border-radius: 16px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  min-width: 140px; transition: all 0.4s ease;
+}
+.reward-item .r-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.reward-item .r-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
+.reward-item .r-cost { font-family: 'Cinzel', serif; font-weight: 700; color: var(--star-gold); font-size: 1rem; }
+.reward-item.redeeming {
+  border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.08);
+  transform: scale(1.05); box-shadow: 0 0 30px rgba(255,215,0,0.2);
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 7: CALENDAR VIEW
+   ═══════════════════════════════════════════════ */
+.calendar-mock {
+  width: min(520px, 90vw); border-radius: 20px; overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #312e81 100%);
+  position: relative;
+}
+.calendar-mock::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255,215,0,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.cal-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem;
+}
+.cal-nav .cal-month {
+  font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: 700;
+  text-shadow: 0 0 10px rgba(254,240,138,0.3);
+}
+.cal-nav .cal-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.1); color: white; cursor: pointer;
+  font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+}
+.cal-nav .cal-today-btn {
+  padding: 0.3rem 0.75rem; border-radius: 8px; border: none;
+  background: var(--star-gold); color: var(--night-deep);
+  font-weight: 600; font-size: 0.75rem; cursor: pointer;
+}
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  padding: 0 0.75rem; margin-bottom: 4px;
+}
+.cal-weekdays span {
+  text-align: center; font-size: 0.7rem; font-weight: 600;
+  color: var(--star-glow); text-shadow: 0 0 6px rgba(254,240,138,0.3);
+  padding: 0.25rem 0;
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  padding: 0 0.75rem 1rem;
+}
+.cal-day {
+  aspect-ratio: 1; border-radius: 10px; padding: 4px 5px;
+  display: flex; flex-direction: column; align-items: center;
+  font-size: 0.8rem; font-weight: 500; position: relative;
+  border: 2px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  transition: all 0.4s ease;
+}
+.cal-day.empty { border-color: transparent; background: transparent; }
+.cal-day .day-num { font-size: 0.75rem; line-height: 1; margin-bottom: 2px; }
+.cal-day .day-dots { display: flex; gap: 3px; margin-top: auto; }
+.cal-day .day-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+}
+.cal-day .day-dot.positive { background: #4ade80; box-shadow: 0 0 4px rgba(74,222,128,0.6); }
+.cal-day .day-dot.negative { background: #f87171; box-shadow: 0 0 4px rgba(248,113,113,0.6); }
+.cal-day .day-stars {
+  font-size: 0.55rem; font-weight: 700; font-family: 'Cinzel', serif;
+  margin-top: 1px; line-height: 1;
+}
+.cal-day .day-stars.pos { color: #4ade80; }
+.cal-day .day-stars.neg { color: #f87171; }
+.cal-day.today {
+  border-color: var(--star-warm); background: rgba(251,191,36,0.12);
+}
+.cal-day.selected {
+  border-color: var(--star-gold); background: rgba(255,215,0,0.15);
+  box-shadow: 0 0 15px rgba(255,215,0,0.3);
+}
+.cal-legend {
+  display: flex; gap: 1.25rem; justify-content: center;
+  padding: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.65rem; color: var(--text-secondary);
+}
+.cal-legend-item { display: flex; align-items: center; gap: 4px; }
+.cal-legend-box {
+  width: 12px; height: 12px; border-radius: 3px;
+}
+
+/* Side activity list mockup */
+.cal-layout {
+  display: flex; gap: 1.5rem; align-items: flex-start; max-width: 900px; width: 100%;
+}
+.cal-sidebar {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.cal-activity-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 0.85rem; border-radius: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.8rem;
+}
+.cal-activity-item .cai-icon { font-size: 1.2rem; }
+.cal-activity-item .cai-info { flex: 1; }
+.cal-activity-item .cai-name { font-weight: 600; font-size: 0.8rem; }
+.cal-activity-item .cai-time { font-size: 0.65rem; color: var(--text-secondary); }
+.cal-activity-item .cai-stars { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem; }
+.cal-activity-item .cai-stars.pos { color: #4ade80; }
+.cal-activity-item .cai-stars.neg { color: #f87171; }
+
+.cal-date-header {
+  font-size: 0.7rem; font-weight: 600; color: var(--star-gold);
+  letter-spacing: 0.08em; text-transform: uppercase; padding: 0.25rem 0;
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 8: CREDIT SYSTEM
+   ═══════════════════════════════════════════════ */
+.credit-layout {
+  display: flex; gap: 1.5rem; max-width: 800px; width: 100%;
+  justify-content: center; flex-wrap: wrap;
+}
+.credit-card {
+  flex: 1; min-width: 280px; max-width: 360px;
+  padding: 1.5rem; border-radius: 16px;
+  position: relative; overflow: hidden;
+}
+.credit-card.enabled {
+  background: rgba(79,70,229,0.08); border: 1px solid rgba(79,70,229,0.3);
+}
+.credit-card.debt {
+  background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(249,115,22,0.06));
+  border: 1px solid rgba(249,115,22,0.3);
+}
+.credit-card .cc-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); display: flex; align-items: center;
+  justify-content: center; font-size: 1.2rem; margin-bottom: 0.75rem;
+}
+.credit-card .cc-name {
+  font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;
+}
+.credit-card .cc-badge {
+  display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px;
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.credit-card .cc-badge.on  { background: rgba(79,70,229,0.2); color: #a5b4fc; }
+.credit-card .cc-badge.warn { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+.credit-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+.credit-stats .cs-item {}
+.credit-stats .cs-label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+.credit-stats .cs-value { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; }
+.credit-stats .cs-value.gold   { color: var(--star-gold); }
+.credit-stats .cs-value.green  { color: var(--success); }
+.credit-stats .cs-value.red    { color: var(--danger); }
+.credit-stats .cs-value.purple { color: #a78bfa; }
+
+.usage-bar-wrap {
+  margin-top: 0.25rem;
+}
+.usage-bar-label {
+  display: flex; justify-content: space-between; font-size: 0.65rem;
+  color: var(--text-secondary); margin-bottom: 0.25rem;
+}
+.usage-bar {
+  height: 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); overflow: hidden;
+}
+.usage-bar-fill {
+  height: 100%; border-radius: 999px; transition: width 1.5s cubic-bezier(0.16,1,0.3,1);
+}
+.usage-bar-fill.low    { background: linear-gradient(90deg, #10B981, #34d399); }
+.usage-bar-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.usage-bar-fill.high   { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+/* Interest tiers mini */
+.tier-table {
+  width: 100%; margin-top: 1rem; font-size: 0.7rem;
+  border-collapse: separate; border-spacing: 0 3px;
+}
+.tier-table th {
+  text-align: left; padding: 0.35rem 0.5rem; font-weight: 600;
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.tier-table td {
+  padding: 0.35rem 0.5rem; background: rgba(255,255,255,0.03);
+}
+.tier-table td:first-child { border-radius: 6px 0 0 6px; }
+.tier-table td:last-child  { border-radius: 0 6px 6px 0; color: var(--warning); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════
+   SCENE 9: MONTHLY SUMMARY
+   ═══════════════════════════════════════════════ */
+.report-mock {
+  width: min(600px, 90vw); border-radius: 16px; overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  background: #f8fafc; color: #1e293b;
+}
+.report-header {
+  background: linear-gradient(135deg, #81D8D0, #5bb8b0);
+  padding: 1.25rem 1.5rem; text-align: center; color: white;
+}
+.report-header .rh-logo { font-size: 1.5rem; margin-bottom: 0.25rem; }
+.report-header .rh-title { font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 700; }
+.report-header .rh-period { font-size: 0.75rem; opacity: 0.85; margin-top: 0.15rem; }
+
+.report-body { padding: 1.25rem 1.5rem; }
+
+.report-overview {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;
+}
+.report-stat {
+  padding: 0.75rem; border-radius: 10px; text-align: center;
+}
+.report-stat.earned { background: #ecfdf5; }
+.report-stat.spent  { background: #fff7ed; }
+.report-stat .rs-value { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; }
+.report-stat .rs-value.green { color: #10B981; }
+.report-stat .rs-value.orange { color: #f59e0b; }
+.report-stat .rs-label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.15rem; }
+.report-stat .rs-change {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  font-size: 0.65rem; font-weight: 600; margin-top: 0.25rem;
+  padding: 0.1rem 0.4rem; border-radius: 999px;
+}
+.report-stat .rs-change.up   { background: #dcfce7; color: #16a34a; }
+.report-stat .rs-change.down { background: #fee2e2; color: #dc2626; }
+
+.report-child-section {
+  margin-top: 0.75rem; padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+.report-child-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;
+}
+.report-child-header .rch-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #dbeafe; display: flex; align-items: center;
+  justify-content: center; font-size: 0.7rem;
+}
+.report-child-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;
+}
+.report-cs {
+  text-align: center; padding: 0.4rem; border-radius: 8px;
+  background: #f1f5f9;
+}
+.report-cs .rcs-value { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; }
+.report-cs .rcs-value.green  { color: #10B981; }
+.report-cs .rcs-value.orange { color: #f59e0b; }
+.report-cs .rcs-value.teal   { color: #0d9488; }
+.report-cs .rcs-label { font-size: 0.55rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Settlement mini section */
+.report-settlement {
+  margin-top: 0.75rem; padding: 0.75rem;
+  border-radius: 10px; background: #fef3c7; border: 1px solid #fde68a;
+}
+.report-settlement .rs-title {
+  font-weight: 700; font-size: 0.75rem; color: #92400e; margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.35rem;
+}
+.report-settlement-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
+}
+.report-settlement-item { text-align: center; }
+.report-settlement-item .rsi-value { font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700; }
+.report-settlement-item .rsi-value.red { color: #dc2626; }
+.report-settlement-item .rsi-value.amber { color: #d97706; }
+.report-settlement-item .rsi-value.green { color: #16a34a; }
+.report-settlement-item .rsi-label { font-size: 0.55rem; color: #78716c; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.report-footer {
+  padding: 0.75rem 1.5rem; background: #f1f5f9; text-align: center;
+  font-size: 0.65rem; color: #94a3b8;
+}
+
+/* ═══════════════════════════════════════════════
+   SCENE 10: BILINGUAL
+   ═══════════════════════════════════════════════ */
+.lang-morph {
+  position: relative; overflow: hidden; min-height: 5rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.lang-morph .lang-text {
+  position: absolute; transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap;
+}
+.lang-morph .lang-text.hidden-up   { opacity: 0; transform: translateY(-30px); }
+.lang-morph .lang-text.visible      { opacity: 1; transform: translateY(0); }
+.lang-morph .lang-text.hidden-down  { opacity: 0; transform: translateY(30px); }
+.lang-flags { display: flex; gap: 2rem; margin-top: 2rem; }
+.lang-flag {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1.5rem; border-radius: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  font-size: 1.1rem; transition: all 0.3s ease;
+}
+.lang-flag.active { border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.08); }
+.lang-flag .flag { font-size: 1.8rem; }
+
+/* ═══════════════════════════════════════════════
+   SCENE 11: CLOSING
+   ═══════════════════════════════════════════════ */
+.cta-button {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 1rem 2.5rem; border-radius: 999px;
+  background: linear-gradient(135deg, var(--star-gold), var(--star-warm));
+  color: var(--night-deep); font-family: 'Cinzel', serif;
+  font-weight: 700; font-size: 1.1rem; letter-spacing: 0.04em;
+  text-decoration: none; border: none; cursor: pointer;
+  transition: all 0.3s ease; box-shadow: 0 0 30px rgba(255,215,0,0.3);
+}
+.cta-button:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(255,215,0,0.5); }
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR & CONTROLS
+   ═══════════════════════════════════════════════ */
+.progress-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  padding: 0 2rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+}
+.progress-track { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; cursor: pointer; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--night-bright), var(--star-gold)); border-radius: 999px; transition: width 0.3s ease; box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+.progress-label { font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase; min-width: 3.5rem; text-align: right; font-variant-numeric: tabular-nums; }
+
+.controls { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 50; display: flex; gap: 0.5rem; }
+.ctrl-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px); color: var(--text-secondary); font-size: 1rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.ctrl-btn.active { color: var(--star-gold); border-color: rgba(255,215,0,0.3); }
+
+.scene-indicator { position: fixed; top: 1.5rem; left: 1.5rem; z-index: 50; display: flex; gap: 6px; }
+.scene-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15);
+  transition: all 0.3s ease; cursor: pointer;
+}
+.scene-dot.active { background: var(--star-gold); box-shadow: 0 0 8px rgba(255,215,0,0.5); transform: scale(1.3); }
+.scene-dot:hover { background: rgba(255,255,255,0.4); }
+
+/* ═══════════════════════════════════════════════
+   SHARED ANIMATIONS
+   ═══════════════════════════════════════════════ */
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+.shimmer-line { height: 2px; background: linear-gradient(90deg, transparent, var(--star-gold), transparent); background-size: 200% 100%; animation: shimmer 3s linear infinite; }
+
+.cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.35rem; vertical-align: middle; }
+.cat-dot.health  { background: #ec4899; }
+.cat-dot.study   { background: #3b82f6; }
+.cat-dot.chores  { background: #10b981; }
+.cat-dot.social  { background: #8b5cf6; }
+.cat-dot.music   { background: #f59e0b; }
+.cat-dot.reading { background: #06b6d4; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .quest-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .quest-card { padding: 1.5rem 1rem; }
+  .dash-body  { grid-template-columns: 1fr; }
+  .quest-board { grid-template-columns: 1fr; }
+  .rewards-showcase { gap: 1rem; }
+  .reward-item { min-width: 100px; padding: 1rem; }
+  .multiplier-row { flex-wrap: wrap; justify-content: center; }
+  .cal-layout { flex-direction: column; }
+  .credit-layout { flex-direction: column; align-items: center; }
+  .credit-card { max-width: 100%; }
+  .report-child-stats { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula"></div>
+
+<div class="scene-indicator" id="sceneIndicator"></div>
+
+<div class="controls">
+  <button class="ctrl-btn" id="btnPrev" title="Previous">◂</button>
+  <button class="ctrl-btn active" id="btnPlayPause" title="Play/Pause">❚❚</button>
+  <button class="ctrl-btn" id="btnNext" title="Next">▸</button>
+  <button class="ctrl-btn" id="btnRestart" title="Restart">↻</button>
+</div>
+
+<!-- ═══════ SCENE 0: COLD OPEN ═══════ -->
+<section class="scene" id="scene-0">
+  <div class="reveal" style="animation: revealScale 1.2s cubic-bezier(0.16,1,0.3,1) both;">
+    <span class="logo-star">⭐</span>
+  </div>
+  <h1 class="font-display text-hero text-gold reveal reveal-d2" style="margin-top: 1rem;">StarQuest</h1>
+  <div class="reveal reveal-d3" style="margin-top: 1.5rem;">
+    <span class="brand-badge">Beluga Tempo &nbsp;|&nbsp; 鲸律</span>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 1: TAGLINE ═══════ -->
+<section class="scene" id="scene-1">
+  <p class="text-label reveal" style="color: var(--star-gold);">A Family Gamification Platform</p>
+  <div class="tagline-divider reveal reveal-d1"></div>
+  <h2 class="font-display text-title reveal reveal-d2" style="max-width: 700px; text-align: center;">
+    Complete quests.<br>Earn stars.<br>Unlock rewards.
+  </h2>
+  <div class="tagline-divider reveal reveal-d3"></div>
+  <p class="font-cn text-subtitle reveal reveal-d4" style="color: var(--text-secondary); text-align: center;">闯关夺星，解锁奖励。</p>
+</section>
+
+<!-- ═══════ SCENE 2: QUEST TYPES ═══════ -->
+<section class="scene" id="scene-2">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">The Quest System</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 2rem;">Three Dimensions of Growth</h2>
+  <div class="quest-grid">
+    <div class="quest-card glass bonus reveal reveal-d2" style="animation-name: revealLeft;">
+      <span class="icon">⭐</span>
+      <div class="card-title" style="color: var(--star-gold);">Bonus</div>
+      <div class="card-desc">Go above and beyond. Extra tasks that earn stars for effort and initiative.</div>
+    </div>
+    <div class="quest-card glass duty reveal reveal-d3" style="animation-name: revealUp;">
+      <span class="icon">📋</span>
+      <div class="card-title" style="color: var(--warning);">Duty</div>
+      <div class="card-desc">Daily responsibilities. Miss them and stars get deducted. Build discipline.</div>
+    </div>
+    <div class="quest-card glass violation reveal reveal-d4" style="animation-name: revealRight;">
+      <span class="icon">⚠️</span>
+      <div class="card-title" style="color: var(--danger);">Violation</div>
+      <div class="card-desc">Consequences for rule-breaking. Learn accountability through star deductions.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 3: STAR EARNING ═══════ -->
+<section class="scene" id="scene-3">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Star Economy</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 2rem;">Every Star Counts</h2>
+  <div class="star-counter reveal reveal-d2">
+    <span class="star-icon">⭐</span>
+    <span class="count text-gold" id="starCount">0</span>
+  </div>
+  <div class="multiplier-row reveal reveal-d3">
+    <div class="multiplier-badge" data-mult="1">1×</div>
+    <div class="multiplier-badge" data-mult="2">2×</div>
+    <div class="multiplier-badge" data-mult="3">3×</div>
+    <div class="multiplier-badge" data-mult="5">5×</div>
+    <div class="multiplier-badge" data-mult="10">10×</div>
+  </div>
+  <p class="text-subtitle reveal reveal-d4" style="color: var(--text-secondary); margin-top: 1.5rem;">
+    Star multiplier — reward exceptional effort up to 10×
+  </p>
+</section>
+
+<!-- ═══════ SCENE 4: PARENT DASHBOARD ═══════ -->
+<section class="scene" id="scene-4">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Parent View</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 2rem;">Command Center</h2>
+  <div class="dashboard-mock glass-strong reveal reveal-d2">
+    <div class="dash-header">
+      <div class="logo-sm"><span>⭐</span> StarQuest</div>
+      <div class="nav-dots">
+        <div class="nav-dot active"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+      </div>
+    </div>
+    <div class="dash-body">
+      <div class="dash-stat reveal reveal-d3">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">Stars Earned Today</div>
+        <div class="stat-value gold" id="dashStars">0</div>
+      </div>
+      <div class="dash-stat reveal reveal-d4">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">Pending Approvals</div>
+        <div class="stat-value blue">3</div>
+      </div>
+      <div class="dash-stat reveal reveal-d5">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-label">Quests Completed</div>
+        <div class="stat-value green" id="dashQuests">0</div>
+      </div>
+      <div class="dash-stat reveal reveal-d6">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-label">Current Level</div>
+        <div class="stat-value purple">Level 3</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 5: CHILD QUEST BOARD ═══════ -->
+<section class="scene" id="scene-5">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Child View</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 2rem;">Quest Board</h2>
+  <div class="quest-board">
+    <div class="board-quest reveal reveal-d2" id="bq-1">
+      <span class="q-icon">📚</span>
+      <div class="q-info"><div class="q-name">Read for 30 minutes</div><div class="q-cat"><span class="cat-dot reading"></span>Reading</div></div>
+      <div class="q-stars">+3 ⭐</div>
+    </div>
+    <div class="board-quest reveal reveal-d3" id="bq-2">
+      <span class="q-icon">🎵</span>
+      <div class="q-info"><div class="q-name">Practice piano</div><div class="q-cat"><span class="cat-dot music"></span>Music</div></div>
+      <div class="q-stars">+2 ⭐</div>
+    </div>
+    <div class="board-quest reveal reveal-d4" id="bq-3">
+      <span class="q-icon">💪</span>
+      <div class="q-info"><div class="q-name">Exercise 20 minutes</div><div class="q-cat"><span class="cat-dot health"></span>Health</div></div>
+      <div class="q-stars">+2 ⭐</div>
+    </div>
+    <div class="board-quest reveal reveal-d5" id="bq-4">
+      <span class="q-icon">🤝</span>
+      <div class="q-info"><div class="q-name">Help a classmate</div><div class="q-cat"><span class="cat-dot social"></span>Social</div></div>
+      <div class="q-stars">+4 ⭐</div>
+    </div>
+    <div class="board-quest reveal reveal-d6" id="bq-5">
+      <span class="q-icon">🧹</span>
+      <div class="q-info"><div class="q-name">Clean your room</div><div class="q-cat"><span class="cat-dot chores"></span>Chores</div></div>
+      <div class="q-stars">+2 ⭐</div>
+    </div>
+    <div class="board-quest reveal reveal-d7" id="bq-6">
+      <span class="q-icon">✍️</span>
+      <div class="q-info"><div class="q-name">Study vocabulary</div><div class="q-cat"><span class="cat-dot study"></span>Study</div></div>
+      <div class="q-stars">+3 ⭐</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 6: REWARDS ═══════ -->
+<section class="scene" id="scene-6">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Reward Catalog</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 2rem;">Stars → Rewards</h2>
+  <div class="rewards-showcase">
+    <div class="reward-item reveal reveal-d2" id="rw-1"><span class="r-icon">🎮</span><div class="r-name">30 min<br>Screen Time</div><div class="r-cost">15 ⭐</div></div>
+    <div class="reward-item reveal reveal-d3" id="rw-2"><span class="r-icon">🍦</span><div class="r-name">Ice Cream<br>Treat</div><div class="r-cost">20 ⭐</div></div>
+    <div class="reward-item reveal reveal-d4" id="rw-3"><span class="r-icon">🎪</span><div class="r-name">Family<br>Activity</div><div class="r-cost">50 ⭐</div></div>
+    <div class="reward-item reveal reveal-d5" id="rw-4"><span class="r-icon">🧸</span><div class="r-name">New<br>Toy</div><div class="r-cost">100 ⭐</div></div>
+    <div class="reward-item reveal reveal-d6" id="rw-5"><span class="r-icon">🎢</span><div class="r-name">Theme<br>Park Trip</div><div class="r-cost">200 ⭐</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 7: CALENDAR VIEW ═══════ -->
+<section class="scene" id="scene-7">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Activity Log</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 1.5rem;">Calendar View</h2>
+  <div class="cal-layout reveal reveal-d2">
+    <div class="calendar-mock" id="calendarMock">
+      <div class="cal-nav">
+        <button class="cal-btn">◂</button>
+        <span class="cal-month">February 2026</span>
+        <button class="cal-today-btn">Today</button>
+        <button class="cal-btn">▸</button>
+      </div>
+      <div class="cal-weekdays">
+        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      </div>
+      <div class="cal-grid" id="calGrid">
+        <!-- Row 1: Feb starts on Sunday -->
+        <div class="cal-day" data-day="1"><span class="day-num">1</span><div class="day-dots"><span class="day-dot positive"></span></div><span class="day-stars pos">+5</span></div>
+        <div class="cal-day" data-day="2"><span class="day-num">2</span><div class="day-dots"><span class="day-dot positive"></span><span class="day-dot negative"></span></div><span class="day-stars pos">+2</span></div>
+        <div class="cal-day" data-day="3"><span class="day-num">3</span><div class="day-dots"><span class="day-dot positive"></span></div><span class="day-stars pos">+8</span></div>
+        <div class="cal-day" data-day="4"><span class="day-num">4</span><div class="day-dots"><span class="day-dot negative"></span></div><span class="day-stars neg">−3</span></div>
+        <div class="cal-day" data-day="5"><span class="day-num">5</span><div class="day-dots"><span class="day-dot positive"></span></div><span class="day-stars pos">+6</span></div>
+        <div class="cal-day" data-day="6"><span class="day-num">6</span><div class="day-dots"><span class="day-dot positive"></span><span class="day-dot negative"></span></div><span class="day-stars pos">+1</span></div>
+        <div class="cal-day" data-day="7"><span class="day-num">7</span><div class="day-dots"><span class="day-dot positive"></span></div><span class="day-stars pos">+4</span></div>
+        <!-- Row 2 -->
+        <div class="cal-day" data-day="8"><span class="day-num">8</span><div class="day-dots"><span class="day-dot positive"></span></div><span class="day-stars pos">+7</span></div>
+        <div class="cal-day today" data-day="9"><span class="day-num">9</span><div class="day-dots"><span class="day-dot positive"></span></div><span class="day-stars pos">+3</span></div>
+        <div class="cal-day selected" data-day="10"><span class="day-num">10</span><div class="day-dots"><span class="day-dot positive"></span><span class="day-dot negative"></span></div><span class="day-stars pos">+5</span></div>
+        <div class="cal-day" data-day="11"><span class="day-num">11</span></div>
+        <div class="cal-day" data-day="12"><span class="day-num">12</span></div>
+        <div class="cal-day" data-day="13"><span class="day-num">13</span></div>
+        <div class="cal-day" data-day="14"><span class="day-num">14</span></div>
+        <!-- Row 3 -->
+        <div class="cal-day" data-day="15"><span class="day-num">15</span></div>
+        <div class="cal-day" data-day="16"><span class="day-num">16</span></div>
+        <div class="cal-day" data-day="17"><span class="day-num">17</span></div>
+        <div class="cal-day" data-day="18"><span class="day-num">18</span></div>
+        <div class="cal-day" data-day="19"><span class="day-num">19</span></div>
+        <div class="cal-day" data-day="20"><span class="day-num">20</span></div>
+        <div class="cal-day" data-day="21"><span class="day-num">21</span></div>
+        <!-- Row 4 -->
+        <div class="cal-day" data-day="22"><span class="day-num">22</span></div>
+        <div class="cal-day" data-day="23"><span class="day-num">23</span></div>
+        <div class="cal-day" data-day="24"><span class="day-num">24</span></div>
+        <div class="cal-day" data-day="25"><span class="day-num">25</span></div>
+        <div class="cal-day" data-day="26"><span class="day-num">26</span></div>
+        <div class="cal-day" data-day="27"><span class="day-num">27</span></div>
+        <div class="cal-day" data-day="28"><span class="day-num">28</span></div>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-box" style="border: 2px solid var(--star-warm); background: rgba(251,191,36,0.12);"></div>Today</div>
+        <div class="cal-legend-item"><div class="cal-legend-box" style="border: 2px solid var(--star-gold); background: rgba(255,215,0,0.15); box-shadow: 0 0 6px rgba(255,215,0,0.3);"></div>Selected</div>
+        <div class="cal-legend-item"><div class="day-dot positive" style="width:8px;height:8px;"></div>Positive</div>
+        <div class="cal-legend-item"><div class="day-dot negative" style="width:8px;height:8px;"></div>Negative</div>
+      </div>
+    </div>
+    <div class="cal-sidebar reveal reveal-d4">
+      <div class="cal-date-header">Feb 10, 2026 — Selected Day</div>
+      <div class="cal-activity-item" id="ca-1">
+        <span class="cai-icon">📚</span>
+        <div class="cai-info"><div class="cai-name">Read for 30 minutes</div><div class="cai-time">9:15 AM</div></div>
+        <div class="cai-stars pos">+3</div>
+      </div>
+      <div class="cal-activity-item" id="ca-2">
+        <span class="cai-icon">💪</span>
+        <div class="cai-info"><div class="cai-name">Exercise 20 minutes</div><div class="cai-time">2:30 PM</div></div>
+        <div class="cai-stars pos">+2</div>
+      </div>
+      <div class="cal-activity-item" id="ca-3">
+        <span class="cai-icon">📋</span>
+        <div class="cai-info"><div class="cai-name">Missed homework</div><div class="cai-time">8:00 PM</div></div>
+        <div class="cai-stars neg">−2</div>
+      </div>
+      <div class="cal-activity-item" id="ca-4">
+        <span class="cai-icon">🤝</span>
+        <div class="cai-info"><div class="cai-name">Helped with dinner</div><div class="cai-time">6:45 PM</div></div>
+        <div class="cai-stars pos">+2</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 8: CREDIT SYSTEM ═══════ -->
+<section class="scene" id="scene-8">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Credit System</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 0.5rem;">Borrow Now, Repay Later</h2>
+  <p class="text-subtitle reveal reveal-d2" style="color: var(--text-secondary); margin-bottom: 2rem; text-align: center; max-width: 550px;">
+    Children can borrow stars with configurable interest — learning real financial concepts.
+  </p>
+  <div class="credit-layout">
+    <!-- Emma: healthy credit -->
+    <div class="credit-card glass enabled reveal reveal-d3" style="animation-name: revealLeft;">
+      <div class="cc-avatar">👧</div>
+      <div class="cc-name">Emma</div>
+      <span class="cc-badge on">Credit Enabled</span>
+      <div class="credit-stats">
+        <div class="cs-item"><div class="cs-label">Balance</div><div class="cs-value green">48 ⭐</div></div>
+        <div class="cs-item"><div class="cs-label">Credit Limit</div><div class="cs-value purple">100 ⭐</div></div>
+        <div class="cs-item"><div class="cs-label">Debt</div><div class="cs-value" style="color: var(--text-secondary);">0 ⭐</div></div>
+        <div class="cs-item"><div class="cs-label">Spendable</div><div class="cs-value gold">148 ⭐</div></div>
+      </div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-label"><span>Credit Usage</span><span>0%</span></div>
+        <div class="usage-bar"><div class="usage-bar-fill low" id="usage-emma" style="width: 0%;"></div></div>
+      </div>
+    </div>
+    <!-- Lucas: in debt -->
+    <div class="credit-card glass debt reveal reveal-d4" style="animation-name: revealRight;">
+      <div class="cc-avatar">👦</div>
+      <div class="cc-name">Lucas</div>
+      <span class="cc-badge warn">Has Debt</span>
+      <div class="credit-stats">
+        <div class="cs-item"><div class="cs-label">Balance</div><div class="cs-value red">−45 ⭐</div></div>
+        <div class="cs-item"><div class="cs-label">Credit Limit</div><div class="cs-value purple">80 ⭐</div></div>
+        <div class="cs-item"><div class="cs-label">Debt</div><div class="cs-value red">45 ⭐</div></div>
+        <div class="cs-item"><div class="cs-label">Available</div><div class="cs-value" style="color: var(--text-secondary);">35 ⭐</div></div>
+      </div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-label"><span>Credit Usage</span><span id="lucas-pct">0%</span></div>
+        <div class="usage-bar"><div class="usage-bar-fill high" id="usage-lucas" style="width: 0%;"></div></div>
+      </div>
+      <table class="tier-table reveal reveal-d5">
+        <thead><tr><th>Tier</th><th>Debt Range</th><th>Rate</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>0 – 19 ⭐</td><td>5%</td></tr>
+          <tr><td>2</td><td>20 – 49 ⭐</td><td>10%</td></tr>
+          <tr><td>3</td><td>50+ ⭐</td><td>15%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 9: MONTHLY SUMMARY ═══════ -->
+<section class="scene" id="scene-9">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Automated Reports</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 1.5rem;">Monthly Summary</h2>
+  <div class="report-mock reveal reveal-d2">
+    <div class="report-header">
+      <div class="rh-logo">⭐ StarQuest</div>
+      <div class="rh-title">Monthly Star Summary</div>
+      <div class="rh-period">January 2026</div>
+    </div>
+    <div class="report-body">
+      <div class="report-overview">
+        <div class="report-stat earned">
+          <div class="rs-value green" id="reportEarned">0</div>
+          <div class="rs-label">Stars Earned</div>
+          <div class="rs-change up">▲ 12%</div>
+        </div>
+        <div class="report-stat spent">
+          <div class="rs-value orange" id="reportSpent">0</div>
+          <div class="rs-label">Stars Spent</div>
+          <div class="rs-change down">▼ 8%</div>
+        </div>
+      </div>
+
+      <!-- Emma -->
+      <div class="report-child-section">
+        <div class="report-child-header"><div class="rch-avatar">👧</div> Emma</div>
+        <div class="report-child-stats">
+          <div class="report-cs"><div class="rcs-value green" id="repEmmaEarn">0</div><div class="rcs-label">Earned</div></div>
+          <div class="report-cs"><div class="rcs-value orange" id="repEmmaSpent">0</div><div class="rcs-label">Spent</div></div>
+          <div class="report-cs"><div class="rcs-value green" id="repEmmaNet">0</div><div class="rcs-label">Net</div></div>
+          <div class="report-cs"><div class="rcs-value teal" id="repEmmaBalance">0</div><div class="rcs-label">Balance</div></div>
+        </div>
+      </div>
+
+      <!-- Lucas -->
+      <div class="report-child-section">
+        <div class="report-child-header"><div class="rch-avatar">👦</div> Lucas</div>
+        <div class="report-child-stats">
+          <div class="report-cs"><div class="rcs-value green" id="repLucasEarn">0</div><div class="rcs-label">Earned</div></div>
+          <div class="report-cs"><div class="rcs-value orange" id="repLucasSpent">0</div><div class="rcs-label">Spent</div></div>
+          <div class="report-cs"><div class="rcs-value green" id="repLucasNet">0</div><div class="rcs-label">Net</div></div>
+          <div class="report-cs"><div class="rcs-value teal" id="repLucasBalance">0</div><div class="rcs-label">Balance</div></div>
+        </div>
+      </div>
+
+      <!-- Settlement -->
+      <div class="report-settlement reveal reveal-d5">
+        <div class="rs-title">💳 Credit Settlement — Lucas</div>
+        <div class="report-settlement-grid">
+          <div class="report-settlement-item"><div class="rsi-value red">45 ⭐</div><div class="rsi-label">Debt</div></div>
+          <div class="report-settlement-item"><div class="rsi-value amber">+3.5 ⭐</div><div class="rsi-label">Interest</div></div>
+          <div class="report-settlement-item"><div class="rsi-value green">80 → 75</div><div class="rsi-label">Limit Adj.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="report-footer">Sent automatically every month — StarQuest by Beluga Tempo</div>
+  </div>
+</section>
+
+<!-- ═══════ SCENE 10: BILINGUAL ═══════ -->
+<section class="scene" id="scene-10">
+  <p class="text-label reveal" style="color: var(--text-secondary); margin-bottom: 0.5rem;">Bilingual Support</p>
+  <h2 class="font-display text-title reveal reveal-d1" style="margin-bottom: 2rem;">Two Languages, One Family</h2>
+  <div class="lang-morph reveal reveal-d2" style="min-height: 4rem;">
+    <span class="font-display text-title lang-text visible" id="langEN" style="color: var(--star-gold);">Complete quests. Earn stars.</span>
+    <span class="font-cn text-title lang-text hidden-down" id="langCN" style="color: var(--star-gold);">闯关夺星，解锁奖励。</span>
+  </div>
+  <div class="lang-flags reveal reveal-d3">
+    <div class="lang-flag active" id="flagEN"><span class="flag">🇺🇸</span><span>English</span></div>
+    <div class="lang-flag" id="flagCN"><span class="flag">🇨🇳</span><span>中文</span></div>
+  </div>
+  <p class="text-subtitle reveal reveal-d4" style="color: var(--text-secondary); margin-top: 2rem; text-align: center; max-width: 500px;">
+    Full localization for English and Chinese — every quest, reward, and interface element adapts seamlessly.
+  </p>
+</section>
+
+<!-- ═══════ SCENE 11: CLOSING ═══════ -->
+<section class="scene" id="scene-11">
+  <div class="reveal" style="animation: revealScale 1s cubic-bezier(0.16,1,0.3,1) both;">
+    <span style="font-size: 4rem; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">⭐</span>
+  </div>
+  <h2 class="font-display text-hero text-gold reveal reveal-d1" style="font-size: clamp(2.5rem, 6vw, 5rem); text-align: center;">StarQuest</h2>
+  <p class="text-subtitle reveal reveal-d2" style="color: var(--text-secondary); margin: 1.5rem 0; text-align: center; max-width: 500px;">
+    Transform daily tasks into an adventure.<br>Motivate growth through play.
+  </p>
+  <div class="shimmer-line reveal reveal-d3" style="width: 120px; margin: 1.5rem auto;"></div>
+  <div class="reveal reveal-d4" style="margin-top: 0.5rem;">
+    <a class="cta-button" href="https://starquest-kappa.vercel.app" target="_blank"><span>⭐</span> Try StarQuest</a>
+  </div>
+  <div class="reveal reveal-d5" style="margin-top: 2rem;">
+    <span class="brand-badge">Beluga Tempo &nbsp;|&nbsp; 鲸律</span>
+  </div>
+</section>
+
+<!-- Progress Bar -->
+<div class="progress-bar">
+  <div class="progress-track" id="progressTrack">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+  <span class="progress-label" id="progressLabel">0 / 12</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STARFIELD RENDERER
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+let stars = [];
+let W, H;
+
+function resizeCanvas() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+function initStars(count = 300) {
+  stars = [];
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.8 + 0.2, alpha: Math.random() * 0.8 + 0.2,
+      speed: Math.random() * 0.3 + 0.05,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleOffset: Math.random() * Math.PI * 2,
+      color: ['#FFD700','#FEF08A','#FBBF24','#e0e7ff','#c7d2fe','#ffffff'][Math.floor(Math.random()*6)]
+    });
+  }
+}
+
+function drawStars(time) {
+  ctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    const twinkle = Math.sin(time * s.twinkleSpeed + s.twinkleOffset) * 0.3 + 0.7;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = s.color; ctx.globalAlpha = s.alpha * twinkle; ctx.fill();
+    if (s.r > 1.2) {
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = s.color; ctx.globalAlpha = s.alpha * twinkle * 0.1; ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function animateStars(time) {
+  drawStars(time);
+  for (const s of stars) { s.y -= s.speed; if (s.y < -5) { s.y = H + 5; s.x = Math.random() * W; } }
+  requestAnimationFrame(animateStars);
+}
+
+window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+resizeCanvas(); initStars(); requestAnimationFrame(animateStars);
+
+// ═══════════════════════════════════════════════════
+// SCENE MANAGER
+// ═══════════════════════════════════════════════════
+const TOTAL_SCENES = 12;
+const SCENE_DURATIONS = [4000, 5000, 6000, 6500, 6500, 7000, 6500, 7500, 7500, 8000, 6000, 8000];
+let currentScene = -1;
+let isPlaying = true;
+let sceneTimer = null;
+
+const scenes = [];
+for (let i = 0; i < TOTAL_SCENES; i++) scenes.push(document.getElementById(`scene-${i}`));
+
+const indicator = document.getElementById('sceneIndicator');
+for (let i = 0; i < TOTAL_SCENES; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'scene-dot';
+  dot.addEventListener('click', () => goToScene(i));
+  indicator.appendChild(dot);
+}
+
+function updateIndicators() {
+  indicator.querySelectorAll('.scene-dot').forEach((d, i) => d.classList.toggle('active', i === currentScene));
+}
+
+function updateProgress() {
+  document.getElementById('progressFill').style.width = ((currentScene + 1) / TOTAL_SCENES * 100) + '%';
+  document.getElementById('progressLabel').textContent = `${currentScene + 1} / ${TOTAL_SCENES}`;
+}
+
+function goToScene(index) {
+  if (index < 0 || index >= TOTAL_SCENES || index === currentScene) return;
+  clearTimeout(sceneTimer);
+  if (currentScene >= 0) scenes[currentScene].classList.remove('active');
+  currentScene = index;
+  scenes[currentScene].classList.add('active');
+  updateIndicators(); updateProgress();
+  runSceneAnimation(currentScene);
+  if (isPlaying) scheduleNext();
+}
+
+function scheduleNext() {
+  clearTimeout(sceneTimer);
+  if (currentScene < TOTAL_SCENES - 1)
+    sceneTimer = setTimeout(() => goToScene(currentScene + 1), SCENE_DURATIONS[currentScene]);
+}
+
+function nextScene() { if (currentScene < TOTAL_SCENES - 1) goToScene(currentScene + 1); }
+function prevScene() { if (currentScene > 0) goToScene(currentScene - 1); }
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('btnPlayPause');
+  btn.textContent = isPlaying ? '❚❚' : '▶';
+  btn.classList.toggle('active', isPlaying);
+  if (isPlaying) scheduleNext(); else clearTimeout(sceneTimer);
+}
+
+function restart() {
+  clearTimeout(sceneTimer);
+  if (currentScene >= 0) scenes[currentScene].classList.remove('active');
+  currentScene = -1; isPlaying = true;
+  document.getElementById('btnPlayPause').textContent = '❚❚';
+  document.getElementById('btnPlayPause').classList.add('active');
+  goToScene(0);
+}
+
+document.getElementById('btnNext').addEventListener('click', nextScene);
+document.getElementById('btnPrev').addEventListener('click', prevScene);
+document.getElementById('btnPlayPause').addEventListener('click', togglePlay);
+document.getElementById('btnRestart').addEventListener('click', restart);
+
+document.getElementById('progressTrack').addEventListener('click', (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  goToScene(Math.max(0, Math.min(TOTAL_SCENES - 1, Math.floor(pct * TOTAL_SCENES))));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextScene(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevScene(); }
+  if (e.key === 'p' || e.key === 'P') togglePlay();
+  if (e.key === 'r' || e.key === 'R') restart();
+});
+
+// ═══════════════════════════════════════════════════
+// SCENE-SPECIFIC ANIMATIONS
+// ═══════════════════════════════════════════════════
+function runSceneAnimation(index) {
+  switch (index) {
+    case 3: animateStarCounter(); break;
+    case 4: animateDashboard(); break;
+    case 5: animateQuestCompletion(); break;
+    case 6: animateRewardRedeem(); break;
+    case 7: animateCalendar(); break;
+    case 8: animateCredit(); break;
+    case 9: animateReport(); break;
+    case 10: animateLangSwitch(); break;
+  }
+}
+
+function animateNumber(el, from, to, duration, cb) {
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(from + (to - from) * ease);
+    if (t < 1) requestAnimationFrame(tick); else if (cb) cb();
+  }
+  requestAnimationFrame(tick);
+}
+
+// Scene 3: Star counter + multiplier
+function animateStarCounter() {
+  const el = document.getElementById('starCount');
+  const badges = document.querySelectorAll('.multiplier-badge');
+  let count = 0, step = 0;
+  const targets = [3, 6, 9, 14, 24];
+  badges.forEach(b => b.classList.remove('active'));
+  function tickMultiplier() {
+    if (step >= 5) return;
+    badges[step].classList.add('active');
+    if (step > 0) badges[step - 1].classList.remove('active');
+    animateNumber(el, count, targets[step], step === 4 ? 800 : 500, () => {
+      count = targets[step]; step++;
+      if (step < 5) setTimeout(tickMultiplier, 400);
+    });
+  }
+  setTimeout(tickMultiplier, 800);
+}
+
+// Scene 4: Dashboard counters
+function animateDashboard() {
+  setTimeout(() => {
+    animateNumber(document.getElementById('dashStars'), 0, 47, 1200);
+    animateNumber(document.getElementById('dashQuests'), 0, 12, 1200);
+  }, 1000);
+}
+
+// Scene 5: Quest completion
+function animateQuestCompletion() {
+  ['bq-1', 'bq-3', 'bq-5'].forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('completing'); spawnStarBurst(el); }
+    }, 2000 + i * 800);
+  });
+  setTimeout(() => {
+    ['bq-1','bq-3','bq-5'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('completing');
+    });
+  }, 6500);
+}
+
+// Scene 6: Reward redeeming
+function animateRewardRedeem() {
+  setTimeout(() => { const el = document.getElementById('rw-2'); if (el) { el.classList.add('redeeming'); spawnStarBurst(el); setTimeout(() => el.classList.remove('redeeming'), 2000); } }, 2000);
+  setTimeout(() => { const el = document.getElementById('rw-4'); if (el) { el.classList.add('redeeming'); spawnStarBurst(el); setTimeout(() => el.classList.remove('redeeming'), 2000); } }, 3500);
+}
+
+// Scene 7: Calendar day selection animation
+function animateCalendar() {
+  const days = document.querySelectorAll('#calGrid .cal-day[data-day]');
+  // Animate: click through a few days
+  const sequence = [5, 3, 10]; // days to highlight
+  let prev = document.querySelector('.cal-day.selected');
+
+  sequence.forEach((dayNum, i) => {
+    setTimeout(() => {
+      // Remove old selected
+      const oldSel = document.querySelector('.cal-day.selected');
+      if (oldSel) oldSel.classList.remove('selected');
+      // Add new selected
+      const target = document.querySelector(`.cal-day[data-day="${dayNum}"]`);
+      if (target) {
+        target.classList.add('selected');
+        spawnStarBurst(target);
+      }
+    }, 1500 + i * 1800);
+  });
+}
+
+// Scene 8: Credit usage bars
+function animateCredit() {
+  setTimeout(() => {
+    // Emma stays at 0% (no debt)
+    // Lucas fills to 56%
+    const lucasBar = document.getElementById('usage-lucas');
+    const lucasPct = document.getElementById('lucas-pct');
+    if (lucasBar) lucasBar.style.width = '56%';
+    if (lucasPct) lucasPct.textContent = '56%';
+  }, 800);
+}
+
+// Scene 9: Monthly report counters
+function animateReport() {
+  setTimeout(() => {
+    animateNumber(document.getElementById('reportEarned'), 0, 247, 1500);
+    animateNumber(document.getElementById('reportSpent'), 0, 85, 1500);
+    // Emma
+    animateNumber(document.getElementById('repEmmaEarn'), 0, 142, 1200);
+    animateNumber(document.getElementById('repEmmaSpent'), 0, 40, 1200);
+    animateNumber(document.getElementById('repEmmaNet'), 0, 102, 1200);
+    animateNumber(document.getElementById('repEmmaBalance'), 0, 348, 1200);
+    // Lucas
+    animateNumber(document.getElementById('repLucasEarn'), 0, 105, 1200);
+    animateNumber(document.getElementById('repLucasSpent'), 0, 45, 1200);
+    animateNumber(document.getElementById('repLucasNet'), 0, 60, 1200);
+    animateNumber(document.getElementById('repLucasBalance'), 0, 48, 1200);
+  }, 800);
+}
+
+// Scene 10: Language switching
+function animateLangSwitch() {
+  const enText = document.getElementById('langEN');
+  const cnText = document.getElementById('langCN');
+  const enFlag = document.getElementById('flagEN');
+  const cnFlag = document.getElementById('flagCN');
+  enText.className = 'font-display text-title lang-text visible';
+  cnText.className = 'font-cn text-title lang-text hidden-down';
+  enFlag.classList.add('active'); cnFlag.classList.remove('active');
+  let showCN = false;
+  function toggle() {
+    showCN = !showCN;
+    if (showCN) {
+      enText.className = 'font-display text-title lang-text hidden-up';
+      cnText.className = 'font-cn text-title lang-text visible';
+      enFlag.classList.remove('active'); cnFlag.classList.add('active');
+    } else {
+      enText.className = 'font-display text-title lang-text visible';
+      cnText.className = 'font-cn text-title lang-text hidden-down';
+      enFlag.classList.add('active'); cnFlag.classList.remove('active');
+    }
+  }
+  setTimeout(toggle, 2000);
+  setTimeout(toggle, 4000);
+}
+
+// ═══════════════════════════════════════════════════
+// STAR BURST PARTICLES
+// ═══════════════════════════════════════════════════
+function spawnStarBurst(targetEl) {
+  const rect = targetEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;width:${Math.random()*4+2}px;height:${Math.random()*4+2}px;background:${['#FFD700','#FEF08A','#FBBF24'][Math.floor(Math.random()*3)]};border-radius:50%;pointer-events:none;z-index:200;box-shadow:0 0 6px rgba(255,215,0,0.8);`;
+    document.body.appendChild(p);
+    const angle = (Math.PI * 2 / 12) * i + (Math.random() - 0.5) * 0.5;
+    const dist = 40 + Math.random() * 60;
+    const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
+    const dur = 600 + Math.random() * 400;
+    p.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx}px,${dy}px) scale(0)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(0.16,1,0.3,1)', fill: 'forwards' });
+    setTimeout(() => p.remove(), dur + 50);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SHOOTING STARS
+// ═══════════════════════════════════════════════════
+function spawnShootingStar() {
+  const s = document.createElement('div');
+  const x = Math.random() * W * 0.6, y = Math.random() * H * 0.3, len = 80 + Math.random() * 120;
+  s.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${len}px;height:1.5px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.8),rgba(255,255,255,0.9));border-radius:999px;pointer-events:none;z-index:5;transform-origin:left center;transform:rotate(25deg);box-shadow:0 0 4px rgba(255,215,0,0.5);`;
+  document.body.appendChild(s);
+  s.animate([
+    { transform: 'rotate(25deg) translateX(0) scaleX(0)', opacity: 0 },
+    { transform: 'rotate(25deg) translateX(0) scaleX(1)', opacity: 1, offset: 0.1 },
+    { transform: `rotate(25deg) translateX(${200+Math.random()*300}px) scaleX(1)`, opacity: 1, offset: 0.6 },
+    { transform: `rotate(25deg) translateX(${400+Math.random()*400}px) scaleX(0.3)`, opacity: 0 }
+  ], { duration: 1200 + Math.random() * 800, easing: 'ease-in', fill: 'forwards' });
+  setTimeout(() => s.remove(), 2200);
+}
+setInterval(() => { if (Math.random() < 0.4) spawnShootingStar(); }, 3000);
+
+// ═══════════════════════════════════════════════════
+// LAUNCH
+// ═══════════════════════════════════════════════════
+setTimeout(() => goToScene(0), 500);
+</script>
+</body>
+</html>
