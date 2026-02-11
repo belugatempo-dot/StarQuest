@@ -154,10 +154,8 @@ lib/
 - Auto-resets on quest change
 - `starsToRecord = baseStars * multiplier`
 
-### Time-Based Theme (`ThemeProvider.tsx`)
-- Day (7AM-6PM): Tiffany blue (#81D8D0)
-- Night (6PM-7AM): Starry dark blue
-- Auto-refresh every 60s
+### Theme (`ThemeProvider.tsx`)
+- Always uses starry dark blue (night) theme
 - Usage: `const { mode, isDayMode, isNightMode } = useTheme()`
 
 ### Credit System
