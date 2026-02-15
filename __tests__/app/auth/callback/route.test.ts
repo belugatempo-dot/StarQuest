@@ -59,7 +59,7 @@ describe("auth/callback route handler", () => {
       });
     });
 
-    it("logs success message on successful verification", async () => {
+    it("does not log to console on successful verification", async () => {
       mockVerifyOtp.mockResolvedValue({ error: null });
       const consoleSpy = jest.spyOn(console, "log");
 
@@ -68,7 +68,7 @@ describe("auth/callback route handler", () => {
       );
       await GET(request);
 
-      expect(consoleSpy).toHaveBeenCalledWith("✅ Email verification successful");
+      expect(consoleSpy).not.toHaveBeenCalled();
     });
   });
 

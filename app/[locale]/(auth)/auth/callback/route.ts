@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      console.log("✅ Email verification successful");
       return NextResponse.redirect(`${origin}/${locale}/auth/confirmed`);
     }
 
