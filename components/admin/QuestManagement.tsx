@@ -30,7 +30,7 @@ export default function QuestManagement({
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(["duties", "family", "self", "others", "violations"])
+    new Set()
   );
 
   const questGroups = groupQuests(quests);

@@ -98,6 +98,13 @@ describe('QuestManagement', () => {
     global.confirm = jest.fn(() => true)
   })
 
+  // Helper: expand all collapsed groups by clicking all ▶ icons
+  const expandAllGroups = () => {
+    screen.queryAllByText('▶').forEach((icon) => {
+      fireEvent.click(icon.closest('button')!)
+    })
+  }
+
   describe('Rendering', () => {
     it('renders quest management with quest count', () => {
       render(
@@ -120,6 +127,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       // Should have duty, bonus family, and violation groups
       expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
@@ -131,6 +139,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getByText(/inactive/i)).toBeInTheDocument()
     })
@@ -139,6 +148,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       // Duty: 0 stars
       expect(screen.getByText(/^0 ⭐$/)).toBeInTheDocument()
@@ -152,6 +162,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getByText(/hygiene/i)).toBeInTheDocument()
       expect(screen.getByText(/chores/i)).toBeInTheDocument()
@@ -161,6 +172,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getByText('🦷')).toBeInTheDocument()
       expect(screen.getByText('👨‍🍳')).toBeInTheDocument()
@@ -191,45 +203,50 @@ describe('QuestManagement', () => {
   })
 
   describe('Group Expand/Collapse', () => {
-    it('all groups are expanded by default', () => {
+    it('all groups are collapsed by default', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
 
-      // All quests should be visible
-      expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
-      expect(screen.getByText(/help mom cook/i)).toBeInTheDocument()
-      expect(screen.getByText(/fighting/i)).toBeInTheDocument()
+      // Quest content should NOT be visible (groups collapsed)
+      expect(screen.queryByText(/brush teeth/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/help mom cook/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/fighting/i)).not.toBeInTheDocument()
+
+      // Group headers should still be visible
+      expect(screen.getByText(/my duties/i)).toBeInTheDocument()
+      expect(screen.getByText(/helping family/i)).toBeInTheDocument()
+      expect(screen.getByText(/violations/i)).toBeInTheDocument()
     })
 
-    it('collapses group when clicking header', async () => {
+    it('expands group when clicking header', async () => {
       const user = userEvent.setup()
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
 
-      // Find and click a group header
-      const groupHeaders = screen.getAllByRole('button')
-      const dutyHeader = groupHeaders.find((btn) =>
-        btn.textContent?.includes('Brush Teeth')
-      )
+      // All collapsed — quest names not visible
+      expect(screen.queryByText('Brush Teeth')).not.toBeInTheDocument()
 
-      if (dutyHeader?.parentElement) {
-        await user.click(dutyHeader.parentElement)
-      }
+      // Click the first group header (▶) to expand it
+      const expandIcons = screen.getAllByText('▶')
+      await user.click(expandIcons[0].closest('button')!)
 
-      // Quest should still be visible as it's in the content
-      expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
+      // The first group content should now be visible
+      // First group is "My Duties" containing "Brush Teeth"
+      expect(screen.getByText('Brush Teeth')).toBeInTheDocument()
     })
 
-    it('shows collapse/expand icons', () => {
+    it('shows expand icons for collapsed groups', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
 
-      // Should show collapse icon (▼) for expanded groups
-      const collapseIcons = screen.getAllByText('▼')
-      expect(collapseIcons.length).toBeGreaterThan(0)
+      // Should show expand icon (▶) for collapsed groups
+      const expandIcons = screen.getAllByText('▶')
+      expect(expandIcons).toHaveLength(3) // duties, family bonus, violations
+      // No collapse icons should be present
+      expect(screen.queryAllByText('▼')).toHaveLength(0)
     })
   })
 
@@ -288,6 +305,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const editButtons = screen.getAllByRole('button', { name: /edit/i })
       await user.click(editButtons[0])
@@ -300,6 +318,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="zh-CN" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getAllByText(/编辑/i).length).toBeGreaterThan(0)
     })
@@ -309,6 +328,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const editButtons = screen.getAllByRole('button', { name: /edit/i })
       await user.click(editButtons[0])
@@ -330,6 +350,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const disableButtons = screen.getAllByRole('button', { name: /disable/i })
       await user.click(disableButtons[0])
@@ -345,6 +366,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const enableButton = screen.getByRole('button', { name: /enable/i })
       await user.click(enableButton)
@@ -359,6 +381,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="zh-CN" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getAllByText(/停用/i).length).toBeGreaterThan(0)
     })
@@ -367,6 +390,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="zh-CN" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getByText(/启用/i)).toBeInTheDocument()
     })
@@ -384,6 +408,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const disableButtons = screen.getAllByRole('button', { name: /disable/i })
       await user.click(disableButtons[0])
@@ -403,6 +428,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
       await user.click(deleteButtons[0])
@@ -417,6 +443,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
       await user.click(deleteButtons[0])
@@ -434,6 +461,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
       await user.click(deleteButtons[0])
@@ -446,6 +474,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="zh-CN" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getAllByText(/删除/i).length).toBeGreaterThan(0)
     })
@@ -458,6 +487,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="zh-CN" familyId="family-1" />
       )
+      expandAllGroups()
 
       const deleteButtons = screen.getAllByRole('button', { name: /删除/i })
       await user.click(deleteButtons[0])
@@ -480,6 +510,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
       await user.click(deleteButtons[0])
@@ -495,6 +526,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
       expect(screen.getByText(/help mom cook/i)).toBeInTheDocument()
@@ -505,6 +537,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="zh-CN" familyId="family-1" />
       )
+      expandAllGroups()
 
       expect(screen.getByText(/刷牙/i)).toBeInTheDocument()
       expect(screen.getByText(/帮妈妈做饭/i)).toBeInTheDocument()
@@ -526,61 +559,74 @@ describe('QuestManagement', () => {
           familyId="family-1"
         />
       )
+      expandAllGroups()
 
       expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
     })
   })
 
   describe('Group Collapse/Expand - content visibility', () => {
-    it('hides group content when group header is clicked to collapse', async () => {
+    it('shows group content when group header is clicked to expand', async () => {
       const user = userEvent.setup()
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
 
-      // All quests should be visible initially
-      expect(screen.getByText(/brush teeth/i)).toBeInTheDocument()
-
-      // Find the collapse icons (▼) - these are inside group header buttons
-      const collapseIcons = screen.getAllByText('▼')
-      // Click the first group header button (the one containing the first ▼)
-      const firstGroupHeaderButton = collapseIcons[0].closest('button')!
-      await user.click(firstGroupHeaderButton)
-
-      // After collapsing, the icon should change to ▶ for that group
-      // The first group is "duties" which contains "Brush Teeth"
-      // After collapse, "Brush Teeth" should no longer be visible in the duties group content
-      // But it depends on which group is first - let's check what groups exist
-      // From groupQuests: duties (Brush Teeth), family bonus (Help Mom Cook), violations (Fighting)
-      // The first ▼ corresponds to "My Duties" group containing "Brush Teeth"
+      // All groups collapsed — quest names not visible
       expect(screen.queryByText('Brush Teeth')).not.toBeInTheDocument()
-      // The expand icon ▶ should now appear
-      expect(screen.getByText('▶')).toBeInTheDocument()
+
+      // Click the first group header (▶) to expand
+      const expandIcons = screen.getAllByText('▶')
+      await user.click(expandIcons[0].closest('button')!)
+
+      // First group is "My Duties" containing "Brush Teeth"
+      expect(screen.getByText('Brush Teeth')).toBeInTheDocument()
+      // The expanded group should now show ▼
+      expect(screen.getAllByText('▼')).toHaveLength(1)
+      // Remaining groups still collapsed
+      expect(screen.getAllByText('▶')).toHaveLength(2)
     })
 
-    it('re-expands group content when collapsed group header is clicked again', async () => {
+    it('hides group content when expanded group header is clicked to collapse', async () => {
       const user = userEvent.setup()
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
 
-      // Collapse first group
-      const collapseIcons = screen.getAllByText('▼')
-      const firstGroupHeaderButton = collapseIcons[0].closest('button')!
-      await user.click(firstGroupHeaderButton)
+      // Expand first group
+      const expandIcons = screen.getAllByText('▶')
+      await user.click(expandIcons[0].closest('button')!)
+      expect(screen.getByText('Brush Teeth')).toBeInTheDocument()
 
-      // Verify collapsed
+      // Collapse it again by clicking the ▼
+      const collapseIcon = screen.getByText('▼')
+      await user.click(collapseIcon.closest('button')!)
+
+      // Content should be hidden again
+      expect(screen.queryByText('Brush Teeth')).not.toBeInTheDocument()
+      // All icons should be ▶ again
+      expect(screen.queryAllByText('▼')).toHaveLength(0)
+      expect(screen.getAllByText('▶')).toHaveLength(3)
+    })
+
+    it('re-expands group content after collapsing', async () => {
+      const user = userEvent.setup()
+      render(
+        <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
+      )
+
+      // Expand → collapse → re-expand
+      const expandIcons = screen.getAllByText('▶')
+      await user.click(expandIcons[0].closest('button')!)
+      expect(screen.getByText('Brush Teeth')).toBeInTheDocument()
+
+      const collapseIcon = screen.getByText('▼')
+      await user.click(collapseIcon.closest('button')!)
       expect(screen.queryByText('Brush Teeth')).not.toBeInTheDocument()
 
-      // Re-expand by clicking the same header (now has ▶)
-      const expandIcon = screen.getByText('▶')
-      const expandButton = expandIcon.closest('button')!
-      await user.click(expandButton)
-
-      // Content should be visible again
+      const expandIconsAgain = screen.getAllByText('▶')
+      await user.click(expandIconsAgain[0].closest('button')!)
       expect(screen.getByText('Brush Teeth')).toBeInTheDocument()
-      // All icons should be ▼ again
-      expect(screen.queryByText('▶')).not.toBeInTheDocument()
     })
   })
 
@@ -630,6 +676,7 @@ describe('QuestManagement', () => {
           categories={mockCategories}
         />
       )
+      expandAllGroups()
 
       // Quest 1 has category "hygiene" which matches cat-1
       // Should display "🧼 Hygiene" instead of just "hygiene"
@@ -647,6 +694,7 @@ describe('QuestManagement', () => {
           categories={mockCategories}
         />
       )
+      expandAllGroups()
 
       // In zh-CN, should show Chinese names
       expect(screen.getByText('🧼 卫生')).toBeInTheDocument()
@@ -682,6 +730,7 @@ describe('QuestManagement', () => {
           categories={mockCategories}
         />
       )
+      expandAllGroups()
 
       // Should fall back to raw category name
       expect(screen.getByText('unknowncat')).toBeInTheDocument()
@@ -721,6 +770,7 @@ describe('QuestManagement', () => {
           familyId="family-1"
         />
       )
+      expandAllGroups()
 
       // Should display English name as fallback
       expect(screen.getByText('Help Mom Cook')).toBeInTheDocument()
@@ -741,6 +791,7 @@ describe('QuestManagement', () => {
           familyId="family-1"
         />
       )
+      expandAllGroups()
 
       // The fallback icon "📝" should be displayed
       expect(screen.getByText('📝')).toBeInTheDocument()
@@ -753,6 +804,7 @@ describe('QuestManagement', () => {
       render(
         <QuestManagement quests={mockQuests} locale="en" familyId="family-1" />
       )
+      expandAllGroups()
 
       // Open edit modal
       const editButtons = screen.getAllByRole('button', { name: /edit/i })

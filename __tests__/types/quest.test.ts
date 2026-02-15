@@ -159,6 +159,16 @@ describe("Quest Type System", () => {
       expect(violationsGroup!.quests[0].type).toBe("violation");
     });
 
+    it("should return groups in correct order: self, duties, family, others, violations", () => {
+      const groups = groupQuests(mockQuests);
+
+      expect(groups[0].key).toBe("self");
+      expect(groups[1].key).toBe("duties");
+      expect(groups[2].key).toBe("family");
+      expect(groups[3].key).toBe("others");
+      expect(groups[4].key).toBe("violations");
+    });
+
     it("should filter out empty groups", () => {
       const bonusOnly = mockQuests.filter((q) => q.type === "bonus");
       const groups = groupQuests(bonusOnly);

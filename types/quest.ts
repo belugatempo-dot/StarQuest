@@ -38,6 +38,13 @@ export interface QuestGroup {
 export const groupQuests = (quests: Quest[]): QuestGroup[] => {
   return [
     {
+      key: "self",
+      title_en: "Self Bonus",
+      title_zh: "自我提升",
+      icon: "⭐",
+      quests: quests.filter((q) => q.type === "bonus" && q.scope === "self"),
+    },
+    {
       key: "duties",
       title_en: "My Duties",
       title_zh: "日常本分",
@@ -50,13 +57,6 @@ export const groupQuests = (quests: Quest[]): QuestGroup[] => {
       title_zh: "帮助家人",
       icon: "👨‍👩‍👧",
       quests: quests.filter((q) => q.type === "bonus" && q.scope === "family"),
-    },
-    {
-      key: "self",
-      title_en: "Self Bonus",
-      title_zh: "自我提升",
-      icon: "⭐",
-      quests: quests.filter((q) => q.type === "bonus" && q.scope === "self"),
     },
     {
       key: "others",

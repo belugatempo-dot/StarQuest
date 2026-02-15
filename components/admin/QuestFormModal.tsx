@@ -223,7 +223,7 @@ export default function QuestFormModal({
           <input type="number" value={stars}
             onChange={(e) => setStars(Number(e.target.value))}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-            min="-100" max="100" required
+            min="-200" max="200" required
           />
           <p className="text-sm text-gray-500 mt-1">
             {locale === "zh-CN" ? "正数为奖励，负数为扣除" : "Positive for rewards, negative for deductions"}
