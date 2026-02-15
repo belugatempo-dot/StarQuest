@@ -131,6 +131,11 @@ export default async function ChildDashboard({
                         locale === "zh-CN" ? "zh-CN" : "en-US"
                       )}
                     </p>
+                    {transaction.child_note && (
+                      <p className="text-xs text-gray-600 italic mt-1 truncate max-w-[300px]">
+                        &quot;{transaction.child_note}&quot;
+                      </p>
+                    )}
                   </div>
                 </div>
                 <span

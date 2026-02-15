@@ -149,6 +149,11 @@ export default function ActivityItem({
                   {statusBadge.label}
                 </span>
               </p>
+              {activity.childNote && (
+                <p className="text-sm text-gray-700 mt-1 italic">
+                  &quot;{activity.childNote}&quot;
+                </p>
+              )}
               {activity.parentResponse && (
                 <p className="text-sm text-gray-600 mt-1">
                   💬 {activity.parentResponse}
@@ -208,14 +213,18 @@ export default function ActivityItem({
               </p>
             )}
 
-            {/* Parent Response (for rejected) */}
-            {activity.status === "rejected" && activity.parentResponse && (
-              <div className="mt-2 p-2 bg-danger/10 rounded border border-danger/20">
-                <p className="text-xs font-semibold text-danger">
-                  {t("history.rejectionReason")}:
-                </p>
-                <p className="text-sm text-danger">{activity.parentResponse}</p>
-              </div>
+            {/* Parent Response */}
+            {activity.parentResponse && (
+              activity.status === "rejected" ? (
+                <div className="mt-2 p-2 bg-danger/10 rounded border border-danger/20">
+                  <p className="text-xs font-semibold text-danger">
+                    {t("history.rejectionReason")}:
+                  </p>
+                  <p className="text-sm text-danger">{activity.parentResponse}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1">💬 {activity.parentResponse}</p>
+              )
             )}
 
             {/* Pending indicator (child view) */}
