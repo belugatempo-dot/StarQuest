@@ -50,7 +50,7 @@ export default function ActivityItem({
 
   // Stars color class
   const getStarsColorClass = () => {
-    if (activity.status === "rejected") return "text-gray-400 line-through";
+    if (activity.status === "rejected") return "text-slate-500 line-through";
     if (activity.status === "pending") return "text-yellow-600";
     if (variant === "list") {
       return activity.stars > 0 ? "text-success" : "text-danger";
@@ -63,18 +63,18 @@ export default function ActivityItem({
     if (variant === "list") {
       if (activity.status === "rejected") return "bg-danger/5 border-danger/20";
       if (activity.status === "pending") return "bg-warning/5 border-warning/20";
-      if (activity.type === "redemption") return "border-purple-200 bg-purple-50";
-      if (activity.type === "credit_transaction") return "border-blue-200 bg-blue-50";
-      return "bg-gray-50 border-gray-200";
+      if (activity.type === "redemption") return "border-purple-500/30 bg-purple-500/10";
+      if (activity.type === "credit_transaction") return "border-blue-500/30 bg-blue-500/10";
+      return "bg-white/5 border-white/10";
     }
     // calendar variant
-    if (activity.status === "rejected") return "border-gray-300 bg-gray-50";
-    if (activity.status === "pending") return "border-yellow-200 bg-yellow-50";
-    if (activity.type === "redemption") return "border-purple-200 bg-purple-50";
-    if (activity.type === "credit_transaction") return "border-blue-200 bg-blue-50";
+    if (activity.status === "rejected") return "border-white/20 bg-white/5";
+    if (activity.status === "pending") return "border-yellow-500/30 bg-yellow-500/10";
+    if (activity.type === "redemption") return "border-purple-500/30 bg-purple-500/10";
+    if (activity.type === "credit_transaction") return "border-blue-500/30 bg-blue-500/10";
     return activity.stars > 0
-      ? "border-green-200 bg-green-50"
-      : "border-red-200 bg-red-50";
+      ? "border-green-500/30 bg-green-500/10"
+      : "border-red-500/30 bg-red-500/10";
   };
 
   // Selection checkbox (shared)
@@ -83,7 +83,7 @@ export default function ActivityItem({
       type="checkbox"
       checked={isSelected}
       onChange={onToggleSelection}
-      className={`w-5 h-5 ${variant === "list" ? "mt-1" : ""} rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer`}
+      className={`w-5 h-5 ${variant === "list" ? "mt-1" : ""} rounded border-white/20 text-purple-300 focus:ring-purple-500 cursor-pointer`}
     />
   );
 
@@ -95,8 +95,8 @@ export default function ActivityItem({
       <button
         onClick={onEdit}
         className={variant === "list"
-          ? "px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
-          : "px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"}
+          ? "px-3 py-1 text-xs bg-blue-500/20 text-blue-300 rounded hover:bg-blue-200 transition"
+          : "px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded hover:bg-blue-200 transition"}
       >
         {variant === "list" ? `✏️ ${t("common.edit")}` : "✏️"}
       </button>
@@ -105,8 +105,8 @@ export default function ActivityItem({
           onClick={onDelete}
           disabled={deletingId === activity.id}
           className={variant === "list"
-            ? "px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"
-            : "px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50"}
+            ? "px-3 py-1 text-xs bg-red-500/20 text-red-300 rounded hover:bg-red-200 transition disabled:opacity-50"
+            : "px-2 py-1 text-xs bg-red-500/20 text-red-300 rounded hover:bg-red-200 transition disabled:opacity-50"}
         >
           {variant === "list" ? `🗑️ ${t("common.delete")}` : "🗑️"}
         </button>
@@ -136,7 +136,7 @@ export default function ActivityItem({
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-400">
                 {showChildName && `👤 ${activity.childName} • `}
                 {new Date(activity.createdAt).toLocaleTimeString(
                   locale === "zh-CN" ? "zh-CN" : "en-US",
@@ -150,12 +150,12 @@ export default function ActivityItem({
                 </span>
               </p>
               {activity.childNote && (
-                <p className="text-sm text-gray-700 mt-1 italic">
+                <p className="text-sm text-slate-300 mt-1 italic">
                   &quot;{activity.childNote}&quot;
                 </p>
               )}
               {activity.parentResponse && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-slate-400 mt-1">
                   💬 {activity.parentResponse}
                 </p>
               )}
@@ -193,13 +193,13 @@ export default function ActivityItem({
                 {typeBadge.icon} {typeBadge.label}
               </span>
             )}
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-400">
               {formatActivityDate(activity.createdAt, locale)}
             </p>
 
             {/* Source (child view) */}
             {!permissions.canFilterByType && activity.source && (
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 {activity.source === "parent_record"
                   ? t("history.parentRecorded")
                   : t("history.youRequested")}
@@ -208,7 +208,7 @@ export default function ActivityItem({
 
             {/* Child Note */}
             {activity.childNote && (
-              <p className="text-sm text-gray-700 mt-2 italic">
+              <p className="text-sm text-slate-300 mt-2 italic">
                 &quot;{activity.childNote}&quot;
               </p>
             )}
@@ -223,7 +223,7 @@ export default function ActivityItem({
                   <p className="text-sm text-danger">{activity.parentResponse}</p>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 mt-1">💬 {activity.parentResponse}</p>
+                <p className="text-sm text-slate-400 mt-1">💬 {activity.parentResponse}</p>
               )
             )}
 
@@ -241,7 +241,7 @@ export default function ActivityItem({
               activity.source === "child_request" && (
                 <button
                   onClick={onResubmit}
-                  className="mt-2 px-3 py-1 text-sm bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition font-medium"
+                  className="mt-2 px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
                 >
                   {t("activity.editResubmit")}
                 </button>

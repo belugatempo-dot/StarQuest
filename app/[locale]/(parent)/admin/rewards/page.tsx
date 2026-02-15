@@ -84,7 +84,7 @@ export default async function RewardManagementPage({
             <h1 className="text-3xl font-bold mb-2">
               {t("admin.manageRewards")}
             </h1>
-            <p className="text-gray-700">
+            <p className="text-slate-300">
               {locale === "zh-CN"
                 ? "管理孩子可以兑换的奖励"
                 : "Manage rewards that children can redeem"}
@@ -93,7 +93,7 @@ export default async function RewardManagementPage({
           <div className="text-right">
             <div className="flex gap-6">
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "启用的" : "Active"}
                 </div>
                 <div className="text-3xl font-bold text-success">
@@ -101,10 +101,10 @@ export default async function RewardManagementPage({
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "已停用" : "Inactive"}
                 </div>
-                <div className="text-3xl font-bold text-gray-500">
+                <div className="text-3xl font-bold text-slate-400">
                   {inactiveRewards.length}
                 </div>
               </div>

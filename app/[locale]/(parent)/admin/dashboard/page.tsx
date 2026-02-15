@@ -129,7 +129,7 @@ export default async function AdminDashboard({
         <h1 className="text-3xl font-bold mb-2">
           Welcome, {user.name}!
         </h1>
-        <p className="text-gray-600">
+        <p className="text-slate-400">
           Manage your family&apos;s quest progress and rewards
         </p>
       </div>
@@ -138,15 +138,15 @@ export default async function AdminDashboard({
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Pending Approvals */}
         <a href="#approval-center">
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+          <div className="dark-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-700">
+              <h3 className="text-lg font-semibold text-slate-300">
                 {t("admin.pendingApprovals")}
               </h3>
               <span className="text-3xl">⏳</span>
             </div>
             <p className="text-4xl font-bold text-warning">{totalPending}</p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-400 mt-1">
               {starRequests?.length || 0} stars, {redemptionRequests?.length || 0} redemptions
             </p>
           </div>
@@ -154,15 +154,15 @@ export default async function AdminDashboard({
 
         {/* Family Members */}
         <a href="#family-management">
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+          <div className="dark-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-700">
+              <h3 className="text-lg font-semibold text-slate-300">
                 {locale === "zh-CN" ? "家庭成员" : "Family Members"}
               </h3>
               <span className="text-3xl">👥</span>
             </div>
             <p className="text-4xl font-bold text-secondary">{totalFamilyMembers}</p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-400 mt-1">
               {parentsCount} {locale === "zh-CN" ? "家长" : (parentsCount === 1 ? "parent" : "parents")}, {childrenCount} {locale === "zh-CN" ? "孩子" : (childrenCount === 1 ? "child" : "children")}
             </p>
           </div>
@@ -170,9 +170,9 @@ export default async function AdminDashboard({
 
         {/* Quick Record */}
         <Link href={`/${locale}/admin/record`}>
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+          <div className="dark-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-700">
+              <h3 className="text-lg font-semibold text-slate-300">
                 Quick Record
               </h3>
               <span className="text-3xl">⚡</span>
@@ -180,23 +180,23 @@ export default async function AdminDashboard({
             <p className="text-xl font-semibold text-primary mt-4">
               {t("admin.recordStars")}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Click to add stars</p>
+            <p className="text-sm text-slate-400 mt-1">Click to add stars</p>
           </div>
         </Link>
 
         {/* Credit Management */}
         <Link href={`/${locale}/admin/credit`}>
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+          <div className="dark-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-700">
+              <h3 className="text-lg font-semibold text-slate-300">
                 Credit Management
               </h3>
               <span className="text-3xl">💳</span>
             </div>
-            <p className="text-xl font-semibold text-purple-600 mt-4">
+            <p className="text-xl font-semibold text-purple-300 mt-4">
               {locale === "zh-CN" ? "信用管理" : "Manage Credit"}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-400 mt-1">
               {locale === "zh-CN" ? "设置额度和利率" : "Set limits & rates"}
             </p>
           </div>
@@ -215,12 +215,12 @@ export default async function AdminDashboard({
                 <h2 className="text-2xl font-bold mb-1">
                   {t("admin.approvalCenter")}
                 </h2>
-                <p className="text-gray-700">
+                <p className="text-slate-300">
                   Review and approve requests from your children
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {t("admin.pendingApprovals")}
                 </div>
                 <div className="text-4xl font-bold text-warning">{totalPending}</div>
@@ -237,7 +237,7 @@ export default async function AdminDashboard({
       )}
 
       {/* Children Overview */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-4">Children Overview</h2>
         {children && children.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -255,20 +255,20 @@ export default async function AdminDashboard({
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">{child.name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-400">
                         Level {(balance as any)?.lifetime_stars || 0}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3 flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-gray-600">Current Stars</p>
+                      <p className="text-sm text-slate-400">Current Stars</p>
                       <p className="text-2xl font-bold text-primary">
                         {(balance as any)?.current_stars || 0}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-600">Lifetime</p>
+                      <p className="text-sm text-slate-400">Lifetime</p>
                       <p className="text-xl font-semibold text-success">
                         {(balance as any)?.lifetime_stars || 0}
                       </p>
@@ -280,7 +280,7 @@ export default async function AdminDashboard({
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No children added yet</p>
+            <p className="text-slate-400 mb-4">No children added yet</p>
           </div>
         )}
       </div>
@@ -288,10 +288,10 @@ export default async function AdminDashboard({
       {/* Family Management Section */}
       <div id="family-management">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">
+          <h2 className="text-2xl font-bold text-white mb-1">
             {t("family.title")}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-slate-400">
             {t("family.subtitle")}: <span className="font-semibold">{(family as any)?.name}</span>
           </p>
         </div>

@@ -56,7 +56,7 @@ export default async function ChildDashboard({
         <h1 className="text-3xl font-bold mb-2">
           👋 {t("dashboard.title")}, {user.name}!
         </h1>
-        <p className="text-gray-600">
+        <p className="text-slate-400">
           Keep up the great work! You're doing amazing.
         </p>
       </div>
@@ -64,33 +64,33 @@ export default async function ChildDashboard({
       {/* Stats Cards */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* Current Balance */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-700">
+            <h3 className="text-lg font-semibold text-slate-300">
               {t("dashboard.currentBalance")}
             </h3>
             <span className="text-3xl">⭐</span>
           </div>
           <p className="text-4xl font-bold text-primary">{currentStars}</p>
-          <p className="text-sm text-gray-500 mt-1">{t("common.stars")}</p>
+          <p className="text-sm text-slate-400 mt-1">{t("common.stars")}</p>
         </div>
 
         {/* Lifetime Stars */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-700">
+            <h3 className="text-lg font-semibold text-slate-300">
               {t("dashboard.lifetimeStars")}
             </h3>
             <span className="text-3xl">✨</span>
           </div>
           <p className="text-4xl font-bold text-success">{lifetimeStars}</p>
-          <p className="text-sm text-gray-500 mt-1">Total earned</p>
+          <p className="text-sm text-slate-400 mt-1">Total earned</p>
         </div>
 
         {/* Current Level */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-700">
+            <h3 className="text-lg font-semibold text-slate-300">
               {t("dashboard.currentLevel")}
             </h3>
             <span className="text-3xl">{(currentLevel as any)?.icon}</span>
@@ -100,21 +100,21 @@ export default async function ChildDashboard({
               ? (currentLevel as any)?.name_zh || (currentLevel as any)?.name_en
               : (currentLevel as any)?.name_en}
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Level {(currentLevel as any)?.level_number}
           </p>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-4">{t("dashboard.recentActivity")}</h2>
         {recentTransactions && recentTransactions.length > 0 ? (
           <div className="space-y-3">
             {recentTransactions.map((transaction: any) => (
               <div
                 key={transaction.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">
@@ -126,13 +126,13 @@ export default async function ChildDashboard({
                         ? transaction.quests?.name_zh || transaction.quests?.name_en || transaction.custom_description
                         : transaction.quests?.name_en || transaction.custom_description}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-slate-400">
                       {new Date(transaction.created_at).toLocaleDateString(
                         locale === "zh-CN" ? "zh-CN" : "en-US"
                       )}
                     </p>
                     {transaction.child_note && (
-                      <p className="text-xs text-gray-600 italic mt-1 truncate max-w-[300px]">
+                      <p className="text-xs text-slate-400 italic mt-1 truncate max-w-[300px]">
                         &quot;{transaction.child_note}&quot;
                       </p>
                     )}
@@ -150,7 +150,7 @@ export default async function ChildDashboard({
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-slate-400 text-center py-8">
             No recent activity yet. Start completing quests!
           </p>
         )}

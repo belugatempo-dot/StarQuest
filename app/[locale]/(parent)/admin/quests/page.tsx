@@ -48,7 +48,7 @@ export default async function QuestManagementPage({
             <h1 className="text-3xl font-bold mb-2">
               {t("admin.questManagement")}
             </h1>
-            <p className="text-gray-700">
+            <p className="text-slate-300">
               {locale === "zh-CN"
                 ? "管理孩子的任务和活动"
                 : "Manage tasks and activities for your children"}
@@ -57,7 +57,7 @@ export default async function QuestManagementPage({
           <div className="text-right">
             <div className="flex gap-6">
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "正向任务" : "Positive Tasks"}
                 </div>
                 <div className="text-3xl font-bold text-success">
@@ -65,7 +65,7 @@ export default async function QuestManagementPage({
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "负向任务" : "Negative Tasks"}
                 </div>
                 <div className="text-3xl font-bold text-danger">

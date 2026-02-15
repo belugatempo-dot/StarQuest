@@ -455,10 +455,10 @@ describe("RewardGrid", () => {
       );
 
       // Find the reward card for screen time, then find the badge within it
-      const rewardCard = screen.getByText("30 mins screen time").closest(".bg-white");
+      const rewardCard = screen.getByText("30 mins screen time").closest(".dark-card");
       const screenTimeBadge = within(rewardCard!).getByText("rewards.category.screen_time");
-      expect(screenTimeBadge.className).toContain("bg-blue-100");
-      expect(screenTimeBadge.className).toContain("text-blue-700");
+      expect(screenTimeBadge.className).toContain("bg-blue-500/15");
+      expect(screenTimeBadge.className).toContain("text-blue-300");
     });
 
     it("should apply correct color for toys category", () => {
@@ -466,10 +466,10 @@ describe("RewardGrid", () => {
         <RewardGrid rewards={mockRewards} currentStars={100} locale="en" userId="user-123" />
       );
 
-      const rewardCard = screen.getByText("Toy car").closest(".bg-white");
+      const rewardCard = screen.getByText("Toy car").closest(".dark-card");
       const toysBadge = within(rewardCard!).getByText("rewards.category.toys");
-      expect(toysBadge.className).toContain("bg-pink-100");
-      expect(toysBadge.className).toContain("text-pink-700");
+      expect(toysBadge.className).toContain("bg-pink-500/15");
+      expect(toysBadge.className).toContain("text-pink-300");
     });
 
     it("should apply correct color for treats category", () => {
@@ -477,10 +477,10 @@ describe("RewardGrid", () => {
         <RewardGrid rewards={mockRewards} currentStars={100} locale="en" userId="user-123" />
       );
 
-      const rewardCard = screen.getByText("Ice cream").closest(".bg-white");
+      const rewardCard = screen.getByText("Ice cream").closest(".dark-card");
       const treatsBadge = within(rewardCard!).getByText("rewards.category.treats");
-      expect(treatsBadge.className).toContain("bg-orange-100");
-      expect(treatsBadge.className).toContain("text-orange-700");
+      expect(treatsBadge.className).toContain("bg-orange-500/15");
+      expect(treatsBadge.className).toContain("text-orange-300");
     });
 
     it("should apply correct color for activities category", () => {
@@ -488,10 +488,10 @@ describe("RewardGrid", () => {
         <RewardGrid rewards={mockRewards} currentStars={100} locale="en" userId="user-123" />
       );
 
-      const rewardCard = screen.getByText("Park visit").closest(".bg-white");
+      const rewardCard = screen.getByText("Park visit").closest(".dark-card");
       const activitiesBadge = within(rewardCard!).getByText("rewards.category.activities");
-      expect(activitiesBadge.className).toContain("bg-green-100");
-      expect(activitiesBadge.className).toContain("text-green-700");
+      expect(activitiesBadge.className).toContain("bg-green-500/15");
+      expect(activitiesBadge.className).toContain("text-green-300");
     });
   });
 
@@ -517,11 +517,11 @@ describe("RewardGrid", () => {
 
       // The category text appears in both the filter button and the badge.
       // Scope to the reward card to find the badge span (which has border class).
-      const rewardCard = screen.getByText("Mystery reward").closest(".bg-white");
+      const rewardCard = screen.getByText("Mystery reward").closest(".dark-card");
       const badge = within(rewardCard!).getByText("rewards.category.unknown_category");
       // getCategoryColor returns colors.other for unknown categories
-      expect(badge.className).toContain("bg-gray-100");
-      expect(badge.className).toContain("text-gray-700");
+      expect(badge.className).toContain("bg-white/10");
+      expect(badge.className).toContain("text-slate-300");
     });
 
     it("should apply fallback color when category is null", () => {

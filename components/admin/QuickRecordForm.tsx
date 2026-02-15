@@ -142,7 +142,7 @@ export default function QuickRecordForm({
   const violationQuests = quests.filter((q) => q.type === "violation");
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="dark-card rounded-lg shadow-md p-6 space-y-6">
       {/* Success Message */}
       {success && (
         <div className="bg-success/10 border border-success text-success px-4 py-3 rounded flex items-center">
@@ -160,11 +160,11 @@ export default function QuickRecordForm({
 
       {/* Select Child */}
       <div className={`${!selectedChild && children.length > 1 ? 'ring-2 ring-red-300 rounded-lg p-4' : ''}`}>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
           {t("admin.selectChild")} {children.length > 1 ? '*' : ''}
         </label>
         {children.length === 0 ? (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+          <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-300 text-sm">
             No children in your family yet. Add a child in Family Management.
           </div>
         ) : (
@@ -176,7 +176,7 @@ export default function QuickRecordForm({
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedChild === child.id
                     ? "border-secondary bg-secondary/10"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-white/10 hover:border-white/20"
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -185,7 +185,7 @@ export default function QuickRecordForm({
                   </div>
                   <div>
                     <div className="font-semibold">{child.name}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-slate-400">
                       {locale === child.locale ? "Same language" : child.locale}
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export default function QuickRecordForm({
 
       {/* Record Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
           {t("admin.recordDate")} *
         </label>
         <input
@@ -206,7 +206,7 @@ export default function QuickRecordForm({
           value={recordDate}
           onChange={(e) => setRecordDate(e.target.value)}
           max={maxDate || undefined}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           required
         />
       </div>
@@ -214,7 +214,7 @@ export default function QuickRecordForm({
       {/* Bonus Quests - Did Good */}
       {bonusQuests.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
             <span className="text-xl">⭐</span>
             <span>Did Good / 做了好事 (Bonus)</span>
           </label>
@@ -231,7 +231,7 @@ export default function QuickRecordForm({
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedQuest === quest.id
                     ? "border-success bg-success/10"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-white/10 hover:border-white/20"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -252,7 +252,7 @@ export default function QuickRecordForm({
       {/* Duty Quests - Missed Duty */}
       {dutyQuests.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
             <span className="text-xl">📋</span>
             <span>Missed Duty / 漏做本分</span>
           </label>
@@ -269,7 +269,7 @@ export default function QuickRecordForm({
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedQuest === quest.id
                     ? "border-warning bg-warning/10"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-white/10 hover:border-white/20"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -290,7 +290,7 @@ export default function QuickRecordForm({
       {/* Violation Quests */}
       {violationQuests.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
             <span className="text-xl">⚠️</span>
             <span>Violation / 违规了</span>
           </label>
@@ -307,7 +307,7 @@ export default function QuickRecordForm({
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedQuest === quest.id
                     ? "border-danger bg-danger/10"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-white/10 hover:border-white/20"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -327,14 +327,14 @@ export default function QuickRecordForm({
 
       {/* Multiplier for selected quest */}
       {selectedQuestData && (
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+        <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-lg p-4">
+          <label className="block text-sm font-medium text-slate-300 mb-3">
             {locale === "zh-CN" ? "调整倍数 / 程度" : "Adjust Multiplier / Severity"}
           </label>
           <div className="flex items-center space-x-4">
             <div className="flex-1">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-slate-400">
                   {locale === "zh-CN" ? "倍数:" : "Multiplier:"}
                 </span>
                 <input
@@ -344,20 +344,20 @@ export default function QuickRecordForm({
                   min="1"
                   max="10"
                   step="1"
-                  className="w-20 px-3 py-2 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-bold"
+                  className="w-20 px-3 py-2 border-2 border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-bold"
                 />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-slate-400">
                   (1-10×)
                 </span>
               </div>
-              <div className="mt-2 text-xs text-gray-600">
+              <div className="mt-2 text-xs text-slate-400">
                 {locale === "zh-CN"
                   ? "💡 例如：超过10分钟 = 1×，超过20分钟 = 2×，以此类推"
                   : "💡 Example: 10 mins over = 1×, 20 mins over = 2×, etc."}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-600 mb-1">
+              <div className="text-xs text-slate-400 mb-1">
                 {locale === "zh-CN" ? "实际星星:" : "Actual Stars:"}
               </div>
               <div className={`text-3xl font-bold ${
@@ -365,7 +365,7 @@ export default function QuickRecordForm({
               }`}>
                 {selectedQuestData.stars >= 0 ? '+' : ''}{selectedQuestData.stars * multiplier}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-slate-400">
                 {selectedQuestData.stars} × {multiplier}
               </div>
             </div>
@@ -375,7 +375,7 @@ export default function QuickRecordForm({
 
       {/* Custom Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
           {t("admin.orCustom")}
         </label>
         <div className="space-y-3">
@@ -386,7 +386,7 @@ export default function QuickRecordForm({
               setCustomDescription(e.target.value);
               if (e.target.value) setSelectedQuest("");
             }}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             placeholder="e.g., Helped neighbor carry groceries"
           />
           {customDescription && (
@@ -395,10 +395,10 @@ export default function QuickRecordForm({
                 type="number"
                 value={customStars || ""}
                 onChange={(e) => setCustomStars(parseInt(e.target.value) || 0)}
-                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+                className="w-32 px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
                 placeholder="Stars"
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-slate-400">
                 Enter positive (+) or negative (-) number
               </span>
             </div>
@@ -408,14 +408,14 @@ export default function QuickRecordForm({
 
       {/* Parent Note */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
           {t("admin.recordNote")}
         </label>
         <textarea
           value={parentNote}
           onChange={(e) => setParentNote(e.target.value)}
           rows={2}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
+          className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
           placeholder="e.g., Great job today!"
         />
       </div>

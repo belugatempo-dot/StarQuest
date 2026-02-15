@@ -24,7 +24,7 @@ export default async function VerifyEmailPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/20 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-night-cosmic/60 to-background p-4">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -37,14 +37,14 @@ export default async function VerifyEmailPage({
           </h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-surface rounded-lg shadow-lg p-8">
           {error === "invalid_token" && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
               {t("verification.invalidToken")}
             </div>
           )}
 
-          <p className="text-gray-700 mb-4">
+          <p className="text-slate-300 mb-4">
             {t("verification.checkEmailMessage")}
           </p>
           {email && (
@@ -52,22 +52,22 @@ export default async function VerifyEmailPage({
               {email}
             </p>
           )}
-          <p className="text-gray-600 mb-6">
+          <p className="text-slate-400 mb-6">
             {t("verification.instructions")}
           </p>
 
           <div className="border-t pt-6">
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-slate-400 mb-3">
               {t("verification.didntReceive")}
             </p>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-slate-400 mb-4">
               {t("verification.checkSpam")}
             </p>
 
             {email && <ResendVerificationButton email={email} locale={locale} />}
           </div>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-slate-400">
             <Link href={`/${locale}/login`} className="text-secondary font-semibold hover:underline">
               {t("common.login")}
             </Link>

@@ -61,11 +61,11 @@ export default function RewardGrid({
 
   const getCategoryColor = (category: string | null) => {
     const colors: Record<string, string> = {
-      screen_time: "bg-blue-100 text-blue-700 border-blue-300",
-      toys: "bg-pink-100 text-pink-700 border-pink-300",
-      activities: "bg-green-100 text-green-700 border-green-300",
-      treats: "bg-orange-100 text-orange-700 border-orange-300",
-      other: "bg-gray-100 text-gray-700 border-gray-300",
+      screen_time: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+      toys: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+      activities: "bg-green-500/15 text-green-300 border-green-500/30",
+      treats: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+      other: "bg-white/10 text-slate-300 border-white/20",
     };
     return colors[category || "other"] || colors.other;
   };
@@ -73,7 +73,7 @@ export default function RewardGrid({
   return (
     <>
       {/* Category Filter */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div className="dark-card rounded-lg shadow-md p-4 mb-6">
         <div className="flex flex-wrap gap-2">
           {categories.map((cat) => (
             <button
@@ -82,7 +82,7 @@ export default function RewardGrid({
               className={`px-4 py-2 rounded-lg font-medium transition ${
                 filterCategory === cat
                   ? "bg-primary text-gray-900"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-white/10 text-slate-400 hover:bg-white/15"
               }`}
             >
               {cat === "all"
@@ -95,9 +95,9 @@ export default function RewardGrid({
 
       {/* Reward Grid */}
       {filteredRewards.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+        <div className="dark-card rounded-lg shadow-md p-12 text-center">
           <div className="text-6xl mb-4">🎁</div>
-          <p className="text-gray-500 text-lg">{t("common.noData")}</p>
+          <p className="text-slate-400 text-lg">{t("common.noData")}</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -107,7 +107,7 @@ export default function RewardGrid({
             return (
               <div
                 key={reward.id}
-                className={`bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden group ${
+                className={`dark-card rounded-lg shadow-md hover:shadow-lg transition overflow-hidden group ${
                   affordable
                     ? "cursor-pointer"
                     : "opacity-60 cursor-not-allowed"
@@ -122,12 +122,12 @@ export default function RewardGrid({
                     <div className="text-right">
                       <div
                         className={`text-2xl font-bold ${
-                          affordable ? "text-primary" : "text-gray-400"
+                          affordable ? "text-primary" : "text-slate-500"
                         }`}
                       >
                         {reward.stars_cost}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-400">
                         {t("common.stars")}
                       </div>
                     </div>
@@ -138,7 +138,7 @@ export default function RewardGrid({
                     className={`font-semibold text-lg mb-2 ${
                       affordable
                         ? "group-hover:text-primary transition"
-                        : "text-gray-500"
+                        : "text-slate-400"
                     }`}
                   >
                     {getRewardName(reward, locale)}
@@ -146,7 +146,7 @@ export default function RewardGrid({
 
                   {/* Description */}
                   {reward.description && (
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-slate-400 mb-3">
                       {reward.description}
                     </p>
                   )}
@@ -164,8 +164,8 @@ export default function RewardGrid({
 
                   {/* Affordability Status */}
                   {!affordable && (
-                    <div className="mt-4 p-2 bg-gray-100 rounded text-center">
-                      <p className="text-xs text-gray-600">
+                    <div className="mt-4 p-2 bg-white/10 rounded text-center">
+                      <p className="text-xs text-slate-400">
                         Need {reward.stars_cost - effectiveSpendable} more stars
                       </p>
                     </div>
@@ -173,7 +173,7 @@ export default function RewardGrid({
 
                   {/* Action Hint */}
                   {affordable && (
-                    <div className="mt-4 text-sm text-gray-500 opacity-0 group-hover:opacity-100 transition">
+                    <div className="mt-4 text-sm text-slate-400 opacity-0 group-hover:opacity-100 transition">
                       Click to redeem →
                     </div>
                   )}

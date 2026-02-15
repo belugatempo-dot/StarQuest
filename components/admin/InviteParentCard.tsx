@@ -118,9 +118,9 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="dark-card rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-700">
+        <h3 className="text-lg font-semibold text-slate-300">
           {isZh ? "邀请家长" : "Invite Parent"}
         </h3>
         <span className="text-3xl">👥</span>
@@ -129,18 +129,18 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
       {result ? (
         <>
           {/* Invite code display */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <p className="text-green-700 font-medium mb-1">
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-4">
+            <p className="text-green-300 font-medium mb-1">
               {isZh ? "邀请已创建！" : "Invitation created!"}
             </p>
-            <p className="text-green-600 text-sm mb-3">
+            <p className="text-green-400 text-sm mb-3">
               {isZh ? "邀请码7天内有效" : "The invitation expires in 7 days"}
             </p>
-            <div className="bg-white rounded-md p-3 text-center border border-green-100">
-              <p className="text-xs text-gray-500 mb-1">
+            <div className="bg-white/5 rounded-md p-3 text-center border border-green-500/20">
+              <p className="text-xs text-slate-400 mb-1">
                 {isZh ? "邀请码" : "Invite Code"}
               </p>
-              <p className="text-2xl font-mono font-bold tracking-widest text-gray-800">
+              <p className="text-2xl font-mono font-bold tracking-widest text-slate-200">
                 {result.inviteCode}
               </p>
             </div>
@@ -148,7 +148,7 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
 
           {/* Email sent note */}
           {result.emailSent && result.email && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-700">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4 text-sm text-blue-300">
               {isZh
                 ? `邮件已发送至 ${result.email}`
                 : `Email also sent to ${result.email}`}
@@ -159,7 +159,7 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
           <div className="space-y-2 mb-4">
             <button
               onClick={copyLink}
-              className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-white/10 text-slate-300 py-2 px-4 rounded-lg font-medium hover:bg-white/15 transition text-sm"
             >
               {copied
                 ? (isZh ? "已复制!" : "Copied!")
@@ -167,13 +167,13 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
             </button>
             <button
               onClick={shareWhatsApp}
-              className="w-full flex items-center justify-center gap-2 bg-green-100 text-green-700 py-2 px-4 rounded-lg font-medium hover:bg-green-200 transition text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-green-500/15 text-green-300 py-2 px-4 rounded-lg font-medium hover:bg-green-500/25 transition text-sm"
             >
               WhatsApp
             </button>
             <button
               onClick={shareEmail}
-              className="w-full flex items-center justify-center gap-2 bg-blue-100 text-blue-700 py-2 px-4 rounded-lg font-medium hover:bg-blue-200 transition text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-blue-500/15 text-blue-300 py-2 px-4 rounded-lg font-medium hover:bg-blue-500/25 transition text-sm"
             >
               {isZh ? "通过邮件分享" : "Share via Email"}
             </button>
@@ -182,14 +182,14 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
           {/* Create another */}
           <button
             onClick={resetForm}
-            className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
+            className="w-full bg-white/10 text-slate-300 py-2 px-4 rounded-lg font-medium hover:bg-white/15 transition text-sm"
           >
             {isZh ? "创建另一个邀请" : "Create Another"}
           </button>
         </>
       ) : (
         <>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-400 mb-4">
             {isZh
               ? "创建邀请码，通过链接或消息分享给家庭成员"
               : "Create an invite code to share with your spouse or family member via link or message"}
@@ -203,7 +203,7 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
                 if (error) setError("");
               }}
               placeholder={isZh ? "邮箱地址（可选）" : "Email address (optional)"}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary"
+              className="w-full px-3 py-2 dark-input rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary"
               disabled={isCreating}
             />
           </div>
@@ -220,7 +220,7 @@ export default function InviteParentCard({ familyId, locale }: InviteParentCardP
       )}
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
           {error}
         </div>
       )}

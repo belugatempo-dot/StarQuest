@@ -249,7 +249,7 @@ describe('RedemptionRequestList', () => {
         />
       )
 
-      const noteElements = container.querySelectorAll('.bg-blue-50')
+      const noteElements = container.querySelectorAll('.bg-blue-500\\/10')
       expect(noteElements.length).toBe(2)
     })
 
@@ -548,7 +548,7 @@ describe('RedemptionRequestList', () => {
 
       // Verify date picker label and input are present
       expect(screen.getByText('admin.approvalDate')).toBeInTheDocument()
-      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const modal = screen.getByText('admin.confirmApproval').closest('.dark-card')
       const dateInput = modal?.querySelector('input[type="date"]')
       expect(dateInput).toBeInTheDocument()
     })
@@ -569,7 +569,7 @@ describe('RedemptionRequestList', () => {
       await user.click(approveButtons[0])
 
       // Find the date input in the modal
-      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const modal = screen.getByText('admin.confirmApproval').closest('.dark-card')
       const dateInput = modal?.querySelector('input[type="date"]')
       expect(dateInput).toBeInTheDocument()
       // Date input should have a max attribute to prevent future dates
@@ -592,7 +592,7 @@ describe('RedemptionRequestList', () => {
       await user.click(approveButtons[0])
 
       // Confirm with default date
-      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const modal = screen.getByText('admin.confirmApproval').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -852,7 +852,7 @@ describe('RedemptionRequestList', () => {
         />
       )
 
-      const categoryElements = container.querySelectorAll('.text-xs.text-gray-500')
+      const categoryElements = container.querySelectorAll('.text-xs.text-slate-400')
       // Should have categories + cost labels, but one less category for null reward
       expect(categoryElements.length).toBeGreaterThan(0)
     })
@@ -1119,7 +1119,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Find and click confirm button in modal
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -1178,7 +1178,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Confirm in modal
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -1207,7 +1207,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Verify date picker is present
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const dateInput = modal?.querySelector('input[type="date"]')
       expect(dateInput).toBeInTheDocument()
     })
@@ -1232,7 +1232,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Verify date input has max attribute
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const dateInput = modal?.querySelector('input[type="date"]')
       expect(dateInput).toHaveAttribute('max')
     })
@@ -1258,7 +1258,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Confirm with default date
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -1517,7 +1517,7 @@ describe('RedemptionRequestList', () => {
       await user.click(approveButtons[0])
 
       // Clear the date input
-      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const modal = screen.getByText('admin.confirmApproval').closest('.dark-card')
       const dateInput = modal?.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(dateInput, { target: { value: '' } })
       expect(dateInput.value).toBe('')
@@ -1570,7 +1570,7 @@ describe('RedemptionRequestList', () => {
       expect(batchDateInput.value).toBe('')
 
       // Confirm with empty date
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -1602,7 +1602,7 @@ describe('RedemptionRequestList', () => {
       await user.click(approveButtons[0])
 
       // Find the date input in the modal and change it
-      const modal = screen.getByText('admin.confirmApproval').closest('.bg-white')
+      const modal = screen.getByText('admin.confirmApproval').closest('.dark-card')
       const dateInput = modal?.querySelector('input[type="date"]') as HTMLInputElement
       expect(dateInput).toBeInTheDocument()
 
@@ -1679,7 +1679,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Confirm in modal
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -1718,7 +1718,7 @@ describe('RedemptionRequestList', () => {
       const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
       await user.click(batchApproveButton)
 
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -1995,7 +1995,7 @@ describe('RedemptionRequestList', () => {
       await user.click(checkboxes[0])
 
       // Confirm batch approve with zero items selected
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 
@@ -2030,7 +2030,7 @@ describe('RedemptionRequestList', () => {
       await user.click(checkboxes[1])
 
       // Confirm batch approve with zero items
-      const modal = screen.getByText('admin.approvalDate').closest('.bg-white')
+      const modal = screen.getByText('admin.approvalDate').closest('.dark-card')
       const confirmButton = within(modal!).getByRole('button', { name: /admin\.approve/i })
       await user.click(confirmButton)
 

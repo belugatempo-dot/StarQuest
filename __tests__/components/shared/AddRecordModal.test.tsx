@@ -306,7 +306,7 @@ describe("AddRecordModal", () => {
       expect(multiplierSection).toHaveTextContent("3 x 1");
 
       // The large total display shows "+3" in the multiplier area
-      const totalDisplay = screen.getByText("(1-10x)").closest(".bg-blue-50");
+      const totalDisplay = screen.getByText("(1-10x)").closest(".bg-blue-500\\/10");
       expect(totalDisplay).toBeInTheDocument();
     });
 
@@ -318,7 +318,7 @@ describe("AddRecordModal", () => {
       fireEvent.change(multiplierInput, { target: { value: "3" } });
 
       // 3 * 3 = 9 — the multiplier section shows the result
-      const multiplierSection = screen.getByText("(1-10x)").closest(".bg-blue-50");
+      const multiplierSection = screen.getByText("(1-10x)").closest(".bg-blue-500\\/10");
       expect(multiplierSection).toHaveTextContent("+9");
       expect(multiplierSection).toHaveTextContent("3 x 3");
     });

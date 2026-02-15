@@ -101,7 +101,7 @@ export default function RewardFormModal({
             </label>
             <input type="text" value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
               placeholder="e.g., 30 mins screen time" required
             />
           </div>
@@ -111,7 +111,7 @@ export default function RewardFormModal({
             </label>
             <input type="text" value={nameZh}
               onChange={(e) => setNameZh(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
               placeholder="例如：30分钟屏幕时间"
             />
           </div>
@@ -125,10 +125,10 @@ export default function RewardFormModal({
           </label>
           <input type="number" value={starsCost}
             onChange={(e) => setStarsCost(Number(e.target.value))}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
             min="1" max="1000" required
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "兑换此奖励需要的星星数量" : "Number of stars needed to redeem this reward"}
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function RewardFormModal({
               <button key={cat} type="button"
                 onClick={() => { setCategory(cat); if (!reward?.icon) setIcon(CATEGORY_ICONS[cat]); }}
                 className={`px-3 py-3 rounded-lg border-2 transition text-sm ${
-                  category === cat ? "border-primary bg-primary/10 font-semibold" : "border-gray-200 hover:border-gray-300"
+                  category === cat ? "border-primary bg-primary/10 font-semibold" : "border-white/10 hover:border-white/20"
                 }`}>
                 <div className="text-2xl mb-1">{CATEGORY_ICONS[cat]}</div>
                 <div>
@@ -163,7 +163,7 @@ export default function RewardFormModal({
           </label>
           <textarea value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary resize-none"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary resize-none"
             rows={3}
             placeholder={locale === "zh-CN" ? "描述这个奖励的详细信息..." : "Describe this reward in detail..."}
           />
@@ -176,10 +176,10 @@ export default function RewardFormModal({
           </label>
           <input type="text" value={icon}
             onChange={(e) => setIcon(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary text-2xl"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary text-2xl"
             placeholder="🎁" maxLength={4}
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "输入一个emoji表情" : "Enter an emoji"}
           </p>
         </div>
@@ -196,9 +196,9 @@ export default function RewardFormModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
           <button type="button" onClick={onClose} disabled={loading}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            className="px-6 py-2 border border-white/20 rounded-lg hover:bg-white/5 transition">
             {locale === "zh-CN" ? "取消" : "Cancel"}
           </button>
           <button type="submit" disabled={loading}

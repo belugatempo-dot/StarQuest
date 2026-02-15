@@ -54,12 +54,12 @@ export default function ParentRedeemSection({
   // No children case
   if (children.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <span>🎁</span>
           {t("admin.quickRedeem")}
         </h2>
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+        <div className="p-4 bg-yellow-500/15 border border-yellow-500/30 rounded text-yellow-300 text-sm">
           {t("admin.noChildrenInFamily")}
         </div>
       </div>
@@ -67,14 +67,14 @@ export default function ParentRedeemSection({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <div className="dark-card rounded-lg shadow-md p-6 space-y-6">
       {/* Section Header */}
       <div>
         <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
           <span>🎁</span>
           {t("admin.quickRedeem")}
         </h2>
-        <p className="text-gray-600 text-sm">
+        <p className="text-slate-400 text-sm">
           {locale === "zh-CN"
             ? "直接为孩子兑换奖励，无需审批"
             : "Redeem rewards for your child directly, no approval needed"}
@@ -83,7 +83,7 @@ export default function ParentRedeemSection({
 
       {/* Child Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
           {t("admin.selectChild")} {children.length > 1 ? "*" : ""}
         </label>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -96,7 +96,7 @@ export default function ParentRedeemSection({
                 className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                   selectedChild === child.id
                     ? "border-secondary bg-secondary/10"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-white/10 hover:border-white/20"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -106,7 +106,7 @@ export default function ParentRedeemSection({
                     </div>
                     <div>
                       <div className="font-semibold">{child.name}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-400">
                         {balance?.current_stars || 0} ⭐
                       </div>
                     </div>
@@ -125,7 +125,7 @@ export default function ParentRedeemSection({
       {selectedChild && (
         <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-slate-300">
               {locale === "zh-CN" ? "可用星星：" : "Available Stars:"}
             </span>
             <span className="text-2xl font-bold text-primary">
@@ -149,15 +149,15 @@ export default function ParentRedeemSection({
             familyId={familyId}
           />
         ) : (
-          <div className="p-8 text-center bg-gray-50 rounded-lg">
+          <div className="p-8 text-center bg-white/5 rounded-lg">
             <div className="text-4xl mb-2">🎁</div>
-            <p className="text-gray-500">{t("common.noData")}</p>
+            <p className="text-slate-400">{t("common.noData")}</p>
           </div>
         )
       ) : (
-        <div className="p-8 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="p-8 text-center bg-white/5 rounded-lg border-2 border-dashed border-white/20">
           <div className="text-4xl mb-2">👆</div>
-          <p className="text-gray-500">
+          <p className="text-slate-400">
             {locale === "zh-CN"
               ? "请先选择一个孩子"
               : "Please select a child first"}

@@ -278,7 +278,7 @@ export default function UnifiedActivityList({
               {displayedActivities.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500 text-lg">{t("history.emptyState")}</p>
+                  <p className="text-slate-400 text-lg">{t("history.emptyState")}</p>
                 </div>
               ) : (
                 displayedActivities.map((activity) => (
@@ -312,8 +312,8 @@ export default function UnifiedActivityList({
           {viewMode === "calendar" && (
             <div className="space-y-4">
               {groupedByDate.length === 0 ? (
-                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-                  <p className="text-gray-500">
+                <div className="bg-white/5 border-2 border-dashed border-white/20 rounded-lg p-12 text-center">
+                  <p className="text-slate-400">
                     {t("activity.noRecordsFound")}
                   </p>
                   {canAddRecord && (

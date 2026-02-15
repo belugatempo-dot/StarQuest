@@ -151,12 +151,12 @@ export default function RedeemRewardModal({
                     {getRewardName(reward, locale)}
                   </h3>
                   {reward.category && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-400">
                       {t(`rewards.category.${reward.category}` as any)}
                     </p>
                   )}
                   {reward.description && (
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-sm text-slate-300 mt-1">
                       {reward.description}
                     </p>
                   )}
@@ -166,7 +166,7 @@ export default function RedeemRewardModal({
                 <div className="text-2xl font-bold text-primary">
                   {reward.stars_cost}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-slate-400">
                   {t("common.stars")}
                 </div>
               </div>
@@ -174,12 +174,12 @@ export default function RedeemRewardModal({
           </div>
 
           {/* Balance Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-blue-300">
                 {t("credit.currentBalance")}:
               </span>
-              <span className={`text-lg font-bold ${currentStars < 0 ? "text-danger" : "text-blue-900"}`}>
+              <span className={`text-lg font-bold ${currentStars < 0 ? "text-danger" : "text-blue-200"}`}>
                 {currentStars} ⭐
               </span>
             </div>
@@ -187,7 +187,7 @@ export default function RedeemRewardModal({
             {/* Credit Info - only show for child mode */}
             {!isParent && creditEnabled && availableCredit > 0 && (
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-blue-800">
+                <span className="text-sm font-medium text-blue-300">
                   {t("credit.availableCredit")}:
                 </span>
                 <span className="text-lg font-bold text-secondary">
@@ -198,9 +198,9 @@ export default function RedeemRewardModal({
 
             {!isParent && creditEnabled && (
               <>
-                <div className="border-t border-blue-300 my-2"></div>
+                <div className="border-t border-blue-500/30 my-2"></div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-semibold text-blue-800">
+                  <span className="text-sm font-semibold text-blue-300">
                     {t("credit.canSpend")}:
                   </span>
                   <span className="text-lg font-bold text-primary">
@@ -210,18 +210,18 @@ export default function RedeemRewardModal({
               </>
             )}
 
-            <div className="border-t border-blue-300 my-2"></div>
+            <div className="border-t border-blue-500/30 my-2"></div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-blue-300">
                 {t("rewards.cost")}:
               </span>
               <span className="text-lg font-bold text-danger">
                 -{reward.stars_cost} ⭐
               </span>
             </div>
-            <div className="border-t border-blue-300 my-2"></div>
+            <div className="border-t border-blue-500/30 my-2"></div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-blue-800">
+              <span className="text-sm font-semibold text-blue-300">
                 {t("credit.afterRedemption")}:
               </span>
               <span
@@ -251,7 +251,7 @@ export default function RedeemRewardModal({
               <p className="text-sm text-danger font-medium">
                 ❌ {t("credit.cannotAfford")}
               </p>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 {t("credit.needMoreStars", { needed: reward.stars_cost - actualSpendable })}
               </p>
             </div>
@@ -261,7 +261,7 @@ export default function RedeemRewardModal({
           <div>
             <label
               htmlFor="note"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-slate-300 mb-1"
             >
               {t("quests.note")} ({t("common.optional")})
             </label>
@@ -270,7 +270,7 @@ export default function RedeemRewardModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
               placeholder={locale === "zh-CN" ? "你想什么时候获得这个奖励？" : "When would you like this reward?"}
             />
           </div>
@@ -284,15 +284,15 @@ export default function RedeemRewardModal({
 
           {/* Info Box */}
           {isParent ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-green-800">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+              <p className="text-sm text-green-300">
                 <span className="font-semibold">✓ {t("credit.note")}:</span>{" "}
                 {t("admin.autoApproveInfo")}
               </p>
             </div>
           ) : (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <p className="text-sm text-yellow-300">
                 <span className="font-semibold">⏳ {t("credit.note")}:</span>{" "}
                 {t("credit.redemptionPendingInfo")}
               </p>
@@ -304,7 +304,7 @@ export default function RedeemRewardModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-slate-300 hover:bg-white/5 transition"
             >
               {t("common.cancel")}
             </button>

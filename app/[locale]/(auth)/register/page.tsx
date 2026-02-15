@@ -12,7 +12,7 @@ export default async function RegisterPage({
   const t = await getTranslations();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/20 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-night-cosmic/60 to-background p-4">
       {/* Language Switcher - Top Right */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
@@ -24,18 +24,18 @@ export default async function RegisterPage({
           <h1 className="text-4xl font-bold text-primary mb-2">
             ⭐ {t("brand.name")}
           </h1>
-          <p className="text-gray-600">{t("brand.slogan")}</p>
+          <p className="text-slate-400">{t("brand.slogan")}</p>
         </div>
 
         {/* Register Form Card */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-surface rounded-lg shadow-lg p-8">
           <h2 className="text-2xl font-semibold mb-6 text-center">
             {t("auth.registerPrompt")}
           </h2>
           <RegisterForm />
 
           {/* Login Link */}
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-slate-400">
             Already have an account?{" "}
             <Link
               href={`/${locale}/login`}

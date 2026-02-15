@@ -36,7 +36,7 @@ export default function ActivityDateGroup({
   const dailyTotal = getDailyTotal(activities);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="dark-card rounded-lg shadow-md overflow-hidden">
       {/* Date Header - Night Theme */}
       <div className="night-date-header px-6 py-4 flex items-center justify-between">
         <div>

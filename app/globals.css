@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 249, 250, 251;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 226, 232, 240;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 30, 58, 95;
 }
 
 body {
@@ -88,10 +88,10 @@ body {
 
 /* Glass card for dark backgrounds */
 .glass-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(30, 58, 95, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Night header gradient */
@@ -166,5 +166,38 @@ body {
 .night-date-header {
   background: linear-gradient(135deg, #1e3a5f 0%, #312e81 100%);
   position: relative;
+}
+
+/* ============================================
+   DARK THEME UTILITY CLASSES
+   ============================================ */
+
+/* Dark card for replacing bg-white cards */
+.dark-card {
+  background: rgba(30, 58, 95, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dark surface for modals and drawers */
+.dark-surface {
+  background: #162a46;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dark input styling */
+.dark-input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+}
+
+.dark-input:focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+  outline: none;
+}
+
+.dark-input::placeholder {
+  color: #64748b;
 }
 

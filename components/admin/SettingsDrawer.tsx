@@ -54,7 +54,7 @@ export default function SettingsDrawer({
     <>
       <button
         onClick={open}
-        className="text-sm text-gray-600 hover:text-gray-900"
+        className="text-sm text-slate-400 hover:text-white"
         aria-label={t("admin.settings")}
       >
         ⚙️
@@ -71,16 +71,16 @@ export default function SettingsDrawer({
 
           {/* Drawer */}
           <div
-            className="fixed top-0 right-0 h-full w-[400px] max-w-full bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto"
+            className="fixed top-0 right-0 h-full w-[400px] max-w-full bg-surface shadow-xl border-l border-white/10 z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto"
             role="dialog"
             aria-label={t("admin.settings")}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-xl font-semibold">{t("settings.title")}</h2>
               <button
                 onClick={close}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                className="text-slate-500 hover:text-white text-2xl leading-none"
                 aria-label="Close"
               >
                 ×
@@ -89,12 +89,12 @@ export default function SettingsDrawer({
 
             {/* Body */}
             <div className="p-6">
-              <p className="text-gray-600 mb-6">{t("settings.subtitle")}</p>
+              <p className="text-slate-400 mb-6">{t("settings.subtitle")}</p>
 
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 {t("settings.reportPreferences")}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-slate-400 mb-4">
                 {t("settings.reportPreferencesDescription")}
               </p>
 

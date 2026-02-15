@@ -35,25 +35,25 @@ export default function ModalFrame({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div
-        className={`bg-white rounded-lg shadow-xl ${widthClass} w-full ${
+        className={`dark-surface rounded-lg shadow-xl ${widthClass} w-full ${
           hasScrollableContent ? "max-h-[90vh] overflow-y-auto" : ""
         }`}
       >
         {/* Header */}
         <div
           className={`px-6 py-4 flex items-center justify-between ${
-            stickyHeader ? "sticky top-0 bg-white border-b z-10" : ""
+            stickyHeader ? "sticky top-0 bg-surface border-b border-white/10 z-10" : ""
           }`}
         >
           <div>
             <h2 className="text-2xl font-bold">{title}</h2>
             {subtitle && (
-              <p className="text-gray-600 mt-1">{subtitle}</p>
+              <p className="text-slate-400 mt-1">{subtitle}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer"
+            className="text-slate-500 hover:text-white text-2xl cursor-pointer"
             type="button"
           >
             ✕
@@ -62,7 +62,7 @@ export default function ModalFrame({
 
         {/* Error Banner */}
         {error && (
-          <div className="mx-6 mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="mx-6 mb-4 bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded">
             {error}
           </div>
         )}

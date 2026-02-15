@@ -198,13 +198,13 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleRegister} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
           {locale === "zh-CN" ? "邮箱" : "Email"}
         </label>
         <input
@@ -213,14 +213,14 @@ export default function RegisterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "your@email.com" : "you@example.com"}
           disabled={isLoading}
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
           {locale === "zh-CN" ? "密码" : "Password"}
         </label>
         <input
@@ -230,14 +230,14 @@ export default function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "至少6个字符" : "At least 6 characters"}
           disabled={isLoading}
         />
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-1">
           {locale === "zh-CN" ? "确认密码" : "Confirm Password"}
         </label>
         <input
@@ -247,7 +247,7 @@ export default function RegisterForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "再次输入密码" : "Re-enter your password"}
           disabled={isLoading}
         />
@@ -256,7 +256,7 @@ export default function RegisterForm() {
       {/* Only show Family Name if NOT using invite code */}
       {!validatedFamily && (
         <div>
-          <label htmlFor="familyName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="familyName" className="block text-sm font-medium text-slate-300 mb-1">
             {locale === "zh-CN" ? "家庭名称" : "Family Name"}
           </label>
           <input
@@ -265,7 +265,7 @@ export default function RegisterForm() {
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
             required={!validatedFamily}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             placeholder={locale === "zh-CN" ? "张家" : "Smith Family"}
             disabled={isLoading}
           />
@@ -273,7 +273,7 @@ export default function RegisterForm() {
       )}
 
       <div>
-        <label htmlFor="parentName" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="parentName" className="block text-sm font-medium text-slate-300 mb-1">
           {locale === "zh-CN" ? "您的名字（家长）" : "Your Name (Parent)"}
         </label>
         <input
@@ -282,7 +282,7 @@ export default function RegisterForm() {
           value={parentName}
           onChange={(e) => setParentName(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "张三" : "John Smith"}
           disabled={isLoading}
         />
@@ -291,10 +291,10 @@ export default function RegisterForm() {
       {/* Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
+          <div className="w-full border-t border-white/20"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-[#FFFDF7] text-gray-500">
+          <span className="px-2 bg-surface text-slate-400">
             {locale === "zh-CN" ? "或" : "OR"}
           </span>
         </div>
@@ -302,13 +302,13 @@ export default function RegisterForm() {
 
       {/* Invite Code Section */}
       {validatedFamily && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-300 text-sm">
           {locale === "zh-CN" ? "✓ 将加入家庭：" : "✓ Joining family: "}<strong>{validatedFamily.name}</strong>
         </div>
       )}
 
       <div>
-        <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="inviteCode" className="block text-sm font-medium text-slate-300 mb-1">
           {locale === "zh-CN" ? "邀请码（可选）" : "Invite Code (Optional)"}
         </label>
         <input
@@ -317,11 +317,11 @@ export default function RegisterForm() {
           value={inviteCode}
           onChange={(e) => handleInviteCodeChange(e.target.value)}
           maxLength={8}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent uppercase font-mono tracking-wider"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent uppercase font-mono tracking-wider"
           placeholder={locale === "zh-CN" ? "如有邀请码请输入" : "Enter if you have one"}
           disabled={isLoading || isValidating}
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-slate-400">
           {locale === "zh-CN"
             ? "有邀请码？输入后可加入现有家庭成为第二家长"
             : "Have an invite code? Enter to join an existing family as a second parent"}
@@ -338,7 +338,7 @@ export default function RegisterForm() {
           : (locale === "zh-CN" ? "注册" : "Register")}
       </button>
 
-      <div className="text-center text-sm text-gray-600">
+      <div className="text-center text-sm text-slate-400">
         {locale === "zh-CN" ? "已有账户？" : "Already have an account?"}{" "}
         <a href={`/${locale}/login`} className="text-secondary font-semibold hover:underline">
           {locale === "zh-CN" ? "登录" : "Sign in"}

@@ -84,7 +84,7 @@ export default function QuestManagement({
       {/* Header with Add Button */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600">
+          <p className="text-slate-400">
             {locale === "zh-CN"
               ? `共 ${quests.length} 个任务模板`
               : `${quests.length} quest templates`}
@@ -108,12 +108,12 @@ export default function QuestManagement({
             return (
               <div
                 key={group.key}
-                className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-gray-100"
+                className="dark-card rounded-lg shadow-md overflow-hidden border-2 border-white/10"
               >
                 {/* Group Header */}
                 <button
                   onClick={() => toggleGroup(group.key)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/5 transition"
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl">{group.icon}</span>
@@ -121,13 +121,13 @@ export default function QuestManagement({
                       <h3 className="text-xl font-bold">
                         {locale === "zh-CN" ? group.title_zh : group.title_en}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-slate-400">
                         {group.quests.length}{" "}
                         {locale === "zh-CN" ? "个任务" : "quests"}
                       </p>
                     </div>
                   </div>
-                  <span className="text-2xl text-gray-400">
+                  <span className="text-2xl text-slate-500">
                     {isExpanded ? "▼" : "▶"}
                   </span>
                 </button>
@@ -147,8 +147,8 @@ export default function QuestManagement({
                             key={quest.id}
                             className={`border-2 rounded-lg p-4 ${
                               quest.is_active
-                                ? "border-gray-200 bg-white"
-                                : "border-gray-300 bg-gray-100 opacity-60"
+                                ? "border-white/10 bg-surface"
+                                : "border-white/20 bg-white/10 opacity-60"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ export default function QuestManagement({
                               <div className="flex items-center space-x-4 flex-1">
                                 <span className="text-3xl">{quest.icon || "📝"}</span>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold text-gray-900">
+                                  <h4 className="font-semibold text-white">
                                     {questName}
                                   </h4>
                                   <div className="flex items-center space-x-3 mt-1">
@@ -171,7 +171,7 @@ export default function QuestManagement({
                                       {quest.stars} ⭐
                                     </span>
                                     {quest.category && (
-                                      <span className="text-xs px-2 py-1 bg-gray-200 rounded">
+                                      <span className="text-xs px-2 py-1 bg-white/15 rounded">
                                         {(() => {
                                           const cat = categories.find(c => c.name === quest.category);
                                           if (cat) {
@@ -182,7 +182,7 @@ export default function QuestManagement({
                                       </span>
                                     )}
                                     {!quest.is_active && (
-                                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                                      <span className="text-xs px-2 py-1 bg-red-500/15 text-red-300 rounded">
                                         {locale === "zh-CN" ? "已停用" : "Inactive"}
                                       </span>
                                     )}
@@ -194,7 +194,7 @@ export default function QuestManagement({
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => setEditingQuest(quest)}
-                                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                                  className="px-3 py-1 text-sm bg-blue-500/15 text-blue-300 rounded hover:bg-blue-500/25 transition"
                                 >
                                   ✏️ {locale === "zh-CN" ? "编辑" : "Edit"}
                                 </button>
@@ -202,8 +202,8 @@ export default function QuestManagement({
                                   onClick={() => handleToggleActive(quest)}
                                   className={`px-3 py-1 text-sm rounded transition ${
                                     quest.is_active
-                                      ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                                      ? "bg-yellow-500/15 text-yellow-300 hover:bg-yellow-500/25"
+                                      : "bg-green-500/15 text-green-300 hover:bg-green-500/25"
                                   }`}
                                 >
                                   {quest.is_active
@@ -216,7 +216,7 @@ export default function QuestManagement({
                                 </button>
                                 <button
                                   onClick={() => handleDelete(quest)}
-                                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition"
+                                  className="px-3 py-1 text-sm bg-red-500/15 text-red-300 rounded hover:bg-red-500/25 transition"
                                 >
                                   🗑️ {locale === "zh-CN" ? "删除" : "Delete"}
                                 </button>
@@ -233,8 +233,8 @@ export default function QuestManagement({
           })}
         </div>
       ) : (
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <p className="text-gray-500 mb-4">
+        <div className="bg-white/5 border-2 border-dashed border-white/20 rounded-lg p-12 text-center">
+          <p className="text-slate-400 mb-4">
             {locale === "zh-CN" ? "还没有任务模板" : "No quest templates yet"}
           </p>
           <button

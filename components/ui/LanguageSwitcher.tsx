@@ -24,7 +24,7 @@ export default function LanguageSwitcher() {
           className={`px-3 py-1 rounded transition ${
             currentLocale === locale
               ? "bg-primary text-gray-900 font-semibold"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              : "bg-white/10 text-slate-400 hover:bg-white/20"
           }`}
         >
           {locale === "en" ? "EN" : "中文"}

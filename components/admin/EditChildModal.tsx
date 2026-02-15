@@ -73,14 +73,14 @@ export default function EditChildModal({
       <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
         {/* Name Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-300 mb-1">
             {t("family.childName")} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 dark-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t("family.childNamePlaceholder")}
             required
           />
@@ -88,21 +88,21 @@ export default function EditChildModal({
 
         {/* Email Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("family.childEmail")} <span className="text-gray-400">({t("common.optional")})</span>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            {t("family.childEmail")} <span className="text-slate-500">({t("common.optional")})</span>
           </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 dark-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t("family.childEmailPlaceholder")}
           />
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-3 py-2 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -112,14 +112,14 @@ export default function EditChildModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+            className="px-4 py-2 text-slate-300 hover:bg-white/10 rounded-lg transition"
             disabled={isLoading}
           >
             {t("common.cancel")}
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:bg-gray-400"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? t("common.saving") : t("common.save")}

@@ -66,7 +66,7 @@ export default function ActivityFilterBar({
   const t = useTranslations();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+    <div className="dark-card rounded-lg shadow-md p-6 space-y-4">
       {/* Header with view mode toggle */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">
@@ -78,7 +78,7 @@ export default function ActivityFilterBar({
             className={`px-4 py-2 rounded-lg transition ${
               viewMode === "list"
                 ? "bg-secondary text-white"
-                : "bg-gray-100 hover:bg-gray-200"
+                : "bg-white/5 hover:bg-white/10"
             }`}
           >
             📋 {t("activity.list")}
@@ -88,7 +88,7 @@ export default function ActivityFilterBar({
             className={`px-4 py-2 rounded-lg transition ${
               viewMode === "calendar"
                 ? "bg-secondary text-white"
-                : "bg-gray-100 hover:bg-gray-200"
+                : "bg-white/5 hover:bg-white/10"
             }`}
           >
             📅 {t("activity.calendar")}
@@ -99,7 +99,7 @@ export default function ActivityFilterBar({
       {/* Type Filter (parent only) */}
       {permissions.canFilterByType && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("activity.type")}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -134,7 +134,7 @@ export default function ActivityFilterBar({
                 className={`px-4 py-2 rounded-lg transition ${
                   filterType === filter.key
                     ? `${filter.bgActive || "bg-blue-500"} text-white`
-                    : "bg-gray-100 hover:bg-gray-200"
+                    : "bg-white/5 hover:bg-white/10"
                 }`}
               >
                 {filter.label}
@@ -146,7 +146,7 @@ export default function ActivityFilterBar({
 
       {/* Status Filter (both roles) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
           {t("common.status")}
         </label>
         <div className="flex flex-wrap gap-2">
@@ -180,7 +180,7 @@ export default function ActivityFilterBar({
               className={`px-4 py-2 rounded-lg font-medium transition ${
                 statusFilter === tab.key
                   ? "bg-primary text-gray-900"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-white/5 text-slate-400 hover:bg-white/10"
               }`}
             >
               {tab.label}
@@ -194,7 +194,7 @@ export default function ActivityFilterBar({
       {viewMode === "list" && permissions.canFilterByType && (
         <div className="grid md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               {t("activity.singleDate")}
             </label>
             <input
@@ -205,11 +205,11 @@ export default function ActivityFilterBar({
                 setStartDate("");
                 setEndDate("");
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               {t("activity.startDate")}
             </label>
             <input
@@ -219,11 +219,11 @@ export default function ActivityFilterBar({
                 setStartDate(e.target.value);
                 setFilterDate("");
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               {t("activity.endDate")}
             </label>
             <input
@@ -233,7 +233,7 @@ export default function ActivityFilterBar({
                 setEndDate(e.target.value);
                 setFilterDate("");
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             />
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function ActivityFilterBar({
       )}
 
       {/* Results Count */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-slate-400">
         {t("activity.showingRecords", { displayed: displayedCount, total: totalCount })}
       </div>
 
@@ -277,7 +277,7 @@ export default function ActivityFilterBar({
             </button>
           )}
           {selectionMode && selectedCount > 0 && (
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-slate-400">
               {t("activity.selectedItems", { count: selectedCount })}
             </span>
           )}

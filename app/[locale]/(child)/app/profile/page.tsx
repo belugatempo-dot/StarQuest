@@ -88,7 +88,7 @@ export default async function ProfilePage({
 
           {/* Current Stars */}
           <div className="text-right">
-            <div className="text-sm text-gray-600 mb-1">Current Stars</div>
+            <div className="text-sm text-slate-400 mb-1">Current Stars</div>
             <div className="text-4xl font-bold text-primary">{currentStars}</div>
           </div>
         </div>
@@ -96,7 +96,7 @@ export default async function ProfilePage({
 
       {/* Level Progress */}
       {nextLevel && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold">Next Level</h2>
             <div className="flex items-center space-x-2">
@@ -111,7 +111,7 @@ export default async function ProfilePage({
 
           {/* Progress Bar */}
           <div className="relative">
-            <div className="h-8 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-8 bg-white/15 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-success to-primary transition-all duration-500"
                 style={{
@@ -130,7 +130,7 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          <p className="text-sm text-gray-600 mt-2 text-center">
+          <p className="text-sm text-slate-400 mt-2 text-center">
             {(nextLevel as any).stars_required - lifetimeStars} more stars to go!
           </p>
         </div>
@@ -138,31 +138,31 @@ export default async function ProfilePage({
 
       {/* Statistics */}
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="text-3xl mb-2">✨</div>
           <div className="text-2xl font-bold text-success">{lifetimeStars}</div>
-          <div className="text-sm text-gray-600">{t("dashboard.lifetimeStars")}</div>
+          <div className="text-sm text-slate-400">{t("dashboard.lifetimeStars")}</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="text-3xl mb-2">📋</div>
           <div className="text-2xl font-bold text-secondary">
             {totalTransactions || 0}
           </div>
-          <div className="text-sm text-gray-600">Quests Completed</div>
+          <div className="text-sm text-slate-400">Quests Completed</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="dark-card rounded-lg shadow-md p-6">
           <div className="text-3xl mb-2">🎁</div>
           <div className="text-2xl font-bold text-primary">
             {totalRedemptions || 0}
           </div>
-          <div className="text-sm text-gray-600">Rewards Claimed</div>
+          <div className="text-sm text-slate-400">Rewards Claimed</div>
         </div>
       </div>
 
       {/* Badge Wall */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-4">Achievement Badges</h2>
         <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-4">
           {levels?.map((level: any) => {
@@ -173,7 +173,7 @@ export default async function ProfilePage({
                 className={`text-center p-4 rounded-lg border-2 transition ${
                   achieved
                     ? "bg-primary/10 border-primary shadow-md"
-                    : "bg-gray-50 border-gray-200 opacity-50 grayscale"
+                    : "bg-white/5 border-white/10 opacity-50 grayscale"
                 }`}
               >
                 <div className="text-4xl mb-2">{level.icon}</div>
@@ -182,13 +182,13 @@ export default async function ProfilePage({
                     ? level.name_zh || level.name_en
                     : level.name_en}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-slate-400 mt-1">
                   Lv.{level.level_number}
                 </div>
                 {achieved ? (
                   <div className="text-xs text-success mt-1 font-semibold">✓ Unlocked</div>
                 ) : (
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-slate-500 mt-1">
                     {level.stars_required} ⭐
                   </div>
                 )}
@@ -199,21 +199,21 @@ export default async function ProfilePage({
       </div>
 
       {/* Account Info */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-4">Account Information</h2>
         <div className="space-y-3">
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-gray-600">Name</span>
+          <div className="flex justify-between py-2 border-b border-white/10">
+            <span className="text-slate-400">Name</span>
             <span className="font-semibold">{user.name}</span>
           </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-gray-600">Language</span>
+          <div className="flex justify-between py-2 border-b border-white/10">
+            <span className="text-slate-400">Language</span>
             <span className="font-semibold">
               {locale === "en" ? "English" : "简体中文"}
             </span>
           </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-gray-600">Member Since</span>
+          <div className="flex justify-between py-2 border-b border-white/10">
+            <span className="text-slate-400">Member Since</span>
             <span className="font-semibold">
               {new Date(user.created_at).toLocaleDateString(
                 locale === "zh-CN" ? "zh-CN" : "en-US",

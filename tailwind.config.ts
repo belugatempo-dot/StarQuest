@@ -14,7 +14,9 @@ const config: Config = {
         success: "#10B981", // 绿色/正面行为
         warning: "#F59E0B", // 橙色/提醒
         danger: "#EF4444", // 红色/扣分
-        background: "#F9FAFB", // 浅灰白
+        background: "#0f172a", // Dark night blue
+        surface: "#162a46", // Card/modal backgrounds
+        "surface-light": "#1e3a5f", // Lighter surface variant
         // Starry Night Theme Colors
         night: {
           deep: "#0f172a", // Deep Night Blue (darkest)

@@ -23,25 +23,25 @@ export default async function HomePage({
           <h1 className="text-6xl font-bold text-primary">
             ⭐ {t("brand.name")}
           </h1>
-          <p className="text-2xl text-gray-700">{t("brand.slogan")}</p>
+          <p className="text-2xl text-slate-300">{t("brand.slogan")}</p>
         </div>
 
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <div className="p-6 bg-white rounded-lg shadow-md">
+          <div className="p-6 dark-card rounded-lg shadow-md">
             <div className="text-4xl mb-2">📋</div>
             <h3 className="text-xl font-semibold mb-2">{t("common.quests")}</h3>
-            <p className="text-gray-600">Complete daily tasks and positive behaviors</p>
+            <p className="text-slate-400">Complete daily tasks and positive behaviors</p>
           </div>
-          <div className="p-6 bg-white rounded-lg shadow-md">
+          <div className="p-6 dark-card rounded-lg shadow-md">
             <div className="text-4xl mb-2">⭐</div>
             <h3 className="text-xl font-semibold mb-2">{t("common.stars")}</h3>
-            <p className="text-gray-600">Earn stars for every achievement</p>
+            <p className="text-slate-400">Earn stars for every achievement</p>
           </div>
-          <div className="p-6 bg-white rounded-lg shadow-md">
+          <div className="p-6 dark-card rounded-lg shadow-md">
             <div className="text-4xl mb-2">🎁</div>
             <h3 className="text-xl font-semibold mb-2">{t("common.rewards")}</h3>
-            <p className="text-gray-600">Redeem exciting rewards with your stars</p>
+            <p className="text-slate-400">Redeem exciting rewards with your stars</p>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export default async function HomePage({
         </div>
 
         {/* Footer */}
-        <div className="mt-16 text-gray-500 text-sm">
+        <div className="mt-16 text-slate-400 text-sm">
           <p>© 2026 Beluga Tempo | 鲸律</p>
         </div>
       </div>

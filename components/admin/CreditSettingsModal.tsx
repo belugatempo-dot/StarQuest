@@ -97,16 +97,16 @@ export default function CreditSettingsModal({
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-6">
           {/* Current Status */}
           {balance && (
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+            <div className="bg-white/5 rounded-lg p-4 space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600">{t("credit.currentBalance")}:</span>
+                <span className="text-slate-400">{t("credit.currentBalance")}:</span>
                 <span className={`font-semibold ${balance.current_stars < 0 ? "text-danger" : "text-success"}`}>
                   {balance.current_stars} {t("common.stars")}
                 </span>
               </div>
               {hasDebt && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">{t("credit.currentDebt")}:</span>
+                  <span className="text-slate-400">{t("credit.currentDebt")}:</span>
                   <span className="font-semibold text-danger">
                     {currentDebt} {t("common.stars")}
                   </span>
@@ -121,7 +121,7 @@ export default function CreditSettingsModal({
               <label htmlFor="credit-enabled" className="font-medium">
                 {t("credit.enableCredit")}
               </label>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-400">
                 {t("credit.enableCreditDescription")}
               </p>
             </div>
@@ -133,7 +133,7 @@ export default function CreditSettingsModal({
                 onChange={(e) => setCreditEnabled(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              <div className="w-11 h-6 bg-white/15 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
             </label>
           </div>
 
@@ -151,9 +151,9 @@ export default function CreditSettingsModal({
                   max={1000}
                   value={creditLimit}
                   onChange={(e) => setCreditLimit(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
                   {t("common.stars")}
                 </span>
               </div>
@@ -162,7 +162,7 @@ export default function CreditSettingsModal({
                   {t("credit.limitBelowDebtWarning")}
                 </p>
               )}
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-slate-400 mt-1">
                 {t("credit.creditLimitDescription")}
               </p>
             </div>
@@ -180,8 +180,8 @@ export default function CreditSettingsModal({
 
           {/* Interest Info */}
           {creditEnabled && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+              <p className="text-sm text-blue-300">
                 <span className="font-semibold">📊 {t("credit.note")}:</span>{" "}
                 {t("credit.interestInfo")}
               </p>
@@ -200,14 +200,14 @@ export default function CreditSettingsModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-slate-300 hover:bg-white/5 transition"
             >
               {t("common.cancel")}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
               {loading ? t("common.saving") : t("common.save")}
             </button>

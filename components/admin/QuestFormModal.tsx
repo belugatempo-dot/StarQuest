@@ -130,7 +130,7 @@ export default function QuestFormModal({
             <input
               type="text" value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
               placeholder="e.g., Make the bed" required
             />
           </div>
@@ -141,7 +141,7 @@ export default function QuestFormModal({
             <input
               type="text" value={nameZh}
               onChange={(e) => setNameZh(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
               placeholder="例如：整理床铺"
             />
           </div>
@@ -157,7 +157,7 @@ export default function QuestFormModal({
             {QUEST_TYPES.map((t) => (
               <button key={t} type="button" onClick={() => setType(t)}
                 className={`px-4 py-3 rounded-lg border-2 transition ${
-                  type === t ? "border-primary bg-primary/10 font-semibold" : "border-gray-200 hover:border-gray-300"
+                  type === t ? "border-primary bg-primary/10 font-semibold" : "border-white/10 hover:border-white/20"
                 }`}>
                 {locale === "zh-CN"
                   ? { duty: "职责", bonus: "奖励", violation: "违规" }[t]
@@ -166,7 +166,7 @@ export default function QuestFormModal({
             ))}
           </div>
           {type !== "bonus" && (
-            <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+            <div className="mt-3 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
               {locale === "zh-CN"
                 ? "⚠️ 注意：孩子只能看到「奖励」类型的任务。「职责」和「违规」类型仅家长可见。"
                 : "⚠️ Note: Children can only see 'Bonus' quests. 'Duty' and 'Violation' quests are parent-only."}
@@ -184,7 +184,7 @@ export default function QuestFormModal({
             {QUEST_SCOPES.map((s) => (
               <button key={s} type="button" onClick={() => setScope(s)}
                 className={`px-4 py-3 rounded-lg border-2 transition ${
-                  scope === s ? "border-secondary bg-secondary/10 font-semibold" : "border-gray-200 hover:border-gray-300"
+                  scope === s ? "border-secondary bg-secondary/10 font-semibold" : "border-white/10 hover:border-white/20"
                 }`}>
                 {locale === "zh-CN"
                   ? { self: "自己", family: "家人", other: "他人" }[s]
@@ -200,7 +200,7 @@ export default function QuestFormModal({
             {locale === "zh-CN" ? "类别" : "Category"}
           </label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary">
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary">
             <option value="">{locale === "zh-CN" ? "-- 选择类别 --" : "-- Select Category --"}</option>
             {activeCategories.length > 0
               ? activeCategories.map((cat) => (
@@ -222,10 +222,10 @@ export default function QuestFormModal({
           </label>
           <input type="number" value={stars}
             onChange={(e) => setStars(Number(e.target.value))}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
             min="-200" max="200" required
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "正数为奖励，负数为扣除" : "Positive for rewards, negative for deductions"}
           </p>
         </div>
@@ -237,10 +237,10 @@ export default function QuestFormModal({
           </label>
           <input type="text" value={icon}
             onChange={(e) => setIcon(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary text-2xl"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary text-2xl"
             placeholder="📝" maxLength={4}
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "输入一个emoji表情" : "Enter an emoji"}
           </p>
         </div>
@@ -257,9 +257,9 @@ export default function QuestFormModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
           <button type="button" onClick={onClose} disabled={loading}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            className="px-6 py-2 border border-white/20 rounded-lg hover:bg-white/5 transition">
             {locale === "zh-CN" ? "取消" : "Cancel"}
           </button>
           <button type="submit" disabled={loading}
