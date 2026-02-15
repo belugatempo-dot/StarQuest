@@ -41,7 +41,7 @@ export const groupQuests = (quests: Quest[]): QuestGroup[] => {
       key: "self",
       title_en: "Self Bonus",
       title_zh: "自我提升",
-      icon: "⭐",
+      icon: "🥳",
       quests: quests.filter((q) => q.type === "bonus" && q.scope === "self"),
     },
     {
