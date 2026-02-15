@@ -48,6 +48,7 @@ describe("AdminNav", () => {
     expect(screen.getByText("admin.manageRewards")).toBeInTheDocument();
     expect(screen.getByText("admin.manageLevels")).toBeInTheDocument();
     expect(screen.getByText("admin.familyManagement")).toBeInTheDocument();
+    expect(screen.getByText("admin.settings")).toBeInTheDocument();
   });
 
   it("highlights active nav item", () => {

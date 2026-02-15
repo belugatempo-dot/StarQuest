@@ -30,6 +30,7 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
     { path: `/${locale}/admin/rewards`, label: t("admin.manageRewards"), icon: "🎁" },
     { path: `/${locale}/admin/levels`, label: t("admin.manageLevels"), icon: "🏆" },
     { path: `/${locale}/admin/family`, label: t("admin.familyManagement"), icon: "👥" },
+    { path: `/${locale}/admin/settings`, label: t("admin.settings"), icon: "⚙️" },
   ];
 
   return (
