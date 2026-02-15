@@ -7,6 +7,7 @@ import type { User } from "@/lib/auth";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import SettingsDrawer from "@/components/admin/SettingsDrawer";
 
 export default function AdminNav({ user, locale }: { user: User; locale: string }) {
   const t = useTranslations();
@@ -23,14 +24,11 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
 
   const navItems = [
     { path: `/${locale}/admin/activity`, label: t("admin.activityLog"), icon: "📊" },
-    { path: `/${locale}/admin`, label: t("admin.title"), icon: "🏠" },
+    { path: `/${locale}/admin/dashboard`, label: t("admin.title"), icon: "🏠" },
     { path: `/${locale}/admin/record`, label: t("admin.recordStars"), icon: "⭐" },
-    { path: `/${locale}/admin/approve`, label: t("admin.approvalCenter"), icon: "✅" },
     { path: `/${locale}/admin/quests`, label: t("admin.manageQuests"), icon: "📋" },
     { path: `/${locale}/admin/rewards`, label: t("admin.manageRewards"), icon: "🎁" },
     { path: `/${locale}/admin/levels`, label: t("admin.manageLevels"), icon: "🏆" },
-    { path: `/${locale}/admin/family`, label: t("admin.familyManagement"), icon: "👥" },
-    { path: `/${locale}/admin/settings`, label: t("admin.settings"), icon: "⚙️" },
   ];
 
   return (
@@ -38,7 +36,7 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
       <div className="container mx-auto px-4 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href={`/${locale}/admin`} className="flex items-center space-x-2">
+          <Link href={`/${locale}/admin/activity`} className="flex items-center space-x-2">
             <span className="text-2xl">⭐</span>
             <div>
               <span className="text-xl font-bold text-primary">{t("brand.name")}</span>
@@ -52,6 +50,11 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">👋 {user.name}</span>
             <LanguageSwitcher />
+            <SettingsDrawer
+              familyId={user.family_id || ""}
+              parentEmail={user.email || ""}
+              locale={locale}
+            />
             <button
               onClick={handleLogout}
               className="text-sm text-gray-600 hover:text-gray-900"

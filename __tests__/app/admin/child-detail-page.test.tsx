@@ -135,8 +135,8 @@ describe("ChildDetailPage", () => {
     });
     render(jsx);
 
-    const backLink = screen.getByText(/Back to Family/);
-    expect(backLink.closest("a")).toHaveAttribute("href", "/en/admin/family");
+    const backLink = screen.getByText(/Back to Dashboard/);
+    expect(backLink.closest("a")).toHaveAttribute("href", "/en/admin/dashboard");
   });
 
   it("renders quick action links", async () => {

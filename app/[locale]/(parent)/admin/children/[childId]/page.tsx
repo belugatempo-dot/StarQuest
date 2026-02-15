@@ -106,10 +106,10 @@ export default async function ChildDetailPage({
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Back Button */}
       <Link
-        href={`/${locale}/admin/family`}
+        href={`/${locale}/admin/dashboard`}
         className="inline-flex items-center text-secondary hover:underline mb-6"
       >
-        ← Back to Family
+        ← Back to Dashboard
       </Link>
 
       {/* Header with Child Info */}
@@ -181,7 +181,7 @@ export default async function ChildDetailPage({
           <div className="text-sm opacity-90">Add stars for this child</div>
         </Link>
         <Link
-          href={`/${locale}/admin/approve`}
+          href={`/${locale}/admin/dashboard#approval-center`}
           className="bg-primary text-white p-6 rounded-lg hover:bg-primary/90 transition text-center"
         >
           <div className="text-4xl mb-2">✅</div>
