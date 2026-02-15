@@ -1,15 +1,11 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ReportPreferencesForm from "@/components/admin/ReportPreferencesForm";
 
-// Mock Supabase client
-const mockFrom = jest.fn();
-jest.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    from: mockFrom,
-  }),
-}));
+// Mock fetch globally
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
 describe("ReportPreferencesForm", () => {
   const defaultProps = {
@@ -21,10 +17,9 @@ describe("ReportPreferencesForm", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFrom.mockReturnValue({
-      insert: jest.fn().mockResolvedValue({ error: null }),
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ error: null }),
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
     });
   });
 
@@ -99,12 +94,7 @@ describe("ReportPreferencesForm", () => {
     expect(weeklyCheckbox).not.toBeChecked();
   });
 
-  it("submits form with insert for new preferences", async () => {
-    const mockInsert = jest.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({
-      insert: mockInsert,
-    });
-
+  it("submits form via fetch to API route", async () => {
     const user = userEvent.setup();
     render(<ReportPreferencesForm {...defaultProps} />);
 
@@ -112,57 +102,44 @@ describe("ReportPreferencesForm", () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/en/api/admin/update-report-preferences",
         expect.objectContaining({
-          family_id: "family-123",
-          weekly_report_enabled: true,
-          monthly_report_enabled: true,
-          settlement_email_enabled: true,
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: expect.any(String),
         })
       );
     });
+
+    // Verify the body content
+    const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(callBody).toEqual(
+      expect.objectContaining({
+        familyId: "family-123",
+        weeklyReportEnabled: true,
+        monthlyReportEnabled: true,
+        settlementEmailEnabled: true,
+      })
+    );
   });
 
-  it("submits form with update for existing preferences", async () => {
-    const mockUpdate = jest.fn().mockReturnThis();
-    const mockEq = jest.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({
-      update: mockUpdate,
-      eq: mockEq,
-    });
-
-    const preferences = {
-      id: "pref-123",
-      family_id: "family-123",
-      report_email: null,
-      weekly_report_enabled: true,
-      monthly_report_enabled: true,
-      settlement_email_enabled: true,
-      timezone: "UTC",
-      report_locale: "en" as const,
-      created_at: "2025-01-01",
-      updated_at: "2025-01-01",
-    };
-
+  it("uses correct locale in API URL", async () => {
     const user = userEvent.setup();
-    render(
-      <ReportPreferencesForm {...defaultProps} preferences={preferences} />
-    );
+    render(<ReportPreferencesForm {...defaultProps} locale="zh-CN" />);
 
     const submitButton = screen.getByRole("button", { name: /save/i });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockUpdate).toHaveBeenCalled();
-      expect(mockEq).toHaveBeenCalledWith("id", "pref-123");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/zh-CN/api/admin/update-report-preferences",
+        expect.any(Object)
+      );
     });
   });
 
   it("shows success message after successful save", async () => {
-    mockFrom.mockReturnValue({
-      insert: jest.fn().mockResolvedValue({ error: null }),
-    });
-
     const user = userEvent.setup();
     render(<ReportPreferencesForm {...defaultProps} />);
 
@@ -174,11 +151,10 @@ describe("ReportPreferencesForm", () => {
     });
   });
 
-  it("shows error message on save failure", async () => {
-    mockFrom.mockReturnValue({
-      insert: jest
-        .fn()
-        .mockResolvedValue({ error: { message: "Database error" } }),
+  it("shows error message on save failure (non-ok response)", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: "Database error" }),
     });
 
     const user = userEvent.setup();
@@ -192,14 +168,26 @@ describe("ReportPreferencesForm", () => {
     });
   });
 
+  it("shows error message on network failure", async () => {
+    mockFetch.mockRejectedValue(new Error("Network error"));
+
+    const user = userEvent.setup();
+    render(<ReportPreferencesForm {...defaultProps} />);
+
+    const submitButton = screen.getByRole("button", { name: /save/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/saveError/i)).toBeInTheDocument();
+    });
+  });
+
   it("disables submit button while saving", async () => {
-    let resolveInsert: (value: { error: null }) => void;
-    const insertPromise = new Promise<{ error: null }>((resolve) => {
-      resolveInsert = resolve;
+    let resolveFetch: (value: any) => void;
+    const fetchPromise = new Promise((resolve) => {
+      resolveFetch = resolve;
     });
-    mockFrom.mockReturnValue({
-      insert: jest.fn().mockReturnValue(insertPromise),
-    });
+    mockFetch.mockReturnValue(fetchPromise);
 
     const user = userEvent.setup();
     render(<ReportPreferencesForm {...defaultProps} />);
@@ -210,7 +198,10 @@ describe("ReportPreferencesForm", () => {
     expect(submitButton).toBeDisabled();
     expect(submitButton).toHaveTextContent(/saving/i);
 
-    resolveInsert!({ error: null });
+    resolveFetch!({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
 
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
@@ -278,11 +269,6 @@ describe("ReportPreferencesForm", () => {
   });
 
   it("submits form with modified values", async () => {
-    const mockInsert = jest.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({
-      insert: mockInsert,
-    });
-
     const user = userEvent.setup();
     render(<ReportPreferencesForm {...defaultProps} />);
 
@@ -307,25 +293,22 @@ describe("ReportPreferencesForm", () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalled();
+      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(callBody).toEqual(
         expect.objectContaining({
-          report_email: "custom@test.com",
+          reportEmail: "custom@test.com",
           timezone: "Asia/Tokyo",
-          report_locale: "zh-CN",
-          settlement_email_enabled: false,
-          weekly_report_enabled: true,
-          monthly_report_enabled: true,
+          reportLocale: "zh-CN",
+          settlementEmailEnabled: false,
+          weeklyReportEnabled: true,
+          monthlyReportEnabled: true,
         })
       );
     });
   });
 
   it("trims email and sends null when empty", async () => {
-    const mockInsert = jest.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({
-      insert: mockInsert,
-    });
-
     const user = userEvent.setup();
     render(<ReportPreferencesForm {...defaultProps} />);
 
@@ -334,11 +317,9 @@ describe("ReportPreferencesForm", () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          report_email: null,
-        })
-      );
+      expect(mockFetch).toHaveBeenCalled();
+      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(callBody.reportEmail).toBeNull();
     });
   });
 });
