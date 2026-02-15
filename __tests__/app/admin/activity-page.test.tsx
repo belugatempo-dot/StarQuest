@@ -66,6 +66,7 @@ jest.mock("@/lib/activity-utils", () => ({
     negativeRecords: 0,
     totalStarsGiven: 0,
     totalStarsDeducted: 0,
+    starsRedeemed: 0,
     netStars: 0,
   }),
 }));
@@ -96,6 +97,24 @@ describe("ActivityPage", () => {
     expect(screen.getByText("Positive")).toBeInTheDocument();
     expect(screen.getByText("Negative")).toBeInTheDocument();
     expect(screen.getByText(/Net Stars/)).toBeInTheDocument();
+  });
+
+  it("renders stars redeemed card", async () => {
+    const jsx = await ActivityPage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    expect(screen.getByText(/Stars Redeemed/)).toBeInTheDocument();
+  });
+
+  it("renders stars redeemed card in Chinese", async () => {
+    const jsx = await ActivityPage({
+      params: Promise.resolve({ locale: "zh-CN" }),
+    });
+    render(jsx);
+
+    expect(screen.getByText(/星星兑换/)).toBeInTheDocument();
   });
 
   it("renders credit borrowed card", async () => {
@@ -359,6 +378,7 @@ describe("ActivityPage with data", () => {
       negativeRecords: 4,
       totalStarsGiven: 10,
       totalStarsDeducted: -30,
+      starsRedeemed: 0,
       netStars: -20,
     });
 
@@ -381,6 +401,7 @@ describe("ActivityPage with data", () => {
       negativeRecords: 3,
       totalStarsGiven: 50,
       totalStarsDeducted: -15,
+      starsRedeemed: 0,
       netStars: 35,
     });
 

@@ -149,6 +149,7 @@ jest.mock("@/lib/activity-utils", () => ({
     ).length,
     totalStarsGiven: 0,
     totalStarsDeducted: 0,
+    starsRedeemed: 0,
     netStars: 0,
     all: activities.length,
     approved: activities.filter((a: any) => a.status === "approved").length,
