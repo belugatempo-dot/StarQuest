@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
@@ -29,11 +29,7 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
   const [formInterestRate, setFormInterestRate] = useState(5);
   const [hasMaxDebt, setHasMaxDebt] = useState(true);
 
-  useEffect(() => {
-    fetchTiers();
-  }, [familyId]);
-
-  const fetchTiers = async () => {
+  const fetchTiers = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error: fetchError } = await supabase
@@ -50,7 +46,11 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
     } finally {
       setLoading(false);
     }
-  };
+  }, [familyId, supabase]);
+
+  useEffect(() => {
+    fetchTiers();
+  }, [fetchTiers]);
 
   const initializeDefaultTiers = async () => {
     setSaving(true);

@@ -200,7 +200,7 @@ export default async function ActivityPage({
         locale={locale}
         role="parent"
         quests={activeQuests || []}
-        children={familyChildren || []}
+        familyChildren={familyChildren || []}
         currentUserId={user.id}
         familyId={user.family_id!}
       />

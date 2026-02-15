@@ -39,7 +39,7 @@ export default function UnifiedActivityList({
   currentChildId,
   permissions: customPermissions,
   quests,
-  children: childrenProp,
+  familyChildren: childrenProp,
   currentUserId,
   familyId,
 }: UnifiedActivityListProps) {
@@ -405,7 +405,7 @@ export default function UnifiedActivityList({
           role={role}
           locale={locale}
           quests={quests}
-          children={childrenProp}
+          familyChildren={childrenProp}
           currentUserId={currentUserId}
           familyId={familyId}
           onClose={() => setShowAddRecordModal(false)}

@@ -297,7 +297,7 @@ export default async function AdminDashboard({
         </div>
         <FamilyMemberList
           parents={parents}
-          children={children}
+          familyChildren={children}
           currentUser={user}
           locale={locale}
         />

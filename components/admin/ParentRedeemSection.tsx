@@ -15,7 +15,7 @@ interface ChildBalance {
 }
 
 interface ParentRedeemSectionProps {
-  children: User[];
+  familyChildren: User[];
   rewards: Reward[];
   childBalances: ChildBalance[];
   locale: string;
@@ -24,7 +24,7 @@ interface ParentRedeemSectionProps {
 }
 
 export default function ParentRedeemSection({
-  children,
+  familyChildren: children,
   rewards,
   childBalances,
   locale,

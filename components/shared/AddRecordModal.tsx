@@ -19,7 +19,7 @@ interface AddRecordModalProps {
   role: ActivityRole;
   locale: string;
   quests: Quest[];
-  children?: User[];
+  familyChildren?: User[];
   currentUserId: string;
   familyId: string;
   onClose: () => void;
@@ -31,7 +31,7 @@ export default function AddRecordModal({
   role,
   locale,
   quests,
-  children,
+  familyChildren: children,
   currentUserId,
   familyId,
   onClose,

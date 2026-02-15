@@ -115,7 +115,7 @@ export default async function RewardManagementPage({
 
       {/* Quick Redeem Section */}
       <ParentRedeemSection
-        children={children || []}
+        familyChildren={children || []}
         rewards={rewards || []}
         childBalances={(childBalances || []) as any}
         locale={locale}

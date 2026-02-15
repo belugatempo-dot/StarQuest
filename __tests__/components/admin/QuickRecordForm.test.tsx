@@ -201,7 +201,7 @@ describe("QuickRecordForm Component", () => {
       <NextIntlClientProvider messages={messages} locale={locale}>
         <QuickRecordForm
           quests={quests}
-          children={children}
+          familyChildren={children}
           locale={locale}
           parentId="parent1"
           familyId="fam1"

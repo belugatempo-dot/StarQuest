@@ -55,7 +55,7 @@ jest.mock("@/components/admin/SettlementHistoryTable", () => {
 describe("CreditManagementClient", () => {
   const defaultProps = {
     familyId: "family-123",
-    children: [
+    familyChildren: [
       { id: "child-1", name: "Alice", family_id: "family-123" },
       { id: "child-2", name: "Bob", family_id: "family-123" },
     ],
@@ -143,7 +143,7 @@ describe("CreditManagementClient", () => {
 
   describe("empty state", () => {
     it("shows empty state when no children exist", () => {
-      render(<CreditManagementClient {...defaultProps} children={[]} />);
+      render(<CreditManagementClient {...defaultProps} familyChildren={[]} />);
       expect(screen.getByText("credit.noChildren")).toBeInTheDocument();
     });
   });

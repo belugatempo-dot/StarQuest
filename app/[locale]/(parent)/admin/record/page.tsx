@@ -44,7 +44,7 @@ export default async function RecordStarsPage({
 
       {/* Quick Record Form */}
       <QuickRecordForm
-        children={children || []}
+        familyChildren={children || []}
         quests={quests || []}
         locale={locale}
         parentId={user.id}
