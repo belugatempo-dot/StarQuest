@@ -7,6 +7,9 @@
 
 import type { Database } from "@/types/database";
 
+type Quest = Database["public"]["Tables"]["quests"]["Row"];
+type User = Database["public"]["Tables"]["users"]["Row"];
+
 /** Star transaction from Supabase query with joined relations */
 export type StarTransaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
   quests?: {
@@ -129,4 +132,8 @@ export interface UnifiedActivityListProps {
   role: ActivityRole;
   currentChildId?: string;
   permissions?: ActivityPermissions;
+  quests?: Quest[];
+  children?: User[];
+  currentUserId?: string;
+  familyId?: string;
 }

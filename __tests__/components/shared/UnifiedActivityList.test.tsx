@@ -86,7 +86,23 @@ jest.mock("@/lib/date-utils", () => ({
     const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   },
+  getTodayString: () => "2025-01-15",
+  formatDateOnly: (dateStr: string, locale: string) => dateStr,
 }));
+
+// Mock AddRecordModal
+jest.mock("@/components/shared/AddRecordModal", () => {
+  return function MockAddRecordModal(props: any) {
+    return (
+      <div data-testid="add-record-modal">
+        <span>{props.date}</span>
+        <span>{props.role}</span>
+        <button onClick={props.onClose}>Close Add Record</button>
+        <button onClick={props.onSuccess}>Submit Record</button>
+      </div>
+    );
+  };
+});
 
 // Mock activity-utils
 jest.mock("@/lib/activity-utils", () => ({
@@ -1277,6 +1293,163 @@ describe("UnifiedActivityList", () => {
       // The edit button exists but not delete — verified by UI behavior
       const deleteButtons = screen.queryAllByText("🗑️");
       expect(deleteButtons.length).toBe(0);
+    });
+  });
+
+  describe("Add Record Button", () => {
+    const mockQuests = [
+      { id: "q1", name_en: "Clean Room", name_zh: "打扫房间", type: "bonus", stars: 5, icon: "🧹", is_active: true, family_id: "fam-1" },
+      { id: "q2", name_en: "Missed Homework", name_zh: "没做作业", type: "duty", stars: -3, icon: "📋", is_active: true, family_id: "fam-1" },
+    ] as any[];
+
+    const mockChildren = [
+      { id: "child-1", name: "Alice", avatar_url: null, role: "child", family_id: "fam-1" },
+    ] as any[];
+
+    const parentPropsWithQuests = {
+      ...parentProps,
+      quests: mockQuests,
+      children: mockChildren,
+      currentUserId: "parent-1",
+      familyId: "fam-1",
+    };
+
+    const childPropsWithQuests = {
+      ...childProps,
+      quests: [mockQuests[0]], // Only bonus quests for child
+      currentUserId: "child-1",
+      familyId: "fam-1",
+    };
+
+    it("should not show add record button when no date is selected", () => {
+      render(<UnifiedActivityList {...parentPropsWithQuests} />);
+      expect(screen.queryByTestId("add-record-button")).not.toBeInTheDocument();
+    });
+
+    it("should show add record button when a date is selected (parent)", () => {
+      render(<UnifiedActivityList {...parentPropsWithQuests} />);
+
+      // Click calendar to select a date (mock sets "2025-01-15", which is <= getTodayString "2025-01-15")
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.getByTestId("add-record-button")).toBeInTheDocument();
+      expect(screen.getByText("activity.addRecord")).toBeInTheDocument();
+    });
+
+    it("should show request stars button for child role", () => {
+      render(<UnifiedActivityList {...childPropsWithQuests} />);
+
+      // Switch to calendar view first
+      fireEvent.click(screen.getByText(/activity.calendar/));
+
+      // Select a date
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.getByTestId("add-record-button")).toBeInTheDocument();
+      expect(screen.getByText("activity.requestStars")).toBeInTheDocument();
+    });
+
+    it("should not show add record button when quests prop is missing", () => {
+      render(<UnifiedActivityList {...parentProps} />);
+
+      // Select a date
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.queryByTestId("add-record-button")).not.toBeInTheDocument();
+    });
+
+    it("should open add record modal when button is clicked", () => {
+      render(<UnifiedActivityList {...parentPropsWithQuests} />);
+
+      // Select a date
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      // Click add record button
+      fireEvent.click(screen.getByTestId("add-record-button"));
+
+      expect(screen.getByTestId("add-record-modal")).toBeInTheDocument();
+    });
+
+    it("should close add record modal when close is clicked", () => {
+      render(<UnifiedActivityList {...parentPropsWithQuests} />);
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("add-record-button"));
+
+      expect(screen.getByTestId("add-record-modal")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText("Close Add Record"));
+
+      expect(screen.queryByTestId("add-record-modal")).not.toBeInTheDocument();
+    });
+
+    it("should close add record modal on success", () => {
+      render(<UnifiedActivityList {...parentPropsWithQuests} />);
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("add-record-button"));
+
+      fireEvent.click(screen.getByText("Submit Record"));
+
+      expect(screen.queryByTestId("add-record-modal")).not.toBeInTheDocument();
+    });
+
+    it("should show CTA in empty state when date is selected and quests available", () => {
+      // Render with no activities so empty state shows
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithQuests}
+          activities={[]}
+        />
+      );
+
+      // Select a date
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.getByTestId("add-record-cta")).toBeInTheDocument();
+      expect(screen.getByText(/activity.addRecordCta/)).toBeInTheDocument();
+    });
+
+    it("should open modal from CTA button in empty state", () => {
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithQuests}
+          activities={[]}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("add-record-cta"));
+
+      expect(screen.getByTestId("add-record-modal")).toBeInTheDocument();
+    });
+
+    it("should show child request CTA text in empty state for child role", () => {
+      render(
+        <UnifiedActivityList
+          {...childPropsWithQuests}
+          activities={[]}
+        />
+      );
+
+      // Switch to calendar view
+      fireEvent.click(screen.getByText(/activity.calendar/));
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.getByText(/activity.requestStarsCta/)).toBeInTheDocument();
+    });
+
+    it("should not show add record button when quests array is empty", () => {
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithQuests}
+          quests={[]}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.queryByTestId("add-record-button")).not.toBeInTheDocument();
     });
   });
 });

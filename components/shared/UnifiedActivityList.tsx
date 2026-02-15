@@ -19,6 +19,7 @@ import CalendarView from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
+import AddRecordModal from "@/components/shared/AddRecordModal";
 import type {
   UnifiedActivityItem,
   UnifiedActivityListProps,
@@ -29,6 +30,7 @@ import {
   groupActivitiesByDate,
   calculateActivityStats,
 } from "@/lib/activity-utils";
+import { getTodayString } from "@/lib/date-utils";
 
 export default function UnifiedActivityList({
   activities,
@@ -36,6 +38,10 @@ export default function UnifiedActivityList({
   role,
   currentChildId,
   permissions: customPermissions,
+  quests,
+  children: childrenProp,
+  currentUserId,
+  familyId,
 }: UnifiedActivityListProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -83,6 +89,9 @@ export default function UnifiedActivityList({
   const [resubmitTransaction, setResubmitTransaction] = useState<any | null>(
     null
   );
+
+  // Add record modal state
+  const [showAddRecordModal, setShowAddRecordModal] = useState(false);
 
   // Batch selection state (parent only)
   const batch = useBatchSelection();
@@ -182,6 +191,13 @@ export default function UnifiedActivityList({
     }
   };
 
+  // Determine if "Add Record" button should be shown
+  const canAddRecord = useMemo(() => {
+    if (!quests || quests.length === 0 || !filterDate || !currentUserId || !familyId) return false;
+    const today = getTodayString();
+    return filterDate <= today;
+  }, [quests, filterDate, currentUserId, familyId]);
+
   // Convert activities to transaction format for CalendarView
   const transactionsForCalendar = useMemo(() => {
     return activities.map((a) => ({
@@ -200,7 +216,7 @@ export default function UnifiedActivityList({
       >
         {/* Calendar Picker - Left Side */}
         {viewMode === "calendar" && (
-          <div className="lg:sticky lg:top-4 lg:self-start">
+          <div className="lg:sticky lg:top-4 lg:self-start space-y-3">
             <CalendarView
               transactions={transactionsForCalendar as any}
               locale={locale}
@@ -211,6 +227,20 @@ export default function UnifiedActivityList({
                 setEndDate("");
               }}
             />
+            {canAddRecord && (
+              <button
+                onClick={() => setShowAddRecordModal(true)}
+                className="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-medium flex items-center justify-center space-x-2"
+                data-testid="add-record-button"
+              >
+                <span>➕</span>
+                <span>
+                  {role === "parent"
+                    ? t("activity.addRecord")
+                    : t("activity.requestStars")}
+                </span>
+              </button>
+            )}
           </div>
         )}
 
@@ -286,6 +316,17 @@ export default function UnifiedActivityList({
                   <p className="text-gray-500">
                     {t("activity.noRecordsFound")}
                   </p>
+                  {canAddRecord && (
+                    <button
+                      onClick={() => setShowAddRecordModal(true)}
+                      className="mt-4 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm"
+                      data-testid="add-record-cta"
+                    >
+                      ➕ {role === "parent"
+                        ? t("activity.addRecordCta")
+                        : t("activity.requestStarsCta")}
+                    </button>
+                  )}
                 </div>
               ) : (
                 groupedByDate.map(([date, dayActivities]) => (
@@ -354,6 +395,21 @@ export default function UnifiedActivityList({
           transaction={resubmitTransaction}
           locale={locale}
           onClose={() => setResubmitTransaction(null)}
+        />
+      )}
+
+      {/* Add Record Modal */}
+      {showAddRecordModal && filterDate && currentUserId && familyId && quests && (
+        <AddRecordModal
+          date={filterDate}
+          role={role}
+          locale={locale}
+          quests={quests}
+          children={childrenProp}
+          currentUserId={currentUserId}
+          familyId={familyId}
+          onClose={() => setShowAddRecordModal(false)}
+          onSuccess={() => setShowAddRecordModal(false)}
         />
       )}
 

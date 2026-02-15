@@ -83,6 +83,20 @@ export default async function ActivityPage({
     console.error("Error fetching credit transactions:", creditError);
   }
 
+  // Fetch children for add-record modal
+  const { data: familyChildren } = await adminClient
+    .from("users")
+    .select("*")
+    .eq("family_id", user.family_id!)
+    .eq("role", "child");
+
+  // Fetch active quests for add-record modal
+  const { data: activeQuests } = await supabase
+    .from("quests")
+    .select("*")
+    .eq("family_id", user.family_id!)
+    .eq("is_active", true);
+
   const t = await getTranslations();
 
   // Convert to unified activity items using utility functions
@@ -174,7 +188,15 @@ export default async function ActivityPage({
       </div>
 
       {/* Activity List with Filters */}
-      <UnifiedActivityList activities={sortedActivities} locale={locale} role="parent" />
+      <UnifiedActivityList
+        activities={sortedActivities}
+        locale={locale}
+        role="parent"
+        quests={activeQuests || []}
+        children={familyChildren || []}
+        currentUserId={user.id}
+        familyId={user.family_id!}
+      />
     </div>
   );
 }

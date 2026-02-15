@@ -32,6 +32,14 @@ export default async function HistoryPage({
     console.error("Error fetching transactions:", error);
   }
 
+  // Fetch bonus quests for add-record modal
+  const { data: bonusQuests } = await supabase
+    .from("quests")
+    .select("*")
+    .eq("family_id", user.family_id!)
+    .eq("is_active", true)
+    .eq("type", "bonus");
+
   const t = await getTranslations();
 
   // Transform transactions to unified format
@@ -58,6 +66,9 @@ export default async function HistoryPage({
         locale={locale}
         role="child"
         currentChildId={user.id}
+        quests={bonusQuests || []}
+        currentUserId={user.id}
+        familyId={user.family_id!}
       />
     </div>
   );
