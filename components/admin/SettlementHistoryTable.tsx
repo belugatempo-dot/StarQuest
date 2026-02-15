@@ -76,17 +76,17 @@ export default function SettlementHistoryTable({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-6 bg-white/15 rounded w-1/3"></div>
+          <div className="h-32 bg-white/15 rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="dark-card rounded-lg shadow-md p-6">
       <h2 className="text-xl font-bold mb-4">{t("credit.settlementHistory")}</h2>
 
       {error && (
@@ -96,33 +96,33 @@ export default function SettlementHistoryTable({
       )}
 
       {settlements.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <p className="text-gray-600">{t("credit.noSettlementsYet")}</p>
-          <p className="text-sm text-gray-500 mt-2">{t("credit.settlementsInfo")}</p>
+        <div className="text-center py-8 bg-white/5 rounded-lg">
+          <p className="text-slate-400">{t("credit.noSettlementsYet")}</p>
+          <p className="text-sm text-slate-400 mt-2">{t("credit.settlementsInfo")}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-2 text-sm font-medium text-gray-600">
+              <tr className="border-b border-white/10">
+                <th className="text-left py-3 px-2 text-sm font-medium text-slate-400">
                   {t("credit.settlementDate")}
                 </th>
                 {!childId && (
-                  <th className="text-left py-3 px-2 text-sm font-medium text-gray-600">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-slate-400">
                     {t("credit.child")}
                   </th>
                 )}
-                <th className="text-right py-3 px-2 text-sm font-medium text-gray-600">
+                <th className="text-right py-3 px-2 text-sm font-medium text-slate-400">
                   {t("credit.debt")}
                 </th>
-                <th className="text-right py-3 px-2 text-sm font-medium text-gray-600">
+                <th className="text-right py-3 px-2 text-sm font-medium text-slate-400">
                   {t("credit.interest")}
                 </th>
-                <th className="text-right py-3 px-2 text-sm font-medium text-gray-600">
+                <th className="text-right py-3 px-2 text-sm font-medium text-slate-400">
                   {t("credit.limitChange")}
                 </th>
-                <th className="text-center py-3 px-2 text-sm font-medium text-gray-600">
+                <th className="text-center py-3 px-2 text-sm font-medium text-slate-400">
                   {t("credit.details")}
                 </th>
               </tr>
@@ -132,7 +132,7 @@ export default function SettlementHistoryTable({
                 <>
                   <tr
                     key={settlement.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+                    className="border-b border-white/10 hover:bg-white/5"
                   >
                     <td className="py-3 px-2">
                       {formatDateOnly(settlement.settlement_date, locale)}
@@ -166,7 +166,7 @@ export default function SettlementHistoryTable({
                           ? `+${settlement.credit_limit_adjustment}`
                           : settlement.credit_limit_adjustment}
                       </span>
-                      <span className="text-gray-400 text-xs ml-1">
+                      <span className="text-slate-500 text-xs ml-1">
                         ({settlement.credit_limit_before} → {settlement.credit_limit_after})
                       </span>
                     </td>
@@ -182,12 +182,12 @@ export default function SettlementHistoryTable({
                   {/* Expanded Details Row */}
                   {expandedId === settlement.id && (
                     <tr key={`${settlement.id}-details`}>
-                      <td colSpan={childId ? 5 : 6} className="bg-gray-50 px-4 py-3">
+                      <td colSpan={childId ? 5 : 6} className="bg-white/5 px-4 py-3">
                         <div className="space-y-3">
                           {/* Balance Info */}
                           <div className="flex space-x-6 text-sm">
                             <div>
-                              <span className="text-gray-500">{t("credit.balanceBefore")}:</span>
+                              <span className="text-slate-400">{t("credit.balanceBefore")}:</span>
                               <span
                                 className={`ml-2 font-medium ${
                                   settlement.balance_before < 0 ? "text-danger" : ""
@@ -197,7 +197,7 @@ export default function SettlementHistoryTable({
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-500">{t("credit.settledAt")}:</span>
+                              <span className="text-slate-400">{t("credit.settledAt")}:</span>
                               <span className="ml-2">
                                 {new Date(settlement.settled_at).toLocaleString(
                                   locale === "zh-CN" ? "zh-CN" : "en-US"
@@ -214,9 +214,9 @@ export default function SettlementHistoryTable({
                                 <h4 className="text-sm font-medium mb-2">
                                   {t("credit.interestBreakdown")}:
                                 </h4>
-                                <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                                <div className="bg-white/5 rounded border border-white/10 overflow-hidden">
                                   <table className="w-full text-sm">
-                                    <thead className="bg-gray-100">
+                                    <thead className="bg-white/10">
                                       <tr>
                                         <th className="text-left py-2 px-3">{t("credit.tier")}</th>
                                         <th className="text-right py-2 px-3">{t("credit.debtInTier")}</th>
@@ -227,7 +227,7 @@ export default function SettlementHistoryTable({
                                     <tbody>
                                       {(settlement.interest_breakdown as InterestBreakdownItem[]).map(
                                         (item, idx) => (
-                                          <tr key={idx} className="border-t border-gray-100">
+                                          <tr key={idx} className="border-t border-white/10">
                                             <td className="py-2 px-3">
                                               {item.min_debt}-{item.max_debt ?? "∞"}
                                             </td>

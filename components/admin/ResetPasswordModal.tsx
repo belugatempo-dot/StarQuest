@@ -78,8 +78,8 @@ export default function ResetPasswordModal({
       onClose={onClose}
     >
       <div className="px-6 pb-6">
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">
+        <div className="mb-4 p-3 bg-white/5 rounded-lg">
+          <p className="text-sm text-slate-400">
             {t("family.resetPasswordFor")}: <span className="font-semibold">{child.name}</span>
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function ResetPasswordModal({
           <div className="space-y-4">
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-300 mb-1">
                 {t("family.newPassword")} <span className="text-red-500">*</span>
               </label>
               <div className="flex space-x-2">
@@ -96,32 +96,32 @@ export default function ResetPasswordModal({
                   type="text"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 dark-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t("family.newPasswordPlaceholder")}
                 />
                 <button
                   type="button"
                   onClick={generatePassword}
-                  className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition text-sm whitespace-nowrap"
+                  className="px-4 py-2 bg-indigo-500/20 text-indigo-300 rounded-lg hover:bg-indigo-500/30 transition text-sm whitespace-nowrap"
                 >
                   {t("family.generate")}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 {t("family.passwordHint")}
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-3 py-2 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
             {/* Warning */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+              <p className="text-sm text-yellow-300">
                 ⚠️ {t("family.resetPasswordWarning")}
               </p>
             </div>
@@ -131,14 +131,14 @@ export default function ResetPasswordModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                className="px-4 py-2 text-slate-300 hover:bg-white/10 rounded-lg transition"
                 disabled={isLoading}
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleResetPassword}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition disabled:bg-gray-400"
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
                 disabled={isLoading || !newPassword}
               >
                 {isLoading ? t("common.resetting") : t("family.resetPasswordButton")}
@@ -148,15 +148,15 @@ export default function ResetPasswordModal({
         ) : (
           <div className="space-y-4">
             {/* Success Message */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-medium mb-2">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+              <p className="text-green-300 font-medium mb-2">
                 ✅ {t("family.passwordResetSuccess")}
               </p>
-              <div className="bg-white border border-green-300 rounded p-3 mt-2">
-                <p className="text-sm text-gray-600 mb-1">{t("family.newPassword")}:</p>
-                <p className="text-2xl font-mono text-green-900 font-bold">{newPassword}</p>
+              <div className="bg-white/5 border border-green-500/30 rounded p-3 mt-2">
+                <p className="text-sm text-slate-400 mb-1">{t("family.newPassword")}:</p>
+                <p className="text-2xl font-mono text-green-300 font-bold">{newPassword}</p>
               </div>
-              <p className="text-sm text-green-700 mt-3">
+              <p className="text-sm text-green-400 mt-3">
                 {t("family.writeDownPassword")}
               </p>
             </div>

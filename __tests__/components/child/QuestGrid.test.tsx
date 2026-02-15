@@ -451,36 +451,36 @@ describe("QuestGrid - getCategoryColor", () => {
   it("applies learning color classes", () => {
     const { container } = renderComponent(makeQuestWithCategory("learning"));
     const badge = container.querySelector(".rounded-full");
-    expect(badge?.className).toContain("bg-blue-100");
-    expect(badge?.className).toContain("text-blue-700");
+    expect(badge?.className).toContain("bg-blue-500/15");
+    expect(badge?.className).toContain("text-blue-300");
   });
 
   it("applies chores color classes", () => {
     const { container } = renderComponent(makeQuestWithCategory("chores"));
     const badge = container.querySelector(".rounded-full");
-    expect(badge?.className).toContain("bg-green-100");
-    expect(badge?.className).toContain("text-green-700");
+    expect(badge?.className).toContain("bg-green-500/15");
+    expect(badge?.className).toContain("text-green-300");
   });
 
   it("applies hygiene color classes", () => {
     const { container } = renderComponent(makeQuestWithCategory("hygiene"));
     const badge = container.querySelector(".rounded-full");
-    expect(badge?.className).toContain("bg-cyan-100");
-    expect(badge?.className).toContain("text-cyan-700");
+    expect(badge?.className).toContain("bg-cyan-500/15");
+    expect(badge?.className).toContain("text-cyan-300");
   });
 
   it("applies health color classes", () => {
     const { container } = renderComponent(makeQuestWithCategory("health"));
     const badge = container.querySelector(".rounded-full");
-    expect(badge?.className).toContain("bg-pink-100");
-    expect(badge?.className).toContain("text-pink-700");
+    expect(badge?.className).toContain("bg-pink-500/15");
+    expect(badge?.className).toContain("text-pink-300");
   });
 
   it("applies social color classes", () => {
     const { container } = renderComponent(makeQuestWithCategory("social"));
     const badge = container.querySelector(".rounded-full");
-    expect(badge?.className).toContain("bg-purple-100");
-    expect(badge?.className).toContain("text-purple-700");
+    expect(badge?.className).toContain("bg-purple-500/15");
+    expect(badge?.className).toContain("text-purple-300");
   });
 
   it("applies default (other) color for unknown category", () => {
@@ -488,7 +488,7 @@ describe("QuestGrid - getCategoryColor", () => {
       makeQuestWithCategory("unknownCategory")
     );
     const badge = container.querySelector(".rounded-full");
-    expect(badge?.className).toContain("bg-gray-100");
-    expect(badge?.className).toContain("text-gray-700");
+    expect(badge?.className).toContain("bg-white/10");
+    expect(badge?.className).toContain("text-slate-300");
   });
 });

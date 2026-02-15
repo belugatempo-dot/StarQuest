@@ -68,16 +68,16 @@ export default async function RewardsPage({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">{t("rewards.title")}</h1>
-            <p className="text-gray-700">
+            <p className="text-slate-300">
               Exchange your stars for awesome rewards!
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-600 mb-1">
+            <div className="text-sm text-slate-400 mb-1">
               {creditEnabled ? t("credit.canSpend") : t("dashboard.currentBalance")}
             </div>
             <div className="text-4xl font-bold text-primary">{spendableStars}</div>
-            <div className="text-sm text-gray-600">{t("common.stars")}</div>
+            <div className="text-sm text-slate-400">{t("common.stars")}</div>
             {creditEnabled && availableCredit > 0 && (
               <div className="text-xs text-secondary mt-1">
                 ({t("credit.includesCredit", { amount: availableCredit })})

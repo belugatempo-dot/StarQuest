@@ -72,8 +72,8 @@ export default function LevelFormModal({
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {/* Info Notice */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+          <p className="text-sm text-blue-300">
             <span className="font-semibold">💡 {locale === "zh-CN" ? "提示" : "Note"}:</span>{" "}
             {locale === "zh-CN"
               ? "等级编号是固定的（1-7）。星星要求应该逐级递增，以确保孩子能够稳步晋级。"
@@ -86,10 +86,10 @@ export default function LevelFormModal({
           <label className="block text-sm font-semibold mb-2">
             {locale === "zh-CN" ? "等级编号" : "Level Number"}
           </label>
-          <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+          <div className="w-full px-4 py-2 border border-white/20 rounded-lg bg-white/10 text-slate-400">
             {level.level_number}
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "等级编号不可修改" : "Level number cannot be changed"}
           </p>
         </div>
@@ -103,7 +103,7 @@ export default function LevelFormModal({
             </label>
             <input type="text" value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
               placeholder="e.g., Star Master" required
             />
           </div>
@@ -113,7 +113,7 @@ export default function LevelFormModal({
             </label>
             <input type="text" value={nameZh}
               onChange={(e) => setNameZh(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
               placeholder="例如：星星大师"
             />
           </div>
@@ -127,10 +127,10 @@ export default function LevelFormModal({
           </label>
           <input type="number" value={starsRequired}
             onChange={(e) => setStarsRequired(Number(e.target.value))}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary"
             min="0" max="100000" required
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "达到此等级所需的累计正星星总数" : "Total lifetime positive stars needed to reach this level"}
           </p>
         </div>
@@ -142,10 +142,10 @@ export default function LevelFormModal({
           </label>
           <input type="text" value={icon}
             onChange={(e) => setIcon(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary text-2xl"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary text-2xl"
             placeholder="⭐" maxLength={4}
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {locale === "zh-CN" ? "输入一个emoji表情" : "Enter an emoji"}
           </p>
         </div>
@@ -159,7 +159,7 @@ export default function LevelFormModal({
             {["🌱", "🔍", "🎒", "⚔️", "🦸", "👑", "⭐", "💎", "🏆", "🌟", "✨", "🎖️"].map((emoji) => (
               <button key={emoji} type="button" onClick={() => setIcon(emoji)}
                 className={`text-3xl px-3 py-2 rounded-lg border-2 transition ${
-                  icon === emoji ? "border-primary bg-primary/10" : "border-gray-200 hover:border-gray-300"
+                  icon === emoji ? "border-primary bg-primary/10" : "border-white/10 hover:border-white/20"
                 }`}>
                 {emoji}
               </button>
@@ -168,9 +168,9 @@ export default function LevelFormModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
           <button type="button" onClick={onClose} disabled={loading}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            className="px-6 py-2 border border-white/20 rounded-lg hover:bg-white/5 transition">
             {locale === "zh-CN" ? "取消" : "Cancel"}
           </button>
           <button type="submit" disabled={loading}

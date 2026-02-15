@@ -143,46 +143,46 @@ export default async function ActivityPage({
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">
+          <div className="text-sm text-slate-300 mb-1">
             {locale === "zh-CN" ? "总记录" : "Total Records"}
           </div>
-          <div className="text-2xl font-bold text-gray-900">{totalRecords}</div>
+          <div className="text-2xl font-bold text-white">{totalRecords}</div>
         </div>
         <div className="glass-card rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">
+          <div className="text-sm text-slate-300 mb-1">
             {locale === "zh-CN" ? "加分记录" : "Positive"}
           </div>
           <div className="text-2xl font-bold text-green-600">{positiveRecords}</div>
         </div>
         <div className="glass-card rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">
+          <div className="text-sm text-slate-300 mb-1">
             {locale === "zh-CN" ? "扣分记录" : "Negative"}
           </div>
           <div className="text-2xl font-bold text-red-600">{negativeRecords}</div>
         </div>
         <div className="glass-card rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">
+          <div className="text-sm text-slate-300 mb-1">
             {locale === "zh-CN" ? "总星星+" : "Total Stars +"}
           </div>
           <div className="text-2xl font-bold text-green-600">+{totalStarsGiven}</div>
         </div>
         <div className="glass-card rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">
+          <div className="text-sm text-slate-300 mb-1">
             {locale === "zh-CN" ? "总星星-" : "Total Stars -"}
           </div>
           <div className="text-2xl font-bold text-red-600">{totalStarsDeducted}</div>
         </div>
-        <div className="glass-card rounded-lg shadow-md p-4 border-2 border-purple-200 bg-purple-50">
-          <div className="text-sm text-purple-600 mb-1">
+        <div className="glass-card rounded-lg shadow-md p-4 border-2 border-purple-500/30 bg-purple-500/10">
+          <div className="text-sm text-purple-300 mb-1">
             🎁 {locale === "zh-CN" ? "星星兑换" : "Stars Redeemed"}
           </div>
-          <div className="text-2xl font-bold text-purple-600">{starsRedeemed}</div>
+          <div className="text-2xl font-bold text-purple-300">{starsRedeemed}</div>
         </div>
-        <div className="glass-card rounded-lg shadow-md p-4 border-2 border-blue-200 bg-blue-50">
-          <div className="text-sm text-blue-600 mb-1">
+        <div className="glass-card rounded-lg shadow-md p-4 border-2 border-blue-500/30 bg-blue-500/10">
+          <div className="text-sm text-blue-300 mb-1">
             💳 {locale === "zh-CN" ? "信用借用" : "Credit Borrowed"}
           </div>
-          <div className="text-2xl font-bold text-blue-600">{totalCreditBorrowed}</div>
+          <div className="text-2xl font-bold text-blue-300">{totalCreditBorrowed}</div>
         </div>
         <div className="net-stars-card rounded-lg shadow-lg p-4">
           <div className="text-sm text-star-glow mb-1 relative z-10">

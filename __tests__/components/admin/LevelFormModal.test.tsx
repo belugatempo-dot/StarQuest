@@ -83,7 +83,7 @@ describe("LevelFormModal", () => {
       render(<LevelFormModal {...defaultProps} />);
 
       const levelNumberField = screen.getByText("3");
-      expect(levelNumberField.closest("div")?.className).toContain("bg-gray-100");
+      expect(levelNumberField.closest("div")?.className).toContain("bg-white/10");
     });
 
     it("should pre-fill English name field", () => {

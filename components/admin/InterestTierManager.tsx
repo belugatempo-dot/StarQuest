@@ -160,21 +160,21 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
+          <div className="h-6 bg-white/15 rounded w-1/3"></div>
+          <div className="h-20 bg-white/15 rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="dark-card rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-bold">{t("credit.interestTiers")}</h2>
-          <p className="text-sm text-gray-600">{t("credit.interestTiersDescription")}</p>
+          <p className="text-sm text-slate-400">{t("credit.interestTiersDescription")}</p>
         </div>
         {tiers.length > 0 && !editingTier && !isAddingNew && (
           <button
@@ -194,8 +194,8 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
 
       {/* Empty State */}
       {tiers.length === 0 && !isAddingNew && (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <p className="text-gray-600 mb-4">{t("credit.noTiersYet")}</p>
+        <div className="text-center py-8 bg-white/5 rounded-lg">
+          <p className="text-slate-400 mb-4">{t("credit.noTiersYet")}</p>
           <button
             onClick={initializeDefaultTiers}
             disabled={saving}
@@ -213,7 +213,7 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
             <div
               key={tier.id}
               className={`border rounded-lg p-4 ${
-                editingTier?.id === tier.id ? "border-primary bg-primary/5" : "border-gray-200"
+                editingTier?.id === tier.id ? "border-primary bg-primary/5" : "border-white/10"
               }`}
             >
               {editingTier?.id === tier.id ? (
@@ -237,13 +237,13 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-6">
                     <div>
-                      <span className="text-sm text-gray-500">{t("credit.debtRange")}:</span>
+                      <span className="text-sm text-slate-400">{t("credit.debtRange")}:</span>
                       <p className="font-semibold">
                         {formatDebtRange(tier.min_debt, tier.max_debt)} {t("common.stars")}
                       </p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-500">{t("credit.interestRate")}:</span>
+                      <span className="text-sm text-slate-400">{t("credit.interestRate")}:</span>
                       <p className="font-semibold text-warning">
                         {formatInterestRate(tier.interest_rate)}
                       </p>
@@ -252,7 +252,7 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditTier(tier)}
-                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition"
+                      className="px-3 py-1 text-sm bg-white/10 hover:bg-white/15 rounded transition"
                     >
                       {t("common.edit")}
                     </button>
@@ -292,8 +292,8 @@ export default function InterestTierManager({ familyId, locale }: InterestTierMa
       )}
 
       {/* Info Box */}
-      <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
+      <div className="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+        <p className="text-sm text-blue-300">
           <span className="font-semibold">💡 {t("credit.tip")}:</span>{" "}
           {t("credit.tiersTip")}
         </p>
@@ -342,7 +342,7 @@ function TierEditForm({
             min={0}
             value={formMinDebt}
             onChange={(e) => setFormMinDebt(Math.max(0, parseInt(e.target.value) || 0))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-3 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
         <div>
@@ -367,7 +367,7 @@ function TierEditForm({
             value={formMaxDebt ?? ""}
             onChange={(e) => setFormMaxDebt(e.target.value ? parseInt(e.target.value) : null)}
             disabled={!hasMaxDebt}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 dark-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-white/10 disabled:cursor-not-allowed"
           />
         </div>
       </div>
@@ -390,7 +390,7 @@ function TierEditForm({
             max={100}
             value={formInterestRate}
             onChange={(e) => setFormInterestRate(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-            className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+            className="w-20 px-3 py-2 dark-input rounded-lg text-center"
           />
           <span className="text-lg font-semibold text-warning">%</span>
         </div>
@@ -398,7 +398,7 @@ function TierEditForm({
       <div className="flex space-x-3">
         <button
           onClick={onCancel}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+          className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-slate-300 hover:bg-white/5 transition"
         >
           {t("common.cancel")}
         </button>

@@ -34,7 +34,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="light" style={{ colorScheme: 'light' }}>
+    <html lang={locale} className="dark" style={{ colorScheme: 'dark' }}>
       <body>
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>

@@ -36,7 +36,7 @@ export default async function LevelConfigurationPage({
             <h1 className="text-3xl font-bold mb-2">
               {locale === "zh-CN" ? "等级配置" : "Level Configuration"}
             </h1>
-            <p className="text-gray-700">
+            <p className="text-slate-300">
               {locale === "zh-CN"
                 ? "管理孩子的成长等级和星星要求"
                 : "Manage growth levels and star requirements for children"}
@@ -45,7 +45,7 @@ export default async function LevelConfigurationPage({
           <div className="text-right">
             <div className="flex gap-6">
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "总等级数" : "Total Levels"}
                 </div>
                 <div className="text-3xl font-bold text-primary">
@@ -53,7 +53,7 @@ export default async function LevelConfigurationPage({
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "最高要求" : "Max Stars"}
                 </div>
                 <div className="text-3xl font-bold text-secondary">
@@ -61,7 +61,7 @@ export default async function LevelConfigurationPage({
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">
+                <div className="text-sm text-slate-400 mb-1">
                   {locale === "zh-CN" ? "平均间隔" : "Avg Gap"}
                 </div>
                 <div className="text-3xl font-bold text-success">

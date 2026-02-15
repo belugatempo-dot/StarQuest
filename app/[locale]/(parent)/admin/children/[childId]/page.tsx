@@ -119,24 +119,24 @@ export default async function ChildDetailPage({
             {(child as any).avatar_url || "👤"}
           </div>
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-white mb-2">
               {(child as any).name}
             </h1>
             <div className="flex items-center space-x-6 text-lg">
               <div>
-                <span className="text-gray-600">Level:</span>{" "}
+                <span className="text-slate-400">Level:</span>{" "}
                 <span className="font-semibold text-secondary">
                   {currentLevelName}
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Current Stars:</span>{" "}
+                <span className="text-slate-400">Current Stars:</span>{" "}
                 <span className="font-bold text-primary text-2xl">
                   ⭐ {currentStars}
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Lifetime Stars:</span>{" "}
+                <span className="text-slate-400">Lifetime Stars:</span>{" "}
                 <span className="font-semibold text-success">
                   🌟 {lifetimeStars}
                 </span>
@@ -148,14 +148,14 @@ export default async function ChildDetailPage({
 
       {/* Level Progress */}
       {nextLevel && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="dark-card rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-2xl font-bold mb-4">Level Progress</h2>
           <div className="mb-2">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
+            <div className="flex justify-between text-sm text-slate-400 mb-1">
               <span>{currentLevelName}</span>
               <span>{nextLevelName}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-6">
+            <div className="w-full bg-white/10 rounded-full h-6">
               <div
                 className="bg-gradient-to-r from-primary to-secondary h-6 rounded-full transition-all duration-500 flex items-center justify-center text-white text-xs font-bold"
                 style={{ width: `${Math.min(progressPercent, 100)}%` }}
@@ -163,7 +163,7 @@ export default async function ChildDetailPage({
                 {Math.round(progressPercent)}%
               </div>
             </div>
-            <div className="text-center mt-2 text-sm text-gray-600">
+            <div className="text-center mt-2 text-sm text-slate-400">
               {starsToNextLevel} stars to next level
             </div>
           </div>
@@ -191,34 +191,34 @@ export default async function ChildDetailPage({
       </div>
 
       {/* Star Transactions History */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div className="dark-card rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-2xl font-bold mb-4">Star Transaction History</h2>
         {transactions && transactions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-white/5">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
                     Quest
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-300">
                     Stars
                   </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-slate-300">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
                     Note
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-white/10">
                 {transactions.map((tx: any) => (
-                  <tr key={tx.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                  <tr key={tx.id} className="hover:bg-white/5">
+                    <td className="px-4 py-3 text-sm text-slate-400">
                       {new Date(tx.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-sm">
@@ -247,7 +247,7 @@ export default async function ChildDetailPage({
                         {tx.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-4 py-3 text-sm text-slate-400">
                       {tx.child_note || tx.parent_response || "-"}
                     </td>
                   </tr>
@@ -256,36 +256,36 @@ export default async function ChildDetailPage({
             </table>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No transactions yet</p>
+          <p className="text-slate-400 text-center py-8">No transactions yet</p>
         )}
       </div>
 
       {/* Redemption History */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-4">Redemption History</h2>
         {redemptions && redemptions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-white/5">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
                     Reward
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-300">
                     Stars Spent
                   </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-slate-300">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-white/10">
                 {redemptions.map((rd: any) => (
-                  <tr key={rd.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                  <tr key={rd.id} className="hover:bg-white/5">
+                    <td className="px-4 py-3 text-sm text-slate-400">
                       {new Date(rd.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-sm">
@@ -317,7 +317,7 @@ export default async function ChildDetailPage({
             </table>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No redemptions yet</p>
+          <p className="text-slate-400 text-center py-8">No redemptions yet</p>
         )}
       </div>
     </div>

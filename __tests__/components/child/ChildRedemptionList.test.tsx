@@ -145,7 +145,7 @@ describe("ChildRedemptionList", () => {
         locale="en"
       />
     );
-    const redemptionRow = container.querySelector('[class*="bg-gray-50"]');
+    const redemptionRow = container.querySelector('[class*="bg-white/5"]');
     expect(redemptionRow).toBeInTheDocument();
   });
 

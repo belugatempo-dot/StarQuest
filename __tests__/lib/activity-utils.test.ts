@@ -451,7 +451,7 @@ describe("activity-utils", () => {
     it("returns fulfilled badge", () => {
       const badge = getStatusBadge("fulfilled", "en");
       expect(badge.label).toBe("Fulfilled");
-      expect(badge.className).toContain("bg-blue-100");
+      expect(badge.className).toContain("bg-blue-500/15");
     });
 
     it("returns fulfilled badge in Chinese", () => {
@@ -484,7 +484,7 @@ describe("activity-utils", () => {
     it("returns default badge for unknown status", () => {
       const badge = getStatusBadge("unknown_status", "en");
       expect(badge.label).toBe("unknown_status");
-      expect(badge.className).toContain("bg-gray-100");
+      expect(badge.className).toContain("bg-white/10");
     });
   });
 
@@ -493,7 +493,7 @@ describe("activity-utils", () => {
       const badge = getTypeBadge("star_transaction", "en");
       expect(badge.label).toBe("Stars");
       expect(badge.icon).toBe("⭐");
-      expect(badge.className).toContain("bg-yellow-100");
+      expect(badge.className).toContain("bg-yellow-500/15");
     });
 
     it("returns star_transaction badge in Chinese", () => {
@@ -505,7 +505,7 @@ describe("activity-utils", () => {
       const badge = getTypeBadge("redemption", "en");
       expect(badge.label).toBe("Redeem");
       expect(badge.icon).toBe("🎁");
-      expect(badge.className).toContain("bg-purple-100");
+      expect(badge.className).toContain("bg-purple-500/15");
     });
 
     it("returns redemption badge in Chinese", () => {
@@ -517,7 +517,7 @@ describe("activity-utils", () => {
       const badge = getTypeBadge("credit_transaction", "en");
       expect(badge.label).toBe("Credit");
       expect(badge.icon).toBe("💳");
-      expect(badge.className).toContain("bg-blue-100");
+      expect(badge.className).toContain("bg-blue-500/15");
     });
 
     it("returns credit_transaction badge in Chinese", () => {
@@ -529,7 +529,7 @@ describe("activity-utils", () => {
       const badge = getTypeBadge("unknown_type", "en");
       expect(badge.label).toBe("unknown_type");
       expect(badge.icon).toBe("📝");
-      expect(badge.className).toContain("bg-gray-100");
+      expect(badge.className).toContain("bg-white/10");
     });
   });
 

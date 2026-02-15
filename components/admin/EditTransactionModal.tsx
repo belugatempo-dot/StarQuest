@@ -86,14 +86,14 @@ export default function EditTransactionModal({
       <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
         {/* Quest Name (Read-only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editTransaction.quest")}
           </label>
-          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+          <div className="px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-slate-300">
             {questDisplayName}
           </div>
           {!transaction.quest_id && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               {t("editTransaction.customDescEditable")}
             </p>
           )}
@@ -102,14 +102,14 @@ export default function EditTransactionModal({
         {/* Custom Description (editable if no quest_id) */}
         {!transaction.quest_id && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               {t("editTransaction.customDescription")}
             </label>
             <input
               type="text"
               value={customDescription}
               onChange={(e) => setCustomDescription(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
               required
             />
           </div>
@@ -117,44 +117,44 @@ export default function EditTransactionModal({
 
         {/* Stars */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editTransaction.starsAmount")}
           </label>
           <input
             type="number"
             value={stars}
             onChange={(e) => setStars(parseInt(e.target.value) || 0)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             required
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             {t("editTransaction.starsHint")}
           </p>
         </div>
 
         {/* Parent Note */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editTransaction.parentNote")}
           </label>
           <textarea
             value={parentResponse}
             onChange={(e) => setParentResponse(e.target.value)}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
             placeholder={t("editTransaction.parentNotePlaceholder")}
           />
         </div>
 
         {/* Status Selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("common.status")}
           </label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as "pending" | "approved" | "rejected")}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
           >
             <option value="approved">
               {t("status.approved")}
@@ -167,7 +167,7 @@ export default function EditTransactionModal({
             </option>
           </select>
           {status !== transaction.status && (
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-blue-400 mt-1">
               {t("editTransaction.statusChangeHint", {
                 from: t(`status.${transaction.status}` as any),
                 to: t(`status.${status}` as any),
@@ -178,10 +178,10 @@ export default function EditTransactionModal({
 
         {/* Date (Read-only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editTransaction.createdDate")}
           </label>
-          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+          <div className="px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-slate-300">
             {new Date(transaction.created_at).toLocaleString(
               locale === "zh-CN" ? "zh-CN" : "en-US"
             )}
@@ -190,8 +190,8 @@ export default function EditTransactionModal({
 
         {/* Quick Approve Button for Rejected/Pending */}
         {(transaction.status === "rejected" || transaction.status === "pending") && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-700 mb-2">
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <p className="text-sm text-green-300 mb-2">
               {t("editTransaction.quickAction")}
             </p>
             <button
@@ -210,7 +210,7 @@ export default function EditTransactionModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+            className="flex-1 px-4 py-2 border border-white/20 text-slate-300 rounded-lg hover:bg-white/5 transition"
           >
             {t("common.cancel")}
           </button>

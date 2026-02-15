@@ -574,7 +574,7 @@ describe("EditParentModal", () => {
       await waitFor(() => {
         const errorElement = screen.getByText("Database error occurred");
         expect(errorElement).toBeInTheDocument();
-        expect(errorElement.className).toContain("text-red-700");
+        expect(errorElement.className).toContain("text-red-300");
       });
     });
 

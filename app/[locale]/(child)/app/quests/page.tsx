@@ -38,11 +38,11 @@ export default async function QuestsPage({
           <span className="text-4xl">⭐</span>
           <h1 className="text-3xl font-bold">{t("quests.title")}</h1>
         </div>
-        <p className="text-gray-700">
+        <p className="text-slate-300">
           Complete these bonus quests to earn stars! Help your family, improve
           yourself, or help others - then request approval from your parents.
         </p>
-        <div className="mt-3 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded p-3">
+        <div className="mt-3 text-sm text-slate-400 bg-blue-500/10 border border-blue-500/30 rounded p-3">
           💡 <strong>Tip:</strong> You can earn extra stars by going beyond your
           daily duties!
         </div>

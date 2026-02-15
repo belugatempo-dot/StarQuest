@@ -128,8 +128,8 @@ export default function StarRequestList({
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">✅</div>
-        <p className="text-gray-500 text-lg">{t("admin.noRequests")}</p>
-        <p className="text-sm text-gray-400 mt-2">
+        <p className="text-slate-400 text-lg">{t("admin.noRequests")}</p>
+        <p className="text-sm text-slate-500 mt-2">
           You're all caught up! New requests will appear here.
         </p>
       </div>
@@ -146,7 +146,7 @@ export default function StarRequestList({
             className={`px-4 py-2 rounded-lg transition font-medium ${
               batch.selectionMode
                 ? "bg-purple-500 text-white"
-                : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                : "bg-purple-500/15 text-purple-300 hover:bg-purple-500/25"
             }`}
           >
             {batch.selectionMode ? "✅ " : "☐ "}
@@ -156,14 +156,14 @@ export default function StarRequestList({
             <>
               <button
                 onClick={() => batch.selectAll(requests.map((r: any) => r.id))}
-                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                className="px-4 py-2 bg-blue-500/15 text-blue-300 rounded-lg hover:bg-blue-500/25 transition"
               >
                 {t("admin.selectAll")} ({requests.length})
               </button>
               {batch.selectedIds.size > 0 && (
                 <button
                   onClick={batch.clearSelection}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  className="px-4 py-2 bg-white/10 text-slate-300 rounded-lg hover:bg-white/15 transition"
                 >
                   {t("admin.clearSelection")}
                 </button>
@@ -172,7 +172,7 @@ export default function StarRequestList({
           )}
         </div>
         {batch.selectionMode && batch.selectedIds.size > 0 && (
-          <span className="text-sm font-medium text-purple-700">
+          <span className="text-sm font-medium text-purple-300">
             {locale === "zh-CN"
               ? `已选择 ${batch.selectedIds.size} 项`
               : `${batch.selectedIds.size} selected`}
@@ -201,7 +201,7 @@ export default function StarRequestList({
                       type="checkbox"
                       checked={batch.selectedIds.has(request.id)}
                       onChange={() => batch.toggleSelection(request.id)}
-                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                      className="w-5 h-5 rounded border-white/20 text-purple-600 focus:ring-purple-500 cursor-pointer"
                     />
                   )}
                   <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-2xl">
@@ -211,7 +211,7 @@ export default function StarRequestList({
                     <h3 className="font-semibold text-lg">
                       {request.users?.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-slate-400">
                       {formatDateTime(request.created_at, locale)}
                     </p>
                   </div>
@@ -225,7 +225,7 @@ export default function StarRequestList({
                   <div>
                     <h4 className="font-semibold">{request.quests ? getQuestName(request.quests, locale) : (request.custom_description || "Custom")}</h4>
                     {request.quests?.category && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-slate-400">
                         {t(`quests.category.${request.quests.category}` as any)}
                       </span>
                     )}
@@ -234,8 +234,8 @@ export default function StarRequestList({
 
                 {/* Child Note */}
                 {request.child_note && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
-                    <p className="text-sm text-blue-900 italic">
+                  <div className="mt-3 p-3 bg-blue-500/10 rounded border border-blue-500/30">
+                    <p className="text-sm text-blue-300 italic">
                       &quot;{request.child_note}&quot;
                     </p>
                   </div>
@@ -276,9 +276,9 @@ export default function StarRequestList({
 
       {/* Floating Batch Action Bar */}
       {batch.selectedIds.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-purple-300 shadow-lg p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-surface border-t-2 border-purple-500/30 shadow-lg p-4 z-50">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <span className="font-medium text-purple-700">
+            <span className="font-medium text-purple-300">
               {locale === "zh-CN"
                 ? `已选择 ${batch.selectedIds.size} 项`
                 : `${batch.selectedIds.size} items selected`}
@@ -302,7 +302,7 @@ export default function StarRequestList({
               </button>
               <button
                 onClick={batch.exitSelectionMode}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                className="px-4 py-2 bg-white/15 text-slate-300 rounded-lg hover:bg-white/20 transition"
               >
                 {t("admin.clearSelection")}
               </button>
@@ -314,13 +314,13 @@ export default function StarRequestList({
       {/* Individual Reject Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="dark-card rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">{t("admin.rejectReason")}</h3>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-danger focus:border-transparent resize-none mb-4"
+              className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-danger focus:border-transparent resize-none mb-4"
               placeholder={locale === "zh-CN" ? "（可选）说明拒绝原因..." : "(Optional) Explain why you're rejecting..."}
               autoFocus
             />
@@ -330,7 +330,7 @@ export default function StarRequestList({
                   setShowRejectModal(null);
                   setRejectReason("");
                 }}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex-1 px-4 py-2 border border-white/20 rounded-lg hover:bg-white/5"
               >
                 {t("common.cancel")}
               </button>
@@ -349,10 +349,10 @@ export default function StarRequestList({
       {/* Batch Reject Modal */}
       {batch.showBatchRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6 border-b">
+          <div className="dark-card rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b border-white/10">
               <h2 className="text-xl font-bold">{t("admin.batchReject")}</h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-slate-400 mt-1">
                 {locale === "zh-CN"
                   ? `将拒绝 ${batch.selectedIds.size} 条待审批请求`
                   : `Rejecting ${batch.selectedIds.size} pending requests`}
@@ -360,14 +360,14 @@ export default function StarRequestList({
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   {t("admin.batchRejectReason")} ({locale === "zh-CN" ? "可选" : "optional"})
                 </label>
                 <textarea
                   value={batch.batchRejectReason}
                   onChange={(e) => batch.setBatchRejectReason(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   placeholder={
                     locale === "zh-CN"
                       ? "（可选）输入拒绝原因..."
@@ -382,7 +382,7 @@ export default function StarRequestList({
                     batch.setShowBatchRejectModal(false);
                     batch.setBatchRejectReason("");
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-slate-300 hover:bg-white/5 transition"
                 >
                   {t("common.cancel")}
                 </button>

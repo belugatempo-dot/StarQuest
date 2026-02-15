@@ -22,15 +22,15 @@ export default function ApprovalTabs({
   const [activeTab, setActiveTab] = useState<"stars" | "redemptions">("stars");
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="dark-card rounded-lg shadow-md overflow-hidden">
       {/* Tabs */}
-      <div className="flex border-b">
+      <div className="flex border-b border-white/10">
         <button
           onClick={() => setActiveTab("stars")}
           className={`flex-1 px-6 py-4 font-semibold transition ${
             activeTab === "stars"
               ? "bg-secondary text-white border-b-2 border-secondary"
-              : "text-gray-600 hover:bg-gray-50"
+              : "text-slate-400 hover:bg-white/5"
           }`}
         >
           {t("admin.starRequests")}
@@ -43,7 +43,7 @@ export default function ApprovalTabs({
           className={`flex-1 px-6 py-4 font-semibold transition ${
             activeTab === "redemptions"
               ? "bg-secondary text-white border-b-2 border-secondary"
-              : "text-gray-600 hover:bg-gray-50"
+              : "text-slate-400 hover:bg-white/5"
           }`}
         >
           {t("admin.redemptionRequests")}

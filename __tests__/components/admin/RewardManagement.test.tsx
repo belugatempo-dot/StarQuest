@@ -543,8 +543,9 @@ describe("RewardManagement", () => {
     it("should apply category color to category badge", () => {
       const { container } = render(<RewardManagement rewards={mockRewards} locale="en" familyId="family-123" />);
 
-      const categoryBadges = container.querySelectorAll(".bg-blue-100");
-      expect(categoryBadges.length).toBeGreaterThan(0);
+      const categoryBadges = container.querySelectorAll("span.rounded-full");
+      const hasBlueCategory = Array.from(categoryBadges).some((b) => b.className.includes("bg-blue-500/15"));
+      expect(hasBlueCategory).toBe(true);
     });
 
     it("should apply opacity to inactive rewards", () => {
@@ -672,10 +673,10 @@ describe("RewardManagement", () => {
         <RewardManagement rewards={rewardWithUnknown} locale="en" familyId="family-123" />
       );
 
-      // Unknown category should get CATEGORY_COLORS.other = "bg-gray-100 text-gray-700 border-gray-300"
+      // Unknown category should get CATEGORY_COLORS.other = "bg-white/10 text-slate-300 border-white/20"
       const categoryBadges = container.querySelectorAll("span.rounded-full");
       const badgeClasses = Array.from(categoryBadges).map((b) => b.className);
-      expect(badgeClasses.some((c) => c.includes("bg-gray-100"))).toBe(true);
+      expect(badgeClasses.some((c) => c.includes("bg-white/10"))).toBe(true);
     });
 
     it("should show 'No rewards in this category' when filter yields empty results", async () => {
@@ -744,9 +745,10 @@ describe("RewardManagement", () => {
       const rewardWithUnknownCategory: Reward[] = [{ ...mockRewards[0], category: "unknown_category" }];
       const { container } = render(<RewardManagement rewards={rewardWithUnknownCategory} locale="en" familyId="family-123" />);
 
-      // The unknown category should get the fallback "other" color (bg-gray-100)
-      const categoryBadges = container.querySelectorAll(".bg-gray-100");
-      expect(categoryBadges.length).toBeGreaterThan(0);
+      // The unknown category should get the fallback "other" color (bg-white/10)
+      const categoryBadges = container.querySelectorAll("span.rounded-full");
+      const hasOtherColor = Array.from(categoryBadges).some((b) => b.className.includes("bg-white/10"));
+      expect(hasOtherColor).toBe(true);
     });
 
     it("should show Chinese empty state buttons", () => {

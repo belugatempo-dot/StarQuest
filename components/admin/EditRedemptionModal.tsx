@@ -73,48 +73,48 @@ export default function EditRedemptionModal({
       <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
         {/* Reward Name (Read-only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editRedemption.reward")}
           </label>
-          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+          <div className="px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-slate-300">
             {redemption.rewards?.icon || "🎁"} {rewardName}
           </div>
         </div>
 
         {/* Stars Spent (Read-only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editRedemption.starsSpent")}
           </label>
-          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+          <div className="px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-slate-300">
             -{redemption.stars_spent} ⭐
           </div>
         </div>
 
         {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("common.date")}
           </label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             required
           />
         </div>
 
         {/* Time */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             {t("editRedemption.time")}
           </label>
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
             required
           />
         </div>
@@ -124,7 +124,7 @@ export default function EditRedemptionModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+            className="flex-1 px-4 py-2 border border-white/20 text-slate-300 rounded-lg hover:bg-white/5 transition"
           >
             {t("common.cancel")}
           </button>

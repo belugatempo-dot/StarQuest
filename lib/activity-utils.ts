@@ -212,7 +212,7 @@ export function getStatusBadge(
     case "fulfilled":
       return {
         label: locale === "zh-CN" ? "已完成" : "Fulfilled",
-        className: "bg-blue-100 text-blue-700 border-blue-300",
+        className: "bg-blue-500/15 text-blue-300 border-blue-500/30",
       };
     case "pending":
       return {
@@ -227,7 +227,7 @@ export function getStatusBadge(
     default:
       return {
         label: status,
-        className: "bg-gray-100 text-gray-600 border-gray-300",
+        className: "bg-white/10 text-slate-400 border-white/20",
       };
   }
 }
@@ -243,25 +243,25 @@ export function getTypeBadge(
     case "star_transaction":
       return {
         label: locale === "zh-CN" ? "星星" : "Stars",
-        className: "bg-yellow-100 text-yellow-700",
+        className: "bg-yellow-500/15 text-yellow-300",
         icon: "⭐",
       };
     case "redemption":
       return {
         label: locale === "zh-CN" ? "兑换" : "Redeem",
-        className: "bg-purple-100 text-purple-700",
+        className: "bg-purple-500/15 text-purple-300",
         icon: "🎁",
       };
     case "credit_transaction":
       return {
         label: locale === "zh-CN" ? "信用" : "Credit",
-        className: "bg-blue-100 text-blue-700",
+        className: "bg-blue-500/15 text-blue-300",
         icon: "💳",
       };
     default:
       return {
         label: type,
-        className: "bg-gray-100 text-gray-700",
+        className: "bg-white/10 text-slate-300",
         icon: "📝",
       };
   }

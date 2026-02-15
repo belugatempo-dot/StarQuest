@@ -164,7 +164,7 @@ describe("ActivityItem", () => {
         />
       );
       const starsElement = screen.getByText("+5");
-      expect(starsElement.className).toContain("text-gray-400");
+      expect(starsElement.className).toContain("text-slate-500");
       expect(starsElement.className).toContain("line-through");
     });
 
@@ -230,7 +230,7 @@ describe("ActivityItem", () => {
           activity={createActivity({ type: "redemption", status: "approved" })}
         />
       );
-      expect(container.firstChild).toHaveClass("bg-purple-50");
+      expect(container.firstChild).toHaveClass("bg-purple-500/10");
     });
 
     it("applies credit card class in list variant", () => {
@@ -240,7 +240,7 @@ describe("ActivityItem", () => {
           activity={createActivity({ type: "credit_transaction", status: "approved" })}
         />
       );
-      expect(container.firstChild).toHaveClass("bg-blue-50");
+      expect(container.firstChild).toHaveClass("bg-blue-500/10");
     });
 
     it("applies positive star card class in calendar variant", () => {
@@ -251,7 +251,7 @@ describe("ActivityItem", () => {
           activity={createActivity({ status: "approved", stars: 5 })}
         />
       );
-      expect(container.firstChild).toHaveClass("bg-green-50");
+      expect(container.firstChild).toHaveClass("bg-green-500/10");
     });
 
     it("applies negative star card class in calendar variant", () => {
@@ -262,7 +262,7 @@ describe("ActivityItem", () => {
           activity={createActivity({ status: "approved", stars: -2 })}
         />
       );
-      expect(container.firstChild).toHaveClass("bg-red-50");
+      expect(container.firstChild).toHaveClass("bg-red-500/10");
     });
   });
 

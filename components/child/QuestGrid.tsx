@@ -36,12 +36,12 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
 
   const getCategoryColor = (category: string | null) => {
     const colors: Record<string, string> = {
-      learning: "bg-blue-100 text-blue-700 border-blue-300",
-      chores: "bg-green-100 text-green-700 border-green-300",
-      hygiene: "bg-cyan-100 text-cyan-700 border-cyan-300",
-      health: "bg-pink-100 text-pink-700 border-pink-300",
-      social: "bg-purple-100 text-purple-700 border-purple-300",
-      other: "bg-gray-100 text-gray-700 border-gray-300",
+      learning: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+      chores: "bg-green-500/15 text-green-300 border-green-500/30",
+      hygiene: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
+      health: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+      social: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+      other: "bg-white/10 text-slate-300 border-white/20",
     };
     return colors[category || "other"] || colors.other;
   };
@@ -49,7 +49,7 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
   const renderQuestCard = (quest: Quest) => (
     <div
       key={quest.id}
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer overflow-hidden group"
+      className="dark-card rounded-lg shadow-md hover:shadow-lg transition cursor-pointer overflow-hidden group"
       onClick={() => setSelectedQuest(quest)}
     >
       <div className="p-6">
@@ -60,7 +60,7 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
             <div className="text-2xl font-bold text-success">
               +{quest.stars}
             </div>
-            <div className="text-xs text-gray-500">{t("common.stars")}</div>
+            <div className="text-xs text-slate-400">{t("common.stars")}</div>
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
         )}
 
         {/* Action Hint */}
-        <div className="mt-4 text-sm text-gray-500 opacity-0 group-hover:opacity-100 transition">
+        <div className="mt-4 text-sm text-slate-400 opacity-0 group-hover:opacity-100 transition">
           Click to request stars →
         </div>
       </div>
@@ -91,10 +91,10 @@ export default function QuestGrid({ quests, locale, userId }: QuestGridProps) {
   return (
     <>
       {quests.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+        <div className="dark-card rounded-lg shadow-md p-12 text-center">
           <div className="text-6xl mb-4">🎯</div>
-          <p className="text-gray-500 text-lg">{t("common.noData")}</p>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-slate-400 text-lg">{t("common.noData")}</p>
+          <p className="text-sm text-slate-500 mt-2">
             Your parents haven't set up any bonus quests yet!
           </p>
         </div>

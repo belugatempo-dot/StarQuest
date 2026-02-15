@@ -51,9 +51,9 @@ export default async function HistoryPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="dark-card rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold mb-2">{t("common.activities")}</h1>
-        <p className="text-gray-600">
+        <p className="text-slate-400">
           {locale === "zh-CN"
             ? "查看所有星星的获得和扣除记录"
             : "Track all your star earnings and deductions"}

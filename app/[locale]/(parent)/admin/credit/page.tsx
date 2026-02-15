@@ -48,7 +48,7 @@ export default async function CreditManagementPage({
         <h1 className="text-3xl font-bold mb-2">
           💳 {t("credit.pageTitle")}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-slate-400">
           {t("credit.pageDescription")}
         </p>
       </div>

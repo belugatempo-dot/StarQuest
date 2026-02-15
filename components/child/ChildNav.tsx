@@ -30,7 +30,7 @@ export default function ChildNav({ user, locale }: { user: User; locale: string 
   ];
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-surface border-b border-white/10">
       <div className="container mx-auto px-4 py-4 max-w-6xl">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -48,7 +48,7 @@ export default function ChildNav({ user, locale }: { user: User; locale: string 
                 className={`px-4 py-2 rounded-lg transition ${
                   isActive(item.path)
                     ? "bg-primary text-gray-900 font-semibold"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-slate-400 hover:bg-white/10"
                 }`}
               >
                 <span className="mr-2">{item.icon}</span>
@@ -59,11 +59,11 @@ export default function ChildNav({ user, locale }: { user: User; locale: string 
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">👋 {user.name}</span>
+            <span className="text-sm text-slate-400">👋 {user.name}</span>
             <LanguageSwitcher />
             <button
               onClick={handleLogout}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-slate-400 hover:text-white"
             >
               {t("common.logout")}
             </button>
@@ -79,7 +79,7 @@ export default function ChildNav({ user, locale }: { user: User; locale: string 
               className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm transition ${
                 isActive(item.path)
                   ? "bg-primary text-gray-900 font-semibold"
-                  : "bg-gray-100 text-gray-600"
+                  : "bg-white/5 text-slate-400"
               }`}
             >
               <span className="mr-1">{item.icon}</span>

@@ -18,11 +18,11 @@ interface RewardManagementProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  screen_time: "bg-blue-100 text-blue-700 border-blue-300",
-  toys: "bg-pink-100 text-pink-700 border-pink-300",
-  activities: "bg-green-100 text-green-700 border-green-300",
-  treats: "bg-orange-100 text-orange-700 border-orange-300",
-  other: "bg-gray-100 text-gray-700 border-gray-300",
+  screen_time: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+  toys: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+  activities: "bg-green-500/15 text-green-300 border-green-500/30",
+  treats: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  other: "bg-white/10 text-slate-300 border-white/20",
 };
 
 export default function RewardManagement({
@@ -99,7 +99,7 @@ export default function RewardManagement({
       {/* Header with Add Button and Filter */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <p className="text-gray-600">
+          <p className="text-slate-400">
             {locale === "zh-CN"
               ? `共 ${rewards.length} 个奖励`
               : `${rewards.length} rewards`}
@@ -118,7 +118,7 @@ export default function RewardManagement({
 
       {/* Category Filter */}
       {rewards.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="dark-card rounded-lg shadow-md p-4">
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
@@ -126,8 +126,8 @@ export default function RewardManagement({
                 onClick={() => setFilterCategory(cat)}
                 className={`px-4 py-2 rounded-lg font-medium transition ${
                   filterCategory === cat
-                    ? "bg-primary text-gray-900"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-primary text-white"
+                    : "bg-white/10 text-slate-400 hover:bg-white/15"
                 }`}
               >
                 {cat === "all"
@@ -148,10 +148,10 @@ export default function RewardManagement({
             return (
               <div
                 key={reward.id}
-                className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
+                className={`dark-card rounded-lg shadow-md overflow-hidden border-2 ${
                   reward.is_active
-                    ? "border-gray-200"
-                    : "border-gray-300 opacity-60"
+                    ? "border-white/10"
+                    : "border-white/20 opacity-60"
                 }`}
               >
                 <div className="p-5">
@@ -162,7 +162,7 @@ export default function RewardManagement({
                       <div className="text-2xl font-bold text-primary">
                         {reward.stars_cost}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-400">
                         {t("common.stars")}
                       </div>
                     </div>
@@ -173,7 +173,7 @@ export default function RewardManagement({
 
                   {/* Description */}
                   {reward.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <p className="text-sm text-slate-400 mb-3 line-clamp-2">
                       {reward.description}
                     </p>
                   )}
@@ -190,7 +190,7 @@ export default function RewardManagement({
                       </span>
                     )}
                     {!reward.is_active && (
-                      <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                      <span className="inline-block px-3 py-1 bg-red-500/15 text-red-300 rounded-full text-xs font-semibold">
                         {locale === "zh-CN" ? "已停用" : "Inactive"}
                       </span>
                     )}
@@ -200,7 +200,7 @@ export default function RewardManagement({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setEditingReward(reward)}
-                      className="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium"
+                      className="flex-1 px-3 py-2 text-sm bg-blue-500/15 text-blue-300 rounded hover:bg-blue-500/25 transition font-medium"
                     >
                       ✏️ {locale === "zh-CN" ? "编辑" : "Edit"}
                     </button>
@@ -208,8 +208,8 @@ export default function RewardManagement({
                       onClick={() => handleToggleActive(reward)}
                       className={`flex-1 px-3 py-2 text-sm rounded transition font-medium ${
                         reward.is_active
-                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                          : "bg-green-100 text-green-700 hover:bg-green-200"
+                          ? "bg-yellow-500/15 text-yellow-300 hover:bg-yellow-500/25"
+                          : "bg-green-500/15 text-green-300 hover:bg-green-500/25"
                       }`}
                     >
                       {reward.is_active
@@ -222,7 +222,7 @@ export default function RewardManagement({
                     </button>
                     <button
                       onClick={() => handleDelete(reward)}
-                      className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition font-medium"
+                      className="px-3 py-2 text-sm bg-red-500/15 text-red-300 rounded hover:bg-red-500/25 transition font-medium"
                     >
                       🗑️
                     </button>
@@ -233,9 +233,9 @@ export default function RewardManagement({
           })}
         </div>
       ) : rewards.length === 0 ? (
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+        <div className="bg-white/5 border-2 border-dashed border-white/20 rounded-lg p-12 text-center">
           <div className="text-6xl mb-4">🎁</div>
-          <p className="text-gray-500 mb-4 text-lg">
+          <p className="text-slate-400 mb-4 text-lg">
             {locale === "zh-CN" ? "还没有奖励" : "No rewards yet"}
           </p>
           <button
@@ -249,9 +249,9 @@ export default function RewardManagement({
           </button>
         </div>
       ) : (
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+        <div className="bg-white/5 border-2 border-dashed border-white/20 rounded-lg p-12 text-center">
           <div className="text-6xl mb-4">🔍</div>
-          <p className="text-gray-500 text-lg">
+          <p className="text-slate-400 text-lg">
             {locale === "zh-CN"
               ? "此类别下没有奖励"
               : "No rewards in this category"}

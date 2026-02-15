@@ -36,7 +36,7 @@ export default async function RecordStarsPage({
       {/* Header */}
       <div className="bg-gradient-to-r from-secondary/20 to-primary/20 rounded-lg p-6">
         <h1 className="text-3xl font-bold mb-2">{t("admin.recordStars")}</h1>
-        <p className="text-gray-700">
+        <p className="text-slate-300">
           Quickly record stars for completed quests or custom behaviors.
           Stars are added immediately without approval.
         </p>
@@ -52,9 +52,9 @@ export default async function RecordStarsPage({
       />
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="font-semibold text-blue-900 mb-2">💡 How it works</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6">
+        <h3 className="font-semibold text-blue-300 mb-2">💡 How it works</h3>
+        <ul className="text-sm text-blue-300 space-y-1">
           <li>• <strong>Select a child</strong> from your family</li>
           <li>• <strong>Choose a quest template</strong> or enter a custom description</li>
           <li>• <strong>Stars are added immediately</strong> - no approval needed</li>

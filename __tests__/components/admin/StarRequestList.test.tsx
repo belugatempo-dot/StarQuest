@@ -234,7 +234,7 @@ describe('StarRequestList', () => {
       )
 
       // Request 2 has no note, so there should be only 2 note sections
-      const noteElements = container.querySelectorAll('.bg-blue-50')
+      const noteElements = container.querySelectorAll('.bg-blue-500\\/10')
       expect(noteElements.length).toBe(2)
     })
 
@@ -727,7 +727,7 @@ describe('StarRequestList', () => {
       )
 
       // Request 3 has no quest, so should have 2 categories
-      const categoryElements = container.querySelectorAll('.text-xs.text-gray-500')
+      const categoryElements = container.querySelectorAll('.text-xs.text-slate-400')
       expect(categoryElements.length).toBe(2)
     })
   })

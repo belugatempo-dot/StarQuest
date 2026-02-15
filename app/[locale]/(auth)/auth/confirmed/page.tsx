@@ -11,7 +11,7 @@ export default async function ConfirmedPage({
   const t = await getTranslations();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/20 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-night-cosmic/60 to-background p-4">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -24,8 +24,8 @@ export default async function ConfirmedPage({
           </h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <p className="text-gray-700 mb-6 text-lg">
+        <div className="bg-surface rounded-lg shadow-lg p-8 text-center">
+          <p className="text-slate-300 mb-6 text-lg">
             {t("verification.confirmedMessage")}
           </p>
 

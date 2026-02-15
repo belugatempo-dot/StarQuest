@@ -64,14 +64,14 @@ export default function EditParentModal({
       <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
         {/* Name Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-300 mb-1">
             {t("family.parentName")} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 dark-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t("family.parentNamePlaceholder")}
             required
           />
@@ -79,23 +79,23 @@ export default function EditParentModal({
 
         {/* Email Display (read-only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-300 mb-1">
             {t("auth.email")}
           </label>
           <input
             type="email"
             value={parent.email || ""}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
+            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 text-slate-400"
             disabled
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             {t("family.emailCannotChange")}
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-3 py-2 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -105,14 +105,14 @@ export default function EditParentModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+            className="px-4 py-2 text-slate-300 hover:bg-white/10 rounded-lg transition"
             disabled={isLoading}
           >
             {t("common.cancel")}
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:bg-gray-400"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? t("common.saving") : t("common.save")}

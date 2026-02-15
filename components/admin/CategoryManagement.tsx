@@ -243,14 +243,14 @@ export default function CategoryManagement({
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="dark-card rounded-lg shadow-sm border border-white/10 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold">
             {t("categoryManagement.title")}
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             {t("categoryManagement.infoNote")}
           </p>
         </div>
@@ -267,7 +267,7 @@ export default function CategoryManagement({
 
       {/* Add/Edit Form */}
       {(showAddForm || editingCategory) && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
           <h3 className="font-semibold mb-4">
             {editingCategory
               ? t("categoryManagement.editCategory")
@@ -275,7 +275,7 @@ export default function CategoryManagement({
           </h3>
 
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded">
+            <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-2 rounded">
               {error}
             </div>
           )}
@@ -290,7 +290,7 @@ export default function CategoryManagement({
                 type="text"
                 value={formData.icon}
                 onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg text-2xl text-center"
+                className="w-full px-3 py-2 dark-input rounded-lg text-2xl text-center"
                 maxLength={4}
                 placeholder="📦"
               />
@@ -306,7 +306,7 @@ export default function CategoryManagement({
                 type="text"
                 value={formData.name_en}
                 onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 dark-input rounded-lg"
                 placeholder="e.g., Health"
                 required
               />
@@ -321,7 +321,7 @@ export default function CategoryManagement({
                 type="text"
                 value={formData.name_zh}
                 onChange={(e) => setFormData({ ...formData, name_zh: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 dark-input rounded-lg"
                 placeholder="例如：健康"
               />
             </div>
@@ -338,7 +338,7 @@ export default function CategoryManagement({
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/5 transition"
                 disabled={loading}
               >
                 {t("common.cancel")}
@@ -352,11 +352,11 @@ export default function CategoryManagement({
       <div className="space-y-2">
         {sortedCategories.length === 0 ? (
           <div className="text-center py-8 space-y-4">
-            <p className="text-gray-500">
+            <p className="text-slate-400">
               {t("categoryManagement.noCategories")}
             </p>
             {error && (
-              <div className="mx-auto max-w-md bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded">
+              <div className="mx-auto max-w-md bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-2 rounded">
                 {error}
               </div>
             )}
@@ -371,7 +371,7 @@ export default function CategoryManagement({
                 ? "📦 初始化默认类别"
                 : "📦 Initialize Default Categories"}
             </button>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-slate-500">
               {locale === "zh-CN"
                 ? "将添加 14 个常用类别（健康、学习、家务等）"
                 : "Will add 14 common categories (Health, Study, Chores, etc.)"}
@@ -388,8 +388,8 @@ export default function CategoryManagement({
                   <div
                     className={`flex items-center justify-between p-3 rounded-lg border ${
                       category.is_active
-                        ? "bg-white border-gray-200"
-                        : "bg-gray-50 border-gray-100 opacity-60"
+                        ? "bg-surface border-white/10"
+                        : "bg-white/5 border-white/10 opacity-60"
                     }`}
                   >
                     <button
@@ -397,23 +397,23 @@ export default function CategoryManagement({
                       onClick={() => toggleCategory(category.name)}
                       className="flex items-center gap-3 text-left flex-1 min-w-0"
                     >
-                      <span className="text-sm text-gray-400 w-4 flex-shrink-0">
+                      <span className="text-sm text-slate-500 w-4 flex-shrink-0">
                         {isExpanded ? "▼" : "▶"}
                       </span>
                       <span className="text-2xl">{category.icon}</span>
                       <div>
                         <div className="font-medium">
                           {getCategoryName(category)}{" "}
-                          <span className="text-sm font-normal text-gray-400">
+                          <span className="text-sm font-normal text-slate-500">
                             ({questCountMap.get(category.name) || 0})
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-slate-400">
                           {locale === "zh-CN" ? "键名" : "Key"}: {category.name}
                         </div>
                       </div>
                       {!category.is_active && (
-                        <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                        <span className="px-2 py-0.5 bg-white/15 text-slate-400 text-xs rounded">
                           {locale === "zh-CN" ? "已禁用" : "Disabled"}
                         </span>
                       )}
@@ -425,8 +425,8 @@ export default function CategoryManagement({
                         onClick={() => handleToggleActive(category)}
                         className={`px-3 py-1 rounded text-sm transition ${
                           category.is_active
-                            ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                            : "bg-green-100 text-green-700 hover:bg-green-200"
+                            ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                            : "bg-green-500/15 text-green-300 hover:bg-green-500/25"
                         }`}
                         title={category.is_active ? "Disable" : "Enable"}
                       >
@@ -438,7 +438,7 @@ export default function CategoryManagement({
                       {/* Edit */}
                       <button
                         onClick={() => handleEdit(category)}
-                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition"
+                        className="px-3 py-1 bg-blue-500/15 text-blue-300 rounded text-sm hover:bg-blue-500/25 transition"
                       >
                         {t("common.edit")}
                       </button>
@@ -446,7 +446,7 @@ export default function CategoryManagement({
                       {/* Delete */}
                       <button
                         onClick={() => handleDelete(category)}
-                        className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition"
+                        className="px-3 py-1 bg-red-500/15 text-red-300 rounded text-sm hover:bg-red-500/25 transition"
                       >
                         {t("common.delete")}
                       </button>
@@ -457,14 +457,14 @@ export default function CategoryManagement({
                   {isExpanded && (
                     <div className="ml-7 mt-1 mb-2 space-y-1">
                       {categoryQuests.length === 0 ? (
-                        <div className="text-sm text-gray-400 italic py-2 pl-4">
+                        <div className="text-sm text-slate-500 italic py-2 pl-4">
                           {locale === "zh-CN" ? "此类别下暂无任务" : "No quests in this category"}
                         </div>
                       ) : (
                         categoryQuests.map((quest) => (
                           <div
                             key={quest.id}
-                            className="flex items-center justify-between p-2 pl-4 rounded border border-gray-100 bg-gray-50 hover:bg-gray-100 transition"
+                            className="flex items-center justify-between p-2 pl-4 rounded border border-white/10 bg-white/5 hover:bg-white/10 transition"
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="text-lg">{quest.icon}</span>
@@ -474,18 +474,18 @@ export default function CategoryManagement({
                               <span className={`text-xs font-semibold ${quest.stars >= 0 ? "text-green-600" : "text-red-600"}`}>
                                 {quest.stars >= 0 ? `+${quest.stars}` : quest.stars}⭐
                               </span>
-                              <span className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                              <span className="px-1.5 py-0.5 bg-white/15 text-slate-400 text-xs rounded">
                                 {locale === "zh-CN" ? typeLabels[quest.type as keyof typeof typeLabels]?.zh : typeLabels[quest.type as keyof typeof typeLabels]?.en}
                               </span>
                               {!quest.is_active && (
-                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded">
+                                <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 text-xs rounded">
                                   {locale === "zh-CN" ? "已停用" : "Inactive"}
                                 </span>
                               )}
                             </div>
                             <button
                               onClick={() => setEditingQuest(quest)}
-                              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition flex-shrink-0"
+                              className="px-2 py-1 text-xs bg-blue-500/15 text-blue-300 rounded hover:bg-blue-500/25 transition flex-shrink-0"
                             >
                               {t("common.edit")}
                             </button>
@@ -501,20 +501,20 @@ export default function CategoryManagement({
             {/* Uncategorized quests group */}
             {uncategorizedQuests.length > 0 && (
               <div>
-                <div className="flex items-center justify-between p-3 rounded-lg border bg-white border-dashed border-gray-300">
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-surface border-dashed border-white/20">
                   <button
                     type="button"
                     onClick={() => toggleCategory("__uncategorized__")}
                     className="flex items-center gap-3 text-left flex-1 min-w-0"
                   >
-                    <span className="text-sm text-gray-400 w-4 flex-shrink-0">
+                    <span className="text-sm text-slate-500 w-4 flex-shrink-0">
                       {expandedCategories.has("__uncategorized__") ? "▼" : "▶"}
                     </span>
                     <span className="text-2xl">📦</span>
                     <div>
-                      <div className="font-medium text-gray-500">
+                      <div className="font-medium text-slate-400">
                         {locale === "zh-CN" ? "未分类" : "Uncategorized"}{" "}
-                        <span className="text-sm font-normal text-gray-400">
+                        <span className="text-sm font-normal text-slate-500">
                           ({uncategorizedQuests.length})
                         </span>
                       </div>
@@ -527,7 +527,7 @@ export default function CategoryManagement({
                     {uncategorizedQuests.map((quest) => (
                       <div
                         key={quest.id}
-                        className="flex items-center justify-between p-2 pl-4 rounded border border-gray-100 bg-gray-50 hover:bg-gray-100 transition"
+                        className="flex items-center justify-between p-2 pl-4 rounded border border-white/10 bg-white/5 hover:bg-white/10 transition"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="text-lg">{quest.icon}</span>
@@ -537,18 +537,18 @@ export default function CategoryManagement({
                           <span className={`text-xs font-semibold ${quest.stars >= 0 ? "text-green-600" : "text-red-600"}`}>
                             {quest.stars >= 0 ? `+${quest.stars}` : quest.stars}⭐
                           </span>
-                          <span className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                          <span className="px-1.5 py-0.5 bg-white/15 text-slate-400 text-xs rounded">
                             {locale === "zh-CN" ? typeLabels[quest.type as keyof typeof typeLabels]?.zh : typeLabels[quest.type as keyof typeof typeLabels]?.en}
                           </span>
                           {!quest.is_active && (
-                            <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded">
+                            <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 text-xs rounded">
                               {locale === "zh-CN" ? "已停用" : "Inactive"}
                             </span>
                           )}
                         </div>
                         <button
                           onClick={() => setEditingQuest(quest)}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition flex-shrink-0"
+                          className="px-2 py-1 text-xs bg-blue-500/15 text-blue-300 rounded hover:bg-blue-500/25 transition flex-shrink-0"
                         >
                           {t("common.edit")}
                         </button>
@@ -563,7 +563,7 @@ export default function CategoryManagement({
       </div>
 
       {/* Info Note */}
-      <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+      <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-sm text-blue-300">
         {locale === "zh-CN" ? (
           <>
             <strong>提示：</strong>删除类别不会删除使用该类别的任务，但这些任务将变为无类别状态。

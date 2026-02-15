@@ -109,7 +109,7 @@ export default function ReportPreferencesForm({
       <div>
         <label
           htmlFor="reportEmail"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-300 mb-1"
         >
           {t("emailOverride")}
         </label>
@@ -119,56 +119,56 @@ export default function ReportPreferencesForm({
           value={reportEmail}
           onChange={(e) => setReportEmail(e.target.value)}
           placeholder={parentEmail || t("emailPlaceholder")}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         />
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-slate-400">
           {t("emailOverrideHint")}
         </p>
       </div>
 
       {/* Report Toggles */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">{t("enabledReports")}</h3>
+        <h3 className="text-sm font-medium text-slate-300">{t("enabledReports")}</h3>
 
         {/* Weekly Report Toggle */}
-        <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+        <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10">
           <div>
-            <span className="font-medium text-gray-900">{t("weeklyReport")}</span>
-            <p className="text-sm text-gray-500">{t("weeklyReportDescription")}</p>
+            <span className="font-medium text-white">{t("weeklyReport")}</span>
+            <p className="text-sm text-slate-400">{t("weeklyReportDescription")}</p>
           </div>
           <input
             type="checkbox"
             checked={weeklyReportEnabled}
             onChange={(e) => setWeeklyReportEnabled(e.target.checked)}
-            className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+            className="w-5 h-5 text-teal-600 border-white/20 rounded focus:ring-teal-500"
           />
         </label>
 
         {/* Monthly Report Toggle */}
-        <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+        <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10">
           <div>
-            <span className="font-medium text-gray-900">{t("monthlyReport")}</span>
-            <p className="text-sm text-gray-500">{t("monthlyReportDescription")}</p>
+            <span className="font-medium text-white">{t("monthlyReport")}</span>
+            <p className="text-sm text-slate-400">{t("monthlyReportDescription")}</p>
           </div>
           <input
             type="checkbox"
             checked={monthlyReportEnabled}
             onChange={(e) => setMonthlyReportEnabled(e.target.checked)}
-            className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+            className="w-5 h-5 text-teal-600 border-white/20 rounded focus:ring-teal-500"
           />
         </label>
 
         {/* Settlement Email Toggle */}
-        <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+        <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10">
           <div>
-            <span className="font-medium text-gray-900">{t("settlementEmail")}</span>
-            <p className="text-sm text-gray-500">{t("settlementEmailDescription")}</p>
+            <span className="font-medium text-white">{t("settlementEmail")}</span>
+            <p className="text-sm text-slate-400">{t("settlementEmailDescription")}</p>
           </div>
           <input
             type="checkbox"
             checked={settlementEmailEnabled}
             onChange={(e) => setSettlementEmailEnabled(e.target.checked)}
-            className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+            className="w-5 h-5 text-teal-600 border-white/20 rounded focus:ring-teal-500"
           />
         </label>
       </div>
@@ -177,7 +177,7 @@ export default function ReportPreferencesForm({
       <div>
         <label
           htmlFor="timezone"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-300 mb-1"
         >
           {t("timezone")}
         </label>
@@ -185,7 +185,7 @@ export default function ReportPreferencesForm({
           id="timezone"
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         >
           {TIMEZONE_OPTIONS.map((tz) => (
             <option key={tz.value} value={tz.value}>
@@ -193,14 +193,14 @@ export default function ReportPreferencesForm({
             </option>
           ))}
         </select>
-        <p className="mt-1 text-sm text-gray-500">{t("timezoneHint")}</p>
+        <p className="mt-1 text-sm text-slate-400">{t("timezoneHint")}</p>
       </div>
 
       {/* Report Language */}
       <div>
         <label
           htmlFor="reportLocale"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-300 mb-1"
         >
           {t("reportLanguage")}
         </label>
@@ -208,7 +208,7 @@ export default function ReportPreferencesForm({
           id="reportLocale"
           value={reportLocale}
           onChange={(e) => setReportLocale(e.target.value as "en" | "zh-CN")}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="w-full px-4 py-2 dark-input rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         >
           <option value="en">English</option>
           <option value="zh-CN">中文</option>
@@ -217,14 +217,14 @@ export default function ReportPreferencesForm({
 
       {/* Status Messages */}
       {saveStatus === "success" && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">{t("saveSuccess")}</p>
+        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <p className="text-green-300">{t("saveSuccess")}</p>
         </div>
       )}
 
       {saveStatus === "error" && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{errorMessage}</p>
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-red-300">{errorMessage}</p>
         </div>
       )}
 

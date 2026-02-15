@@ -65,7 +65,7 @@ export default function ChildRedemptionList({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className="dark-card rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-xl font-bold mb-4 flex items-center">
         <span className="mr-2">📋</span>
         {t("rewards.myRequests")}
@@ -82,7 +82,7 @@ export default function ChildRedemptionList({
                 ? "bg-success/5 border-success/20"
                 : redemption.status === "rejected"
                 ? "bg-danger/5 border-danger/20"
-                : "bg-gray-50 border-gray-200"
+                : "bg-white/5 border-white/10"
             }`}
           >
             <div className="flex items-center space-x-4">
@@ -91,11 +91,11 @@ export default function ChildRedemptionList({
               </div>
               <div>
                 <div className="font-semibold">{getRewardName(redemption.rewards, locale)}</div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-slate-400">
                   {redemption.stars_spent} {t("common.stars")} • {formatDateTime(redemption.created_at, locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </div>
                 {redemption.child_note && (
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-slate-500 mt-1">
                     {t("quests.note")}: {redemption.child_note}
                   </div>
                 )}
