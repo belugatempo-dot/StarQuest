@@ -362,6 +362,32 @@ describe("ChildDashboard with data", () => {
     expect(screen.getByText("Reading")).toBeInTheDocument();
   });
 
+  it("shows child note in recent transactions", async () => {
+    setupMockClient({
+      star_transactions: {
+        data: [
+          {
+            id: "tx-note-1",
+            created_at: "2026-01-15T10:00:00Z",
+            stars: 5,
+            status: "approved",
+            quests: { name_en: "Homework", name_zh: "作业", icon: "📚" },
+            custom_description: null,
+            child_note: "I completed this!",
+          },
+        ],
+        error: null,
+      },
+    });
+
+    const jsx = await ChildDashboard({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    expect(screen.getByText('"I completed this!"')).toBeInTheDocument();
+  });
+
   it("uses star emoji when quest icon is missing", async () => {
     setupMockClient({
       star_transactions: {
