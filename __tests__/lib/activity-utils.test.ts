@@ -632,6 +632,7 @@ describe("activity-utils", () => {
       expect(stats.negativeRecords).toBe(1); // -2
       expect(stats.totalStarsGiven).toBe(8); // 5 + 3
       expect(stats.totalStarsDeducted).toBe(-2);
+      expect(stats.starsRedeemed).toBe(0); // no redemptions
       expect(stats.netStars).toBe(6); // 8 + (-2)
       expect(stats.approved).toBe(3);
       expect(stats.pending).toBe(1);
@@ -645,6 +646,7 @@ describe("activity-utils", () => {
       expect(stats.negativeRecords).toBe(0);
       expect(stats.totalStarsGiven).toBe(0);
       expect(stats.totalStarsDeducted).toBe(0);
+      expect(stats.starsRedeemed).toBe(0);
       expect(stats.netStars).toBe(0);
     });
 
@@ -669,6 +671,29 @@ describe("activity-utils", () => {
       expect(stats.totalStarsGiven).toBe(0);
       expect(stats.totalStarsDeducted).toBe(0);
       expect(stats.netStars).toBe(0);
+    });
+
+    it("separates starsRedeemed from totalStarsDeducted", () => {
+      const activities = [
+        makeActivity({ id: "1", stars: 10, status: "approved" }),
+        makeActivity({ id: "2", stars: -3, status: "approved", type: "star_transaction" }),
+        makeActivity({ id: "3", stars: -50, status: "approved", type: "redemption" }),
+        makeActivity({ id: "4", stars: -20, status: "fulfilled", type: "redemption" }),
+      ];
+      const stats = calculateActivityStats(activities);
+      expect(stats.totalStarsGiven).toBe(10);
+      expect(stats.totalStarsDeducted).toBe(-3); // only star_transaction deductions
+      expect(stats.starsRedeemed).toBe(70); // |−50| + |−20| = 70
+      expect(stats.netStars).toBe(10 + (-3) + (-50) + (-20)); // -63
+    });
+
+    it("excludes pending redemptions from starsRedeemed", () => {
+      const activities = [
+        makeActivity({ id: "1", stars: -50, status: "pending", type: "redemption" }),
+        makeActivity({ id: "2", stars: -20, status: "approved", type: "redemption" }),
+      ];
+      const stats = calculateActivityStats(activities);
+      expect(stats.starsRedeemed).toBe(20); // only approved
     });
 
     it("handles zero-star activities", () => {

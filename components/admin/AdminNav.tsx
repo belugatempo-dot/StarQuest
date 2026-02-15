@@ -22,9 +22,9 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
   };
 
   const navItems = [
+    { path: `/${locale}/admin/activity`, label: t("admin.activityLog"), icon: "📊" },
     { path: `/${locale}/admin`, label: t("admin.title"), icon: "🏠" },
     { path: `/${locale}/admin/record`, label: t("admin.recordStars"), icon: "⭐" },
-    { path: `/${locale}/admin/activity`, label: t("admin.activityLog"), icon: "📊" },
     { path: `/${locale}/admin/approve`, label: t("admin.approvalCenter"), icon: "✅" },
     { path: `/${locale}/admin/quests`, label: t("admin.manageQuests"), icon: "📋" },
     { path: `/${locale}/admin/rewards`, label: t("admin.manageRewards"), icon: "🎁" },

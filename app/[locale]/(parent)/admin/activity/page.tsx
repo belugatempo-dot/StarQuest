@@ -122,6 +122,7 @@ export default async function ActivityPage({
     negativeRecords,
     totalStarsGiven,
     totalStarsDeducted,
+    starsRedeemed,
     netStars,
   } = stats;
 
@@ -140,7 +141,7 @@ export default async function ActivityPage({
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card rounded-lg shadow-md p-4">
           <div className="text-sm text-gray-600 mb-1">
             {locale === "zh-CN" ? "总记录" : "Total Records"}
@@ -170,6 +171,12 @@ export default async function ActivityPage({
             {locale === "zh-CN" ? "总星星-" : "Total Stars -"}
           </div>
           <div className="text-2xl font-bold text-red-600">{totalStarsDeducted}</div>
+        </div>
+        <div className="glass-card rounded-lg shadow-md p-4 border-2 border-purple-200 bg-purple-50">
+          <div className="text-sm text-purple-600 mb-1">
+            🎁 {locale === "zh-CN" ? "星星兑换" : "Stars Redeemed"}
+          </div>
+          <div className="text-2xl font-bold text-purple-600">{starsRedeemed}</div>
         </div>
         <div className="glass-card rounded-lg shadow-md p-4 border-2 border-blue-200 bg-blue-50">
           <div className="text-sm text-blue-600 mb-1">

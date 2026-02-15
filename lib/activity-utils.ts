@@ -310,11 +310,19 @@ export function calculateActivityStats(activities: UnifiedActivityItem[]) {
     (sum, a) => sum + (a.stars > 0 ? a.stars : 0),
     0
   );
+  const starsRedeemed = approvedActivities.reduce(
+    (sum, a) => sum + (a.type === "redemption" && a.stars < 0 ? Math.abs(a.stars) : 0),
+    0
+  );
   const totalStarsDeducted = approvedActivities.reduce(
+    (sum, a) => sum + (a.type !== "redemption" && a.stars < 0 ? a.stars : 0),
+    0
+  );
+  const allNegativeStars = approvedActivities.reduce(
     (sum, a) => sum + (a.stars < 0 ? a.stars : 0),
     0
   );
-  const netStars = totalStarsGiven + totalStarsDeducted;
+  const netStars = totalStarsGiven + allNegativeStars;
 
   return {
     totalRecords,
@@ -322,6 +330,7 @@ export function calculateActivityStats(activities: UnifiedActivityItem[]) {
     negativeRecords,
     totalStarsGiven,
     totalStarsDeducted,
+    starsRedeemed,
     netStars,
     all: totalRecords,
     approved: activities.filter((a) => a.status === "approved").length,
