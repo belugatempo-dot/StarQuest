@@ -131,7 +131,7 @@ export default async function ActivityPage({
       {/* Header - Starry Night Theme */}
       <div className="night-header rounded-lg p-6 shadow-lg">
         <h1 className="text-3xl font-bold mb-2 text-white star-glow relative z-10">
-          ✨ {locale === "zh-CN" ? "活动记录" : "Activity Log"}
+          ✨ {locale === "zh-CN" ? "星星日历" : "Star Calendar"}
         </h1>
         <p className="text-white/80 relative z-10">
           {locale === "zh-CN"
