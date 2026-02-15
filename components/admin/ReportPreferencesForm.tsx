@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database";
 
-type ReportPreferences =
-  Database["public"]["Tables"]["family_report_preferences"]["Row"];
+type ReportPreferences = {
+  id: string;
+  family_id: string;
+  report_email: string | null;
+  weekly_report_enabled: boolean;
+  monthly_report_enabled: boolean;
+  settlement_email_enabled: boolean;
+  timezone: string;
+  report_locale: string;
+  created_at: string;
+  updated_at: string;
+};
 
 interface ReportPreferencesFormProps {
   familyId: string;
@@ -63,43 +71,35 @@ export default function ReportPreferencesForm({
     setSaveStatus("idle");
     setErrorMessage("");
 
-    const supabase = createClient();
+    try {
+      const res = await fetch(`/${locale}/api/admin/update-report-preferences`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          familyId,
+          reportEmail: reportEmail.trim() || null,
+          weeklyReportEnabled,
+          monthlyReportEnabled,
+          settlementEmailEnabled,
+          timezone,
+          reportLocale,
+        }),
+      });
 
-    const data = {
-      family_id: familyId,
-      report_email: reportEmail.trim() || null,
-      weekly_report_enabled: weeklyReportEnabled,
-      monthly_report_enabled: monthlyReportEnabled,
-      settlement_email_enabled: settlementEmailEnabled,
-      timezone,
-      report_locale: reportLocale,
-    };
+      const result = await res.json();
 
-    let error;
-    if (preferences) {
-      // Update existing
-      const result = await (supabase
-        .from("family_report_preferences") as any)
-        .update(data)
-        .eq("id", preferences.id);
-      error = result.error;
-    } else {
-      // Insert new
-      const result = await (supabase
-        .from("family_report_preferences") as any)
-        .insert(data);
-      error = result.error;
-    }
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to save");
+      }
 
-    setIsSaving(false);
-
-    if (error) {
+      setSaveStatus("success");
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (error: any) {
       console.error("Failed to save preferences:", error);
       setSaveStatus("error");
       setErrorMessage(t("saveError"));
-    } else {
-      setSaveStatus("success");
-      setTimeout(() => setSaveStatus("idle"), 3000);
+    } finally {
+      setIsSaving(false);
     }
   };
 
