@@ -19,11 +19,13 @@ const mockUpdate = jest.fn();
 const mockInsert = jest.fn();
 const mockDelete = jest.fn();
 
+const mockSupabaseClient = {
+  from: mockFrom,
+  rpc: mockRpc,
+};
+
 jest.mock("@/lib/supabase/client", () => ({
-  createClient: jest.fn(() => ({
-    from: mockFrom,
-    rpc: mockRpc,
-  })),
+  createClient: jest.fn(() => mockSupabaseClient),
 }));
 
 // Mock window.confirm

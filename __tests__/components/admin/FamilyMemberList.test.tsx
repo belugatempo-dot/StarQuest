@@ -131,7 +131,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -147,7 +147,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -160,7 +160,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -176,7 +176,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -192,7 +192,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -205,7 +205,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -220,7 +220,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -239,7 +239,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -253,7 +253,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -270,7 +270,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -287,7 +287,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -307,7 +307,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -331,7 +331,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -350,7 +350,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -369,7 +369,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -390,7 +390,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -417,7 +417,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -436,7 +436,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -456,7 +456,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -479,7 +479,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -497,7 +497,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -515,7 +515,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -540,7 +540,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -561,7 +561,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -587,7 +587,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -626,7 +626,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="zh-CN"
         />
@@ -655,7 +655,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -677,7 +677,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -698,7 +698,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="zh-CN"
         />
@@ -715,7 +715,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -732,7 +732,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={[]}
+          familyChildren={[]}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -745,7 +745,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />
@@ -758,7 +758,7 @@ describe('FamilyMemberList', () => {
       render(
         <FamilyMemberList
           parents={mockParents}
-          children={mockChildren}
+          familyChildren={mockChildren}
           currentUser={mockParents[0]}
           locale="en"
         />

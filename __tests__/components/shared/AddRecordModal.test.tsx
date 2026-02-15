@@ -156,7 +156,7 @@ const defaultParentProps = {
   role: "parent" as const,
   locale: "en",
   quests: allQuests,
-  children: [child1, child2],
+  familyChildren: [child1, child2],
   currentUserId: "parent-1",
   familyId: "family-1",
   onClose: jest.fn(),
@@ -245,7 +245,7 @@ describe("AddRecordModal", () => {
     it("should auto-select child when only 1 child provided", async () => {
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -335,7 +335,7 @@ describe("AddRecordModal", () => {
       const onSuccess = jest.fn();
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
         onSuccess,
       };
       render(<AddRecordModal {...props} />);
@@ -375,7 +375,7 @@ describe("AddRecordModal", () => {
     it("should submit with multiplied star count", async () => {
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -403,7 +403,7 @@ describe("AddRecordModal", () => {
     it("should include parent_response when note is provided", async () => {
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -431,7 +431,7 @@ describe("AddRecordModal", () => {
     it("should set parent_response to null when note is empty", async () => {
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -457,7 +457,7 @@ describe("AddRecordModal", () => {
       const onSuccess = jest.fn();
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
         onSuccess,
       };
       render(<AddRecordModal {...props} />);
@@ -479,7 +479,7 @@ describe("AddRecordModal", () => {
     it("should call router.refresh after successful submit", async () => {
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -525,7 +525,7 @@ describe("AddRecordModal", () => {
     it("should show error when no quest selected", () => {
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -545,7 +545,7 @@ describe("AddRecordModal", () => {
 
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -575,7 +575,7 @@ describe("AddRecordModal", () => {
 
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 
@@ -981,7 +981,7 @@ describe("AddRecordModal", () => {
     });
 
     it("should not show child selector when children prop is undefined", () => {
-      const props = { ...defaultParentProps, children: undefined };
+      const props = { ...defaultParentProps, familyChildren: undefined };
       render(<AddRecordModal {...props} />);
       // With no children, the child selector section shouldn't render
       // (even though it's parent mode)
@@ -996,7 +996,7 @@ describe("AddRecordModal", () => {
 
       const props = {
         ...defaultParentProps,
-        children: [child1],
+        familyChildren: [child1],
       };
       render(<AddRecordModal {...props} />);
 

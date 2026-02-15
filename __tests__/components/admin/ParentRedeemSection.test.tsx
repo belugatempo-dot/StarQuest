@@ -69,7 +69,7 @@ describe("ParentRedeemSection", () => {
   ];
 
   const baseProps = {
-    children: mockChildren as any[],
+    familyChildren: mockChildren as any[],
     rewards: mockRewards as any[],
     childBalances: mockChildBalances,
     locale: "en",
@@ -112,14 +112,14 @@ describe("ParentRedeemSection", () => {
 
   describe("No Children", () => {
     it("shows no children message when there are no children", () => {
-      render(<ParentRedeemSection {...baseProps} children={[]} />);
+      render(<ParentRedeemSection {...baseProps} familyChildren={[]} />);
       expect(
         screen.getByText("admin.noChildrenInFamily")
       ).toBeInTheDocument();
     });
 
     it("still shows the header when no children", () => {
-      render(<ParentRedeemSection {...baseProps} children={[]} />);
+      render(<ParentRedeemSection {...baseProps} familyChildren={[]} />);
       expect(screen.getByText("admin.quickRedeem")).toBeInTheDocument();
     });
   });
@@ -130,7 +130,7 @@ describe("ParentRedeemSection", () => {
       render(
         <ParentRedeemSection
           {...baseProps}
-          children={singleChild as any[]}
+          familyChildren={singleChild as any[]}
         />
       );
       // Should auto-select and show reward grid
@@ -194,7 +194,7 @@ describe("ParentRedeemSection", () => {
         <ParentRedeemSection
           {...baseProps}
           rewards={inactiveRewards as any[]}
-          children={[mockChildren[0]] as any[]}
+          familyChildren={[mockChildren[0]] as any[]}
         />
       );
       // Auto-selects child, should show no data

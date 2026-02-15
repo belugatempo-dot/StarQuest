@@ -17,7 +17,7 @@ interface Child {
 
 interface CreditManagementClientProps {
   familyId: string;
-  children: Child[];
+  familyChildren: Child[];
   balances: any[];
   creditSettings: any[];
   settlementDay: number;
@@ -26,7 +26,7 @@ interface CreditManagementClientProps {
 
 export default function CreditManagementClient({
   familyId,
-  children,
+  familyChildren: children,
   balances,
   creditSettings,
   settlementDay: initialSettlementDay,

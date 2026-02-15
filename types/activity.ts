@@ -133,7 +133,7 @@ export interface UnifiedActivityListProps {
   currentChildId?: string;
   permissions?: ActivityPermissions;
   quests?: Quest[];
-  children?: User[];
+  familyChildren?: User[];
   currentUserId?: string;
   familyId?: string;
 }

@@ -1310,7 +1310,7 @@ describe("UnifiedActivityList", () => {
     const parentPropsWithQuests = {
       ...parentProps,
       quests: mockQuests,
-      children: mockChildren,
+      familyChildren: mockChildren,
       currentUserId: "parent-1",
       familyId: "fam-1",
     };

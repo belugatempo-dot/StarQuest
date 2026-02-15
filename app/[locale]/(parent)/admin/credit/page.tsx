@@ -56,7 +56,7 @@ export default async function CreditManagementPage({
       {/* Client Component with all the interactive parts */}
       <CreditManagementClient
         familyId={user.family_id!}
-        children={children || []}
+        familyChildren={children || []}
         balances={balances || []}
         creditSettings={creditSettings || []}
         settlementDay={settlementDay}

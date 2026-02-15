@@ -13,7 +13,7 @@ type User = Database["public"]["Tables"]["users"]["Row"];
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
 
 interface QuickRecordFormProps {
-  children: User[];
+  familyChildren: User[];
   quests: Quest[];
   locale: string;
   parentId: string;
@@ -21,7 +21,7 @@ interface QuickRecordFormProps {
 }
 
 export default function QuickRecordForm({
-  children,
+  familyChildren: children,
   quests,
   locale,
   parentId,

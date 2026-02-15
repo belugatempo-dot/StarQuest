@@ -16,10 +16,12 @@ const mockOrder = jest.fn();
 const mockLimit = jest.fn();
 const mockFrom = jest.fn();
 
+const mockSupabaseClient = {
+  from: mockFrom,
+};
+
 jest.mock("@/lib/supabase/client", () => ({
-  createClient: jest.fn(() => ({
-    from: mockFrom,
-  })),
+  createClient: jest.fn(() => mockSupabaseClient),
 }));
 
 describe("SettlementHistoryTable", () => {

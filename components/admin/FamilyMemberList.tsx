@@ -13,14 +13,14 @@ import ResetPasswordModal from "./ResetPasswordModal";
 
 interface FamilyMemberListProps {
   parents: User[];
-  children: User[];
+  familyChildren: User[];
   currentUser: User;
   locale: string;
 }
 
 export default function FamilyMemberList({
   parents,
-  children,
+  familyChildren: children,
   currentUser,
   locale,
 }: FamilyMemberListProps) {

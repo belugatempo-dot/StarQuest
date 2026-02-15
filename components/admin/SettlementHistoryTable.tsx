@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -30,11 +30,7 @@ export default function SettlementHistoryTable({
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSettlements();
-  }, [familyId, childId]);
-
-  const fetchSettlements = async () => {
+  const fetchSettlements = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -68,7 +64,11 @@ export default function SettlementHistoryTable({
     } finally {
       setLoading(false);
     }
-  };
+  }, [familyId, childId, supabase]);
+
+  useEffect(() => {
+    fetchSettlements();
+  }, [fetchSettlements]);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);

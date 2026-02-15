@@ -59,10 +59,10 @@ jest.mock("@/components/admin/InviteParentCard", () => {
 });
 
 jest.mock("@/components/admin/FamilyMemberList", () => {
-  return function MockFamilyMemberList({ parents, children, currentUser, locale }: any) {
+  return function MockFamilyMemberList({ parents, familyChildren, currentUser, locale }: any) {
     return (
       <div data-testid="family-member-list">
-        FamilyMemberList - {parents.length} parents - {children.length} children
+        FamilyMemberList - {parents.length} parents - {familyChildren.length} children
       </div>
     );
   };

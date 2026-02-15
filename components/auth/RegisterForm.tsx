@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export default function RegisterForm() {
   const supabase = createClient();
@@ -23,16 +23,8 @@ export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Check URL parameter for invite code on mount
-  useEffect(() => {
-    const inviteParam = searchParams.get("invite");
-    if (inviteParam) {
-      handleInviteCodeChange(inviteParam);
-    }
-  }, [searchParams]);
-
   // Validate invite code when user types it
-  const handleInviteCodeChange = async (code: string) => {
+  const handleInviteCodeChange = useCallback(async (code: string) => {
     setInviteCode(code.toUpperCase());
     setValidatedFamily(null);
     setError("");
@@ -66,7 +58,15 @@ export default function RegisterForm() {
     } finally {
       setIsValidating(false);
     }
-  };
+  }, [locale, supabase]);
+
+  // Check URL parameter for invite code on mount
+  useEffect(() => {
+    const inviteParam = searchParams.get("invite");
+    if (inviteParam) {
+      handleInviteCodeChange(inviteParam);
+    }
+  }, [searchParams, handleInviteCodeChange]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
