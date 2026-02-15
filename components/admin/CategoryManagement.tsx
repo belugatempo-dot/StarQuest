@@ -10,6 +10,7 @@ import { DEFAULT_CATEGORIES } from "@/types/category";
 
 interface CategoryManagementProps {
   categories: QuestCategoryRow[];
+  quests: { category: string | null }[];
   locale: string;
   familyId: string;
   onCategoriesChange?: () => void;
@@ -17,6 +18,7 @@ interface CategoryManagementProps {
 
 export default function CategoryManagement({
   categories,
+  quests,
   locale,
   familyId,
   onCategoriesChange,
@@ -198,8 +200,21 @@ export default function CategoryManagement({
       : category.name_en;
   };
 
-  // Sort categories by sort_order
-  const sortedCategories = [...categories].sort((a, b) => a.sort_order - b.sort_order);
+  // Build quest count per category
+  const questCountMap = new Map<string, number>();
+  quests.forEach((q) => {
+    if (q.category) {
+      questCountMap.set(q.category, (questCountMap.get(q.category) || 0) + 1);
+    }
+  });
+
+  // Sort categories by quest count descending, ties by sort_order
+  const sortedCategories = [...categories].sort((a, b) => {
+    const countA = questCountMap.get(a.name) || 0;
+    const countB = questCountMap.get(b.name) || 0;
+    if (countB !== countA) return countB - countA;
+    return a.sort_order - b.sort_order;
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -349,7 +364,12 @@ export default function CategoryManagement({
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{category.icon}</span>
                 <div>
-                  <div className="font-medium">{getCategoryName(category)}</div>
+                  <div className="font-medium">
+                    {getCategoryName(category)}{" "}
+                    <span className="text-sm font-normal text-gray-400">
+                      ({questCountMap.get(category.name) || 0})
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500">
                     {locale === "zh-CN" ? "键名" : "Key"}: {category.name}
                   </div>

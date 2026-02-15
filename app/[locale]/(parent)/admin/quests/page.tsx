@@ -89,6 +89,7 @@ export default async function QuestManagementPage({
       {!categoriesTableMissing && (
         <CategoryManagement
           categories={categories}
+          quests={quests || []}
           locale={locale}
           familyId={user.family_id!}
         />

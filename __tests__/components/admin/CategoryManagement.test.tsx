@@ -64,6 +64,11 @@ describe("CategoryManagement", () => {
 
   const baseProps = {
     categories: [mockCategory1, mockCategory2],
+    quests: [
+      { category: "health" },
+      { category: "health" },
+      { category: "study" },
+    ] as { category: string | null }[],
     locale: "en",
     familyId: "family-1",
     onCategoriesChange: jest.fn(),
@@ -90,7 +95,7 @@ describe("CategoryManagement", () => {
       expect(screen.getByText("categoryManagement.infoNote")).toBeInTheDocument();
     });
 
-    it("renders categories sorted by sort_order", () => {
+    it("renders all categories", () => {
       render(<CategoryManagement {...baseProps} />);
       expect(screen.getByText("Health")).toBeInTheDocument();
       expect(screen.getByText("Study")).toBeInTheDocument();
@@ -686,6 +691,83 @@ describe("CategoryManagement", () => {
           screen.getByText(/categoryManagement.saveFailed.*Update constraint violation/)
         ).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Quest count and sorting", () => {
+    it("displays quest count badge for each category", () => {
+      render(
+        <CategoryManagement
+          {...baseProps}
+          quests={[
+            { category: "health" },
+            { category: "health" },
+            { category: "health" },
+            { category: "study" },
+          ]}
+        />
+      );
+      expect(screen.getByText("(3)")).toBeInTheDocument();
+      expect(screen.getByText("(1)")).toBeInTheDocument();
+    });
+
+    it("shows (0) for categories with no quests", () => {
+      render(
+        <CategoryManagement
+          {...baseProps}
+          quests={[]}
+        />
+      );
+      expect(screen.getAllByText("(0)")).toHaveLength(2);
+    });
+
+    it("sorts categories by quest count descending", () => {
+      // Study has more quests than Health, so Study should come first
+      // despite Health having lower sort_order
+      render(
+        <CategoryManagement
+          {...baseProps}
+          quests={[
+            { category: "study" },
+            { category: "study" },
+            { category: "study" },
+            { category: "health" },
+          ]}
+        />
+      );
+      const keyLabels = screen.getAllByText(/^Key: /);
+      expect(keyLabels[0]).toHaveTextContent("Key: study");
+      expect(keyLabels[1]).toHaveTextContent("Key: health");
+    });
+
+    it("breaks count ties by sort_order", () => {
+      // Both categories have 1 quest each — should sort by sort_order
+      render(
+        <CategoryManagement
+          {...baseProps}
+          quests={[
+            { category: "health" },
+            { category: "study" },
+          ]}
+        />
+      );
+      const keyLabels = screen.getAllByText(/^Key: /);
+      expect(keyLabels[0]).toHaveTextContent("Key: health");
+      expect(keyLabels[1]).toHaveTextContent("Key: study");
+    });
+
+    it("ignores quests with null category in count", () => {
+      render(
+        <CategoryManagement
+          {...baseProps}
+          quests={[
+            { category: null },
+            { category: "health" },
+          ]}
+        />
+      );
+      expect(screen.getByText("(1)")).toBeInTheDocument();
+      expect(screen.getByText("(0)")).toBeInTheDocument();
     });
   });
 
