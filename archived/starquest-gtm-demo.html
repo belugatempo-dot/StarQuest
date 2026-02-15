@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarQuest — GTM Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --gold:#F5C542;
+    --gold-dim:rgba(245,197,66,.15);
+    --cyan:#5DE5D5;
+    --magenta:#E84393;
+    --deep:#060B18;
+    --panel:rgba(255,255,255,.04);
+    --text-primary:#F0EDE6;
+    --text-dim:rgba(240,237,230,.5);
+  }
+
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--text-primary);font-family:'DM Sans',sans-serif}
+
+  /* ─── STARFIELD CANVAS ─── */
+  #starfield{position:fixed;inset:0;z-index:0}
+
+  /* ─── SCENE SYSTEM ─── */
+  .scene{
+    position:fixed;inset:0;z-index:1;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    opacity:0;pointer-events:none;
+    transition:opacity .8s cubic-bezier(.4,0,.2,1);
+  }
+  .scene.active{opacity:1;pointer-events:auto}
+
+  /* ─── SCENE 1: COLD OPEN ─── */
+  .hero-star{
+    width:6px;height:6px;background:var(--gold);border-radius:50%;
+    box-shadow:0 0 60px 20px rgba(245,197,66,.4),0 0 120px 60px rgba(245,197,66,.15);
+    animation:pulse-star 2s ease-in-out infinite;
+  }
+  @keyframes pulse-star{
+    0%,100%{transform:scale(1);box-shadow:0 0 60px 20px rgba(245,197,66,.4),0 0 120px 60px rgba(245,197,66,.15)}
+    50%{transform:scale(1.8);box-shadow:0 0 80px 30px rgba(245,197,66,.6),0 0 160px 80px rgba(245,197,66,.25)}
+  }
+
+  .hero-title{
+    font-family:'Anybody',sans-serif;font-weight:900;font-size:clamp(3rem,8vw,7rem);
+    letter-spacing:-.02em;margin-top:2rem;
+    background:linear-gradient(135deg,var(--gold),#FFF6D5,var(--gold));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    opacity:0;transform:translateY(30px) scale(.95);
+    filter:blur(8px);
+  }
+  .hero-title.reveal{
+    animation:title-in 1.4s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes title-in{
+    to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+  }
+
+  .hero-sub{
+    font-size:clamp(.9rem,2vw,1.3rem);font-weight:300;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--text-dim);margin-top:.8rem;
+    opacity:0;transform:translateY(20px);
+  }
+  .hero-sub.reveal{
+    animation:fade-up .8s cubic-bezier(.16,1,.3,1) .6s forwards;
+  }
+
+  /* ─── SCENE 2: PROVOCATION ─── */
+  .provocation{
+    font-family:'Anybody',sans-serif;font-weight:700;
+    font-size:clamp(1.6rem,4.5vw,3.8rem);line-height:1.2;
+    text-align:center;max-width:900px;padding:0 2rem;
+  }
+  .provocation .word{
+    display:inline-block;opacity:0;transform:translateY(40px) rotateX(-40deg);
+    filter:blur(4px);
+  }
+  .provocation .word.reveal{
+    animation:word-in .6s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes word-in{
+    to{opacity:1;transform:translateY(0) rotateX(0);filter:blur(0)}
+  }
+  .provocation .highlight{
+    color:var(--gold);
+    text-shadow:0 0 40px rgba(245,197,66,.3);
+  }
+
+  /* ─── SCENE 3–5: FEATURE CARDS ─── */
+  .feature-scene{
+    gap:2rem;text-align:center;padding:0 2rem;
+  }
+  .feature-icon{
+    font-size:clamp(3rem,8vw,5rem);
+    opacity:0;transform:scale(0) rotate(-180deg);
+    filter:drop-shadow(0 0 30px rgba(245,197,66,.4));
+  }
+  .feature-icon.reveal{
+    animation:icon-burst .8s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes icon-burst{
+    to{opacity:1;transform:scale(1) rotate(0)}
+  }
+
+  .feature-label{
+    font-family:'Anybody',sans-serif;font-weight:900;
+    font-size:clamp(2rem,6vw,4.5rem);letter-spacing:-.02em;
+    opacity:0;transform:translateX(-60px);
+  }
+  .feature-label.reveal{
+    animation:slide-in .7s cubic-bezier(.16,1,.3,1) .3s forwards;
+  }
+  @keyframes slide-in{
+    to{opacity:1;transform:translateX(0)}
+  }
+
+  .feature-desc{
+    font-size:clamp(1rem,2.5vw,1.5rem);font-weight:300;
+    color:var(--text-dim);max-width:600px;line-height:1.6;
+    opacity:0;transform:translateY(20px);
+  }
+  .feature-desc.reveal{
+    animation:fade-up .7s cubic-bezier(.16,1,.3,1) .6s forwards;
+  }
+  @keyframes fade-up{
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  /* feature accent lines */
+  .accent-line{
+    width:80px;height:2px;border-radius:1px;
+    opacity:0;transform:scaleX(0);transform-origin:left;
+  }
+  .accent-line.reveal{
+    animation:line-grow .5s cubic-bezier(.16,1,.3,1) .5s forwards;
+  }
+  @keyframes line-grow{
+    to{opacity:1;transform:scaleX(1)}
+  }
+  .accent-quests{background:var(--cyan)}
+  .accent-stars{background:var(--gold)}
+  .accent-rewards{background:var(--magenta)}
+
+  .feature-label.quests{color:var(--cyan)}
+  .feature-label.stars{
+    background:linear-gradient(135deg,var(--gold),#FFF6D5);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .feature-label.rewards{color:var(--magenta)}
+
+  /* ─── SCENE 5b: QUEST CATEGORIES ─── */
+  .categories-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(.6rem,1.5vw,1.2rem);
+    max-width:680px;padding:0 2rem;
+  }
+  .cat-pill{
+    display:flex;align-items:center;gap:.5rem;
+    padding:.6rem 1rem;border-radius:40px;
+    background:var(--panel);border:1px solid rgba(255,255,255,.06);
+    backdrop-filter:blur(8px);font-size:clamp(.7rem,1.2vw,.95rem);
+    font-weight:500;white-space:nowrap;
+    opacity:0;transform:translateY(20px) scale(.9);
+  }
+  .cat-pill.reveal{
+    animation:pill-in .5s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes pill-in{
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+  .cat-pill span{font-size:1.1em}
+  .categories-heading{
+    font-family:'Anybody',sans-serif;font-weight:900;
+    font-size:clamp(1.4rem,4vw,2.8rem);margin-bottom:.6rem;
+    letter-spacing:-.01em;opacity:0;transform:translateY(20px);
+  }
+  .categories-heading.reveal{animation:fade-up .7s cubic-bezier(.16,1,.3,1) forwards}
+  .categories-sub{
+    font-size:clamp(.85rem,1.8vw,1.15rem);font-weight:300;
+    color:var(--text-dim);margin-bottom:2rem;
+    opacity:0;transform:translateY(15px);
+  }
+  .categories-sub.reveal{animation:fade-up .6s cubic-bezier(.16,1,.3,1) .2s forwards}
+
+  /* ─── SCENE 5c–5e: APP SCREENSHOT SCENES ─── */
+  .app-scene-heading{
+    font-family:'Anybody',sans-serif;font-weight:900;
+    font-size:clamp(1.2rem,3.5vw,2.4rem);margin-bottom:.4rem;
+    letter-spacing:-.01em;opacity:0;transform:translateY(20px);
+  }
+  .app-scene-heading.reveal{animation:fade-up .7s cubic-bezier(.16,1,.3,1) forwards}
+  .app-scene-sub{
+    font-size:clamp(.8rem,1.6vw,1.1rem);font-weight:300;
+    color:var(--text-dim);margin-bottom:1.5rem;
+    opacity:0;transform:translateY(15px);
+  }
+  .app-scene-sub.reveal{animation:fade-up .6s cubic-bezier(.16,1,.3,1) .15s forwards}
+
+  /* Device mockup frame */
+  .device-frame{
+    position:relative;
+    width:clamp(500px,70vw,960px);
+    height:clamp(300px,42vw,560px);
+    border-radius:12px;overflow:hidden;
+    border:2px solid rgba(255,255,255,.08);
+    box-shadow:0 20px 80px rgba(0,0,0,.6),0 0 60px rgba(245,197,66,.08);
+    opacity:0;transform:translateY(30px) perspective(800px) rotateX(4deg);
+    background:#1a1a2e;
+  }
+  .device-frame.reveal{
+    animation:frame-in .9s cubic-bezier(.16,1,.3,1) .3s forwards;
+  }
+  @keyframes frame-in{
+    to{opacity:1;transform:translateY(0) perspective(800px) rotateX(0)}
+  }
+  .device-frame::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:32px;
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    border-bottom:1px solid rgba(255,255,255,.05);z-index:2;
+  }
+  .device-frame::after{
+    content:'● ● ●';position:absolute;top:8px;left:14px;
+    font-size:8px;letter-spacing:5px;color:rgba(255,255,255,.2);z-index:3;
+  }
+  .device-frame iframe{
+    width:100%;height:100%;border:none;
+    transform:scale(.65);transform-origin:top left;
+    width:153.85%;height:153.85%;
+    pointer-events:none;
+  }
+  .frame-label{
+    position:absolute;bottom:-2rem;left:50%;transform:translateX(-50%);
+    font-size:.7rem;color:var(--text-dim);letter-spacing:.12em;
+    text-transform:uppercase;white-space:nowrap;
+    opacity:0;
+  }
+  .frame-label.reveal{animation:fade-up .5s ease .8s forwards}
+
+  @media(max-width:640px){
+    .categories-grid{grid-template-columns:repeat(2,1fr)}
+    .device-frame{width:92vw;height:55vw}
+    .device-frame iframe{transform:scale(.5);width:200%;height:200%}
+  }
+
+  /* ─── SCENE 6: HOW IT WORKS ─── */
+  .flow-container{
+    display:flex;align-items:center;gap:clamp(1rem,3vw,3rem);
+    flex-wrap:wrap;justify-content:center;padding:0 2rem;
+  }
+  .flow-step{
+    display:flex;flex-direction:column;align-items:center;gap:.8rem;
+    opacity:0;transform:translateY(40px);
+  }
+  .flow-step.reveal{
+    animation:fade-up .6s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  .flow-circle{
+    width:clamp(70px,12vw,110px);height:clamp(70px,12vw,110px);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(1.8rem,4vw,2.8rem);
+    border:2px solid rgba(255,255,255,.08);
+    background:var(--panel);backdrop-filter:blur(10px);
+    transition:transform .3s,box-shadow .3s;
+  }
+  .flow-circle:hover{transform:scale(1.1);box-shadow:0 0 40px rgba(245,197,66,.2)}
+  .flow-text{
+    font-family:'Anybody',sans-serif;font-weight:700;
+    font-size:clamp(.7rem,1.5vw,1rem);letter-spacing:.1em;text-transform:uppercase;
+  }
+  .flow-arrow{
+    font-size:1.5rem;color:var(--text-dim);
+    opacity:0;transform:translateX(-10px);
+  }
+  .flow-arrow.reveal{
+    animation:arrow-in .4s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes arrow-in{
+    to{opacity:.5;transform:translateX(0)}
+  }
+  .flow-heading{
+    font-family:'Anybody',sans-serif;font-weight:900;
+    font-size:clamp(1.4rem,4vw,2.8rem);margin-bottom:2rem;
+    letter-spacing:-.01em;opacity:0;transform:translateY(20px);
+  }
+  .flow-heading.reveal{animation:fade-up .7s cubic-bezier(.16,1,.3,1) forwards}
+
+  /* ─── SCENE 7: CTA ─── */
+  .cta-logo{
+    font-family:'Anybody',sans-serif;font-weight:900;
+    font-size:clamp(3rem,8vw,6rem);letter-spacing:-.02em;
+    background:linear-gradient(135deg,var(--gold),#FFF6D5,var(--cyan));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    opacity:0;transform:scale(.8);filter:blur(6px);
+  }
+  .cta-logo.reveal{
+    animation:cta-in 1s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes cta-in{
+    to{opacity:1;transform:scale(1);filter:blur(0)}
+  }
+
+  .cta-tagline{
+    font-size:clamp(.9rem,2vw,1.4rem);font-weight:300;
+    color:var(--text-dim);letter-spacing:.1em;margin-top:.5rem;
+    opacity:0;transform:translateY(20px);
+  }
+  .cta-tagline.reveal{animation:fade-up .7s cubic-bezier(.16,1,.3,1) .4s forwards}
+
+  .cta-btn{
+    margin-top:2.5rem;padding:1rem 3rem;
+    font-family:'Anybody',sans-serif;font-weight:700;font-size:1.1rem;
+    letter-spacing:.08em;text-transform:uppercase;
+    color:var(--deep);background:var(--gold);
+    border:none;border-radius:60px;cursor:pointer;
+    box-shadow:0 0 40px rgba(245,197,66,.3),0 4px 20px rgba(0,0,0,.3);
+    opacity:0;transform:translateY(20px);
+    transition:transform .3s,box-shadow .3s;
+  }
+  .cta-btn.reveal{animation:fade-up .7s cubic-bezier(.16,1,.3,1) .7s forwards}
+  .cta-btn:hover{
+    transform:translateY(-2px)!important;
+    box-shadow:0 0 60px rgba(245,197,66,.5),0 8px 30px rgba(0,0,0,.4);
+  }
+
+  .cta-footer{
+    position:absolute;bottom:2rem;
+    font-size:.75rem;color:var(--text-dim);letter-spacing:.15em;
+    opacity:0;
+  }
+  .cta-footer.reveal{animation:fade-up .5s ease 1s forwards}
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-bar{
+    position:fixed;bottom:0;left:0;height:3px;z-index:100;
+    background:linear-gradient(90deg,var(--cyan),var(--gold),var(--magenta));
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 0 15px rgba(245,197,66,.4);
+  }
+
+  /* ─── SCENE COUNTER ─── */
+  .scene-counter{
+    position:fixed;bottom:1.5rem;right:2rem;z-index:100;
+    font-family:'Anybody',sans-serif;font-weight:700;font-size:.75rem;
+    letter-spacing:.15em;color:var(--text-dim);
+  }
+
+  /* ─── NAV DOTS ─── */
+  .nav-dots{
+    position:fixed;right:2rem;top:50%;transform:translateY(-50%);z-index:100;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .nav-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.15);border:none;cursor:pointer;
+    transition:all .4s cubic-bezier(.16,1,.3,1);padding:0;
+  }
+  .nav-dot.active{
+    background:var(--gold);
+    box-shadow:0 0 12px rgba(245,197,66,.5);
+    transform:scale(1.4);
+  }
+  .nav-dot:hover:not(.active){background:rgba(255,255,255,.3)}
+
+  /* ─── CONTROLS HINT ─── */
+  .controls-hint{
+    position:fixed;bottom:1.5rem;left:2rem;z-index:100;
+    font-size:.7rem;color:var(--text-dim);letter-spacing:.1em;
+    opacity:0;animation:fade-up .5s ease 2s forwards;
+  }
+
+  /* ─── PARTICLES OVERLAY ─── */
+  .particle{
+    position:fixed;z-index:2;pointer-events:none;
+    width:3px;height:3px;border-radius:50%;
+    background:var(--gold);
+    opacity:0;
+  }
+
+  /* ─── RADIAL GLOW PER SCENE ─── */
+  .radial-glow{
+    position:absolute;width:600px;height:600px;border-radius:50%;
+    filter:blur(120px);opacity:.12;pointer-events:none;
+  }
+  .glow-cyan{background:var(--cyan)}
+  .glow-gold{background:var(--gold)}
+  .glow-magenta{background:var(--magenta)}
+
+  /* ─── RESPONSIVE ─── */
+  @media(max-width:640px){
+    .nav-dots{right:1rem;gap:8px}
+    .nav-dot{width:6px;height:6px}
+    .flow-arrow{display:none}
+    .flow-container{gap:1.5rem}
+    .controls-hint,.scene-counter{display:none}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- SCENE 1: COLD OPEN -->
+<div class="scene" id="scene-0">
+  <div class="hero-star"></div>
+  <h1 class="hero-title">StarQuest</h1>
+  <p class="hero-sub">A cosmic journey begins</p>
+</div>
+
+<!-- SCENE 2: PROVOCATION -->
+<div class="scene" id="scene-1">
+  <div class="radial-glow glow-gold" style="top:20%;left:60%"></div>
+  <p class="provocation" id="provocation">
+    What if every <span class="highlight">achievement</span> earned a <span class="highlight">star</span> ?
+  </p>
+</div>
+
+<!-- SCENE 3: QUESTS -->
+<div class="scene feature-scene" id="scene-2">
+  <div class="radial-glow glow-cyan" style="bottom:10%;left:20%"></div>
+  <div class="feature-icon">📋</div>
+  <div class="accent-line accent-quests"></div>
+  <h2 class="feature-label quests">Quests</h2>
+  <p class="feature-desc">Complete daily tasks and positive behaviors.<br>Every small step forward counts.</p>
+</div>
+
+<!-- SCENE 4: STARS -->
+<div class="scene feature-scene" id="scene-3">
+  <div class="radial-glow glow-gold" style="top:15%;right:20%"></div>
+  <div class="feature-icon">⭐</div>
+  <div class="accent-line accent-stars"></div>
+  <h2 class="feature-label stars">Stars</h2>
+  <p class="feature-desc">Earn stars for every achievement.<br>Watch your constellation grow.</p>
+</div>
+
+<!-- SCENE 5: REWARDS -->
+<div class="scene feature-scene" id="scene-4">
+  <div class="radial-glow glow-magenta" style="bottom:20%;right:30%"></div>
+  <div class="feature-icon">🎁</div>
+  <div class="accent-line accent-rewards"></div>
+  <h2 class="feature-label rewards">Rewards</h2>
+  <p class="feature-desc">Redeem exciting rewards with your stars.<br>The universe rewards those who quest.</p>
+</div>
+
+<!-- SCENE 6: QUEST CATEGORIES -->
+<div class="scene" id="scene-5" style="flex-direction:column">
+  <div class="radial-glow glow-cyan" style="top:20%;left:30%"></div>
+  <h2 class="categories-heading">14 Quest Categories</h2>
+  <p class="categories-sub">From learning to kindness — every growth area covered.</p>
+  <div class="categories-grid">
+    <div class="cat-pill"><span>📖</span> Learning</div>
+    <div class="cat-pill"><span>📝</span> Study</div>
+    <div class="cat-pill"><span>🧹</span> Chores</div>
+    <div class="cat-pill"><span>🧼</span> Hygiene</div>
+    <div class="cat-pill"><span>💪</span> Health</div>
+    <div class="cat-pill"><span>🤝</span> Social</div>
+    <div class="cat-pill"><span>🎨</span> Creativity</div>
+    <div class="cat-pill"><span>🏃</span> Exercise</div>
+    <div class="cat-pill"><span>📚</span> Reading</div>
+    <div class="cat-pill"><span>🎵</span> Music</div>
+    <div class="cat-pill"><span>🖼️</span> Art</div>
+    <div class="cat-pill"><span>💛</span> Kindness</div>
+    <div class="cat-pill"><span>✅</span> Responsibility</div>
+    <div class="cat-pill"><span>✨</span> Other</div>
+  </div>
+</div>
+
+<!-- SCENE 7: PARENT DASHBOARD (mockup) -->
+<div class="scene" id="scene-6" style="flex-direction:column">
+  <div class="radial-glow glow-gold" style="bottom:20%;right:25%"></div>
+  <h2 class="app-scene-heading">Parent Command Center</h2>
+  <p class="app-scene-sub">Full visibility. Complete control. Zero guesswork.</p>
+  <div class="device-frame">
+    <div style="background:#FFF9E6;width:100%;height:100%;padding:24px 32px;font-family:'DM Sans',system-ui,sans-serif;color:#333;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">⭐</span><b style="color:#D4A017;font-size:16px">StarQuest</b><span style="background:#7C3AED;color:#fff;font-size:9px;padding:2px 6px;border-radius:4px">Parent</span></div>
+        <div style="display:flex;gap:12px;font-size:10px;color:#666"><span>👋 Amanda</span><span style="background:#3B82F6;color:#fff;padding:1px 6px;border-radius:3px">EN</span></div>
+      </div>
+      <div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px 20px;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:700">👋 Welcome, Amanda!</div>
+        <div style="font-size:11px;color:#666;margin-top:2px">Manage your family's quest progress and rewards</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)"><div style="font-size:10px;color:#666">Pending Approvals</div><div style="font-size:24px;font-weight:800;color:#D4A017">7</div><div style="font-size:8px;color:#999">7 stars, 0 redemptions</div></div>
+        <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)"><div style="font-size:10px;color:#666">Family Members</div><div style="font-size:24px;font-weight:800;color:#7C3AED">2</div><div style="font-size:8px;color:#999">1 parent, 1 child</div></div>
+        <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)"><div style="font-size:10px;color:#666">Quick Record</div><div style="font-size:13px;font-weight:600;color:#EF4444;margin-top:4px">Record Stars</div><div style="font-size:8px;color:#999">Click to add stars</div></div>
+        <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)"><div style="font-size:10px;color:#666">Credit Management</div><div style="font-size:13px;font-weight:600;color:#3B82F6;margin-top:4px">Manage Credit</div><div style="font-size:8px;color:#999">Set limits &amp; rates</div></div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px">Children Overview</div>
+        <div style="display:flex;align-items:center;gap:10px;background:#FFFBEB;border-radius:8px;padding:10px">
+          <div style="width:36px;height:36px;background:#F59E0B;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">🧒</div>
+          <div><div style="font-weight:600;font-size:12px">Lucas</div><div style="font-size:9px;color:#666">Level 427</div></div>
+          <div style="margin-left:auto;text-align:right"><div style="font-size:9px;color:#666">Current Stars</div><div style="font-size:16px;font-weight:800;color:#EF4444">-90</div></div>
+          <div style="text-align:right"><div style="font-size:9px;color:#666">Lifetime</div><div style="font-size:16px;font-weight:800;color:#22C55E">427</div></div>
+        </div>
+      </div>
+    </div>
+    <span class="frame-label">Parent Dashboard — Live Data</span>
+  </div>
+</div>
+
+<!-- SCENE 8: MANAGE QUESTS (mockup) -->
+<div class="scene" id="scene-7" style="flex-direction:column">
+  <div class="radial-glow glow-cyan" style="top:20%;left:30%"></div>
+  <h2 class="app-scene-heading">67 Quest Templates</h2>
+  <p class="app-scene-sub">From chores to creativity — every growth area covered.</p>
+  <div class="device-frame">
+    <div style="background:#FFF9E6;width:100%;height:100%;padding:24px 32px;font-family:'DM Sans',system-ui,sans-serif;color:#333;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:18px;font-weight:700">📋 Quest Management</div><div style="font-size:11px;color:#666">Manage tasks and activities for your children</div></div>
+        <div style="text-align:right"><span style="font-size:10px;color:#666">Positive Tasks</span> <b style="color:#22C55E;font-size:20px">34</b> <span style="font-size:10px;color:#666;margin-left:8px">Negative Tasks</span> <b style="color:#EF4444;font-size:20px">33</b></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:11px;color:#666">67 quest templates</span><button style="background:#22C55E;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer">+ Add Quest</button></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px">📋 My Duties <span style="font-weight:400;font-size:10px;color:#999">23 quests</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFFBEB;border-radius:6px;font-size:11px"><div><b>Do not dribble milk</b> <span style="color:#EF4444;font-size:10px">-5⭐</span> <span style="background:#E5E7EB;padding:1px 5px;border-radius:3px;font-size:9px">Chores</span></div><div style="display:flex;gap:6px"><span style="color:#3B82F6;font-size:9px">Edit</span><span style="color:#666;font-size:9px">Disable</span><span style="color:#EF4444;font-size:9px">Delete</span></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFFBEB;border-radius:6px;font-size:11px"><div><b>Clean own room</b> <span style="color:#EF4444;font-size:10px">-5⭐</span> <span style="background:#E5E7EB;padding:1px 5px;border-radius:3px;font-size:9px">Chores</span></div><div style="display:flex;gap:6px"><span style="color:#3B82F6;font-size:9px">Edit</span><span style="color:#666;font-size:9px">Disable</span><span style="color:#EF4444;font-size:9px">Delete</span></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFFBEB;border-radius:6px;font-size:11px"><div><b>Organize backpack</b> <span style="color:#EF4444;font-size:10px">-5⭐</span> <span style="background:#E5E7EB;padding:1px 5px;border-radius:3px;font-size:9px">Chores</span></div><div style="display:flex;gap:6px"><span style="color:#3B82F6;font-size:9px">Edit</span><span style="color:#666;font-size:9px">Disable</span><span style="color:#EF4444;font-size:9px">Delete</span></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFFBEB;border-radius:6px;font-size:11px"><div><b>Brush own teeth</b> <span style="color:#EF4444;font-size:10px">-5⭐</span> <span style="background:#DCFCE7;padding:1px 5px;border-radius:3px;font-size:9px">Health</span></div><div style="display:flex;gap:6px"><span style="color:#3B82F6;font-size:9px">Edit</span><span style="color:#666;font-size:9px">Disable</span><span style="color:#EF4444;font-size:9px">Delete</span></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFFBEB;border-radius:6px;font-size:11px"><div><b>Go to bed in time</b> <span style="color:#22C55E;font-size:10px">+5⭐</span> <span style="background:#DCFCE7;padding:1px 5px;border-radius:3px;font-size:9px">Health</span></div><div style="display:flex;gap:6px"><span style="color:#3B82F6;font-size:9px">Edit</span><span style="color:#666;font-size:9px">Disable</span><span style="color:#EF4444;font-size:9px">Delete</span></div></div>
+        </div>
+      </div>
+    </div>
+    <span class="frame-label">Quest Management — 67 Templates</span>
+  </div>
+</div>
+
+<!-- SCENE 9: MANAGE REWARDS (mockup) -->
+<div class="scene" id="scene-8" style="flex-direction:column">
+  <div class="radial-glow glow-magenta" style="bottom:25%;left:35%"></div>
+  <h2 class="app-scene-heading">Rewards Marketplace</h2>
+  <p class="app-scene-sub">Screen time, treats, activities — motivation made tangible.</p>
+  <div class="device-frame">
+    <div style="background:#FFF9E6;width:100%;height:100%;padding:24px 32px;font-family:'DM Sans',system-ui,sans-serif;color:#333;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#F3E8FF,#E9D5FF);border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:18px;font-weight:700">🎁 Manage Rewards</div><div style="font-size:11px;color:#666">Manage rewards that children can redeem</div></div>
+        <div style="text-align:right"><span style="font-size:10px;color:#666">Active</span> <b style="color:#22C55E;font-size:20px">17</b> <span style="font-size:10px;color:#666;margin-left:8px">Inactive</span> <b style="color:#999;font-size:20px">0</b></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px"><span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:600">All</span><span style="background:#fff;padding:4px 12px;border-radius:20px;font-size:10px;color:#666">Treats</span><span style="background:#fff;padding:4px 12px;border-radius:20px;font-size:10px;color:#666">Screen Time</span><span style="background:#fff;padding:4px 12px;border-radius:20px;font-size:10px;color:#666">Activities</span><span style="background:#fff;padding:4px 12px;border-radius:20px;font-size:10px;color:#666">Toys</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-bottom:3px solid #3B82F6"><div style="font-size:20px;margin-bottom:4px">🍫</div><div style="font-weight:600;font-size:11px">One piece of chocolate</div><span style="background:#DBEAFE;color:#3B82F6;padding:1px 6px;border-radius:3px;font-size:9px;margin-top:4px;display:inline-block">Treats</span><div style="text-align:right;font-size:18px;font-weight:800;color:#22C55E;margin-top:4px">1 <span style="font-size:10px">Stars</span></div></div>
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-bottom:3px solid #8B5CF6"><div style="font-size:20px;margin-bottom:4px">📱</div><div style="font-weight:600;font-size:11px">15 min screen time</div><span style="background:#EDE9FE;color:#7C3AED;padding:1px 6px;border-radius:3px;font-size:9px;margin-top:4px;display:inline-block">Screen Time</span><div style="text-align:right;font-size:18px;font-weight:800;color:#22C55E;margin-top:4px">30 <span style="font-size:10px">Stars</span></div></div>
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-bottom:3px solid #8B5CF6"><div style="font-size:20px;margin-bottom:4px">📺</div><div style="font-weight:600;font-size:11px">1 episode of show</div><span style="background:#EDE9FE;color:#7C3AED;padding:1px 6px;border-radius:3px;font-size:9px;margin-top:4px;display:inline-block">Screen Time</span><div style="text-align:right;font-size:18px;font-weight:800;color:#22C55E;margin-top:4px">30 <span style="font-size:10px">Stars</span></div></div>
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-bottom:3px solid #3B82F6"><div style="font-size:20px;margin-bottom:4px">🍪</div><div style="font-weight:600;font-size:11px">Small treat</div><span style="background:#DBEAFE;color:#3B82F6;padding:1px 6px;border-radius:3px;font-size:9px;margin-top:4px;display:inline-block">Treats</span><div style="text-align:right;font-size:18px;font-weight:800;color:#22C55E;margin-top:4px">30 <span style="font-size:10px">Stars</span></div></div>
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-bottom:3px solid #F59E0B"><div style="font-size:20px;margin-bottom:4px">🍽️</div><div style="font-weight:600;font-size:11px">Choose dinner menu</div><span style="background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:3px;font-size:9px;margin-top:4px;display:inline-block">Activities</span><div style="text-align:right;font-size:18px;font-weight:800;color:#22C55E;margin-top:4px">40 <span style="font-size:10px">Stars</span></div></div>
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-bottom:3px solid #F59E0B"><div style="font-size:20px;margin-bottom:4px">🌙</div><div style="font-weight:600;font-size:11px">Stay up 30 min late</div><span style="background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:3px;font-size:9px;margin-top:4px;display:inline-block">Activities</span><div style="text-align:right;font-size:18px;font-weight:800;color:#22C55E;margin-top:4px">50 <span style="font-size:10px">Stars</span></div></div>
+      </div>
+    </div>
+    <span class="frame-label">Rewards — 17 Active Rewards</span>
+  </div>
+</div>
+
+<!-- SCENE 10: ACTIVITY LOG (mockup) -->
+<div class="scene" id="scene-9" style="flex-direction:column">
+  <div class="radial-glow glow-gold" style="top:20%;right:30%"></div>
+  <h2 class="app-scene-heading">Every Star Tracked</h2>
+  <p class="app-scene-sub">Calendar view. Filters. Full transaction history.</p>
+  <div class="device-frame">
+    <div style="background:#FFF9E6;width:100%;height:100%;padding:24px 32px;font-family:'DM Sans',system-ui,sans-serif;color:#333;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0);border-radius:12px;padding:16px 20px;margin-bottom:12px">
+        <div style="font-size:18px;font-weight:700">✨ Activity Log</div>
+        <div style="font-size:11px;color:#666">View all recorded star activities, filter by date and type</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:#fff;border-radius:8px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);text-align:center"><div style="font-size:8px;color:#666">Total Records</div><div style="font-size:18px;font-weight:800">203</div></div>
+        <div style="background:#fff;border-radius:8px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);text-align:center"><div style="font-size:8px;color:#666">Positive</div><div style="font-size:18px;font-weight:800;color:#22C55E">59</div></div>
+        <div style="background:#fff;border-radius:8px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);text-align:center"><div style="font-size:8px;color:#666">Negative</div><div style="font-size:18px;font-weight:800;color:#EF4444">13</div></div>
+        <div style="background:#fff;border-radius:8px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);text-align:center"><div style="font-size:8px;color:#666">Total Stars +</div><div style="font-size:18px;font-weight:800;color:#3B82F6">+427</div></div>
+        <div style="background:#fff;border-radius:8px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);text-align:center"><div style="font-size:8px;color:#666">Total Stars -</div><div style="font-size:18px;font-weight:800;color:#EF4444">-517</div></div>
+        <div style="background:#F59E0B;border-radius:8px;padding:8px;text-align:center;color:#fff"><div style="font-size:8px;opacity:.8">Net Stars</div><div style="font-size:18px;font-weight:800">-90</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:#D1FAE5;border-radius:10px;padding:14px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px">February 2026 <span style="background:#22C55E;color:#fff;padding:1px 6px;border-radius:3px;font-size:9px">Today</span></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:8px;text-align:center;color:#666;margin-bottom:4px"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:9px;text-align:center">
+            <span style="background:#fff;border-radius:4px;padding:4px 0">1<br><span style="font-size:7px;color:#22C55E">★+</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">2<br><span style="font-size:7px;color:#22C55E">★+</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">3<br><span style="font-size:7px;color:#22C55E">★+5</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">4<br><span style="font-size:7px;color:#22C55E">★+5</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">5<br><span style="font-size:7px;color:#22C55E">★+5</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">6<br><span style="font-size:7px;color:#22C55E">★+20</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">7<br><span style="font-size:7px;color:#22C55E">★+27</span></span>
+            <span style="background:#fff;border-radius:4px;padding:4px 0">8<br><span style="font-size:7px;color:#22C55E">★</span></span><span style="background:#fff;border-radius:4px;padding:4px 0">9<br><span style="font-size:7px;color:#22C55E">★</span></span><span style="background:#FEF3C7;border-radius:4px;padding:4px 0;border:1px solid #F59E0B">10</span><span style="background:#fff;border-radius:4px;padding:4px 0;color:#ccc">11</span><span style="color:#ccc;padding:4px 0">12</span><span style="color:#ccc;padding:4px 0">13</span><span style="color:#ccc;padding:4px 0">14</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:6px;margin-bottom:8px"><span style="background:#3B82F6;color:#fff;padding:3px 10px;border-radius:20px;font-size:9px;font-weight:600">All</span><span style="background:#fff;padding:3px 10px;border-radius:20px;font-size:9px;color:#666">⭐ Stars</span><span style="background:#fff;padding:3px 10px;border-radius:20px;font-size:9px;color:#666">🎁 Redemptions</span></div>
+          <div style="background:#D1FAE5;border-radius:10px;padding:10px;margin-bottom:6px"><div style="font-weight:700;font-size:11px;color:#166534">✨ Feb 9 <span style="float:right">0 ⭐</span></div></div>
+          <div style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:4px;font-size:10px;display:flex;justify-content:space-between;align-items:center"><div><b>Go to bed in time (8:30–8:45pm)</b><br><span style="color:#999;font-size:8px">🧒 Lucas · 08:44 PM · <span style="color:#F59E0B">Pending</span></span></div><span style="color:#22C55E;font-weight:800">+5⭐</span></div>
+          <div style="background:#fff;border-radius:8px;padding:8px 10px;font-size:10px;display:flex;justify-content:space-between;align-items:center"><div><b>Extra reading 30 min</b><br><span style="color:#999;font-size:8px">🧒 Lucas · 06:55 PM · <span style="color:#F59E0B">Pending</span></span></div><span style="color:#22C55E;font-weight:800">+5⭐</span></div>
+        </div>
+      </div>
+    </div>
+    <span class="frame-label">Activity Log — 203 Records Tracked</span>
+  </div>
+</div>
+
+<!-- SCENE 11: HOW IT WORKS -->
+<div class="scene" id="scene-10" style="flex-direction:column">
+  <div class="radial-glow glow-gold" style="top:30%;left:50%;transform:translateX(-50%)"></div>
+  <h2 class="flow-heading">The Journey</h2>
+  <div class="flow-container">
+    <div class="flow-step">
+      <div class="flow-circle">📋</div>
+      <span class="flow-text" style="color:var(--cyan)">Quest</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="flow-circle">⭐</div>
+      <span class="flow-text" style="color:var(--gold)">Earn</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="flow-circle">🎁</div>
+      <span class="flow-text" style="color:var(--magenta)">Reward</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="flow-circle">🔄</div>
+      <span class="flow-text">Repeat</span>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 12: CTA -->
+<div class="scene" id="scene-11">
+  <div class="radial-glow glow-gold" style="top:30%;left:40%"></div>
+  <div class="radial-glow glow-cyan" style="bottom:20%;right:30%"></div>
+  <h1 class="cta-logo">⭐ StarQuest</h1>
+  <p class="cta-tagline">Complete quests. Earn stars. Unlock rewards.</p>
+  <button class="cta-btn" onclick="window.open('https://starquest-kappa.vercel.app/en','_blank')">Start Your Quest</button>
+  <p class="cta-footer">© 2026 Beluga Tempo | 鲸律</p>
+</div>
+
+<!-- NAV DOTS -->
+<nav class="nav-dots" id="navDots"></nav>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- SCENE COUNTER -->
+<div class="scene-counter" id="sceneCounter"></div>
+
+<!-- CONTROLS HINT -->
+<div class="controls-hint">↑↓ or scroll to navigate · space to auto-play</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STARFIELD — procedural animated background
+// ═══════════════════════════════════════════
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+let stars = [];
+const STAR_COUNT = 220;
+let warpSpeed = 0;
+
+function initStarfield() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = Array.from({ length: STAR_COUNT }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    z: Math.random() * 1000,
+    size: Math.random() * 1.8 + 0.3,
+    brightness: Math.random(),
+    twinkleSpeed: Math.random() * 0.02 + 0.005,
+    twinklePhase: Math.random() * Math.PI * 2,
+  }));
+}
+
+function drawStarfield(t) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  for (const s of stars) {
+    s.z -= 0.15 + warpSpeed * 8;
+    if (s.z <= 0) {
+      s.z = 1000;
+      s.x = Math.random() * canvas.width;
+      s.y = Math.random() * canvas.height;
+    }
+
+    const scale = 400 / s.z;
+    const px = (s.x - cx) * scale + cx;
+    const py = (s.y - cy) * scale + cy;
+    const r = s.size * scale * (0.5 + warpSpeed);
+
+    const twinkle = 0.5 + 0.5 * Math.sin(t * s.twinkleSpeed + s.twinklePhase);
+    const alpha = twinkle * (1 - s.z / 1000) * 0.8;
+
+    ctx.beginPath();
+    ctx.arc(px, py, Math.max(r, 0.4), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(245,${197 + Math.floor(s.brightness * 58)},${66 + Math.floor(s.brightness * 189)},${alpha})`;
+    ctx.fill();
+
+    // warp streaks
+    if (warpSpeed > 0.2) {
+      const streakLen = warpSpeed * 12 * scale;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      const dx = px - cx;
+      const dy = py - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      ctx.lineTo(px + (dx / dist) * streakLen, py + (dy / dist) * streakLen);
+      ctx.strokeStyle = `rgba(245,215,130,${alpha * 0.4})`;
+      ctx.lineWidth = r * 0.6;
+      ctx.stroke();
+    }
+  }
+  requestAnimationFrame(drawStarfield);
+}
+
+window.addEventListener('resize', initStarfield);
+initStarfield();
+requestAnimationFrame(drawStarfield);
+
+
+// ═══════════════════════════════════════════
+//  SCENE MANAGEMENT
+// ═══════════════════════════════════════════
+const TOTAL_SCENES = 12;
+let currentScene = 0;
+let transitioning = false;
+let autoPlayTimer = null;
+const AUTO_PLAY_INTERVAL = 4200;
+
+// Build nav dots
+const navDots = document.getElementById('navDots');
+for (let i = 0; i < TOTAL_SCENES; i++) {
+  const dot = document.createElement('button');
+  dot.className = 'nav-dot';
+  dot.setAttribute('aria-label', `Scene ${i + 1}`);
+  dot.addEventListener('click', () => goToScene(i));
+  navDots.appendChild(dot);
+}
+
+function updateUI() {
+  // scenes
+  document.querySelectorAll('.scene').forEach((s, i) => {
+    s.classList.toggle('active', i === currentScene);
+  });
+  // dots
+  document.querySelectorAll('.nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === currentScene);
+  });
+  // progress
+  document.getElementById('progressBar').style.width =
+    `${((currentScene) / (TOTAL_SCENES - 1)) * 100}%`;
+  // counter
+  document.getElementById('sceneCounter').textContent =
+    `${String(currentScene + 1).padStart(2, '0')} / ${String(TOTAL_SCENES).padStart(2, '0')}`;
+}
+
+function animateScene(index) {
+  const scene = document.getElementById(`scene-${index}`);
+  if (!scene) return;
+
+  // Reset all revealable children
+  scene.querySelectorAll('.reveal').forEach(el => el.classList.remove('reveal'));
+
+  // Small delay then trigger reveals
+  setTimeout(() => {
+    const revealables = scene.querySelectorAll(
+      '.hero-title,.hero-sub,.feature-icon,.accent-line,.feature-label,.feature-desc,.flow-heading,.flow-step,.flow-arrow,.cta-logo,.cta-tagline,.cta-btn,.cta-footer,.categories-heading,.categories-sub,.cat-pill,.app-scene-heading,.app-scene-sub,.device-frame,.frame-label'
+    );
+    revealables.forEach((el, i) => {
+      setTimeout(() => el.classList.add('reveal'), i * 150);
+    });
+  }, 200);
+
+  // Special: provocation word-by-word
+  if (index === 1) {
+    const words = document.querySelectorAll('#provocation .word');
+    words.forEach((w, i) => {
+      setTimeout(() => w.classList.add('reveal'), 300 + i * 120);
+    });
+  }
+
+  // Warp speed on transitions
+  warpSpeed = 1;
+  setTimeout(() => { warpSpeed = 0; }, 800);
+
+  // Burst particles on feature scenes and new content scenes
+  if ((index >= 2 && index <= 4) || (index >= 5 && index <= 9)) {
+    burstParticles(index);
+  }
+}
+
+function goToScene(index) {
+  if (index < 0 || index >= TOTAL_SCENES || index === currentScene || transitioning) return;
+  transitioning = true;
+  currentScene = index;
+  updateUI();
+  animateScene(index);
+  setTimeout(() => { transitioning = false; }, 900);
+}
+
+function nextScene() { goToScene(currentScene + 1); }
+function prevScene() { goToScene(currentScene - 1); }
+
+// ─── Provocation: wrap words ───
+(function() {
+  const p = document.getElementById('provocation');
+  const html = p.innerHTML;
+  // Split on spaces but preserve HTML tags
+  const parts = html.split(/(\s+|<[^>]+>[^<]*<\/[^>]+>)/);
+  let result = '';
+  parts.forEach(part => {
+    if (part.trim() === '') {
+      result += ' ';
+    } else if (part.startsWith('<')) {
+      // wrap the whole tag group
+      result += `<span class="word">${part}</span> `;
+    } else {
+      result += `<span class="word">${part}</span> `;
+    }
+  });
+  p.innerHTML = result;
+})();
+
+
+// ─── Particles ───
+function burstParticles(sceneIndex) {
+  const colors = { 2: '#5DE5D5', 3: '#F5C542', 4: '#E84393', 5: '#5DE5D5', 6: '#F5C542', 7: '#5DE5D5', 8: '#E84393', 9: '#F5C542' };
+  const color = colors[sceneIndex] || '#F5C542';
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = `${50 + (Math.random() - 0.5) * 30}%`;
+    p.style.top = `${50 + (Math.random() - 0.5) * 30}%`;
+    p.style.background = color;
+    p.style.width = p.style.height = `${Math.random() * 4 + 2}px`;
+    document.body.appendChild(p);
+
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 80 + Math.random() * 200;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+
+    p.animate([
+      { opacity: 1, transform: 'translate(0,0) scale(1)' },
+      { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0)` }
+    ], {
+      duration: 800 + Math.random() * 600,
+      easing: 'cubic-bezier(.16,1,.3,1)',
+      fill: 'forwards'
+    }).onfinish = () => p.remove();
+  }
+}
+
+
+// ═══════════════════════════════════════════
+//  INPUT HANDLERS
+// ═══════════════════════════════════════════
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+    e.preventDefault(); nextScene(); stopAutoPlay();
+  }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault(); prevScene(); stopAutoPlay();
+  }
+  if (e.key === ' ') {
+    e.preventDefault(); toggleAutoPlay();
+  }
+  if (e.key === 'Home') { e.preventDefault(); goToScene(0); stopAutoPlay(); }
+  if (e.key === 'End') { e.preventDefault(); goToScene(TOTAL_SCENES - 1); stopAutoPlay(); }
+});
+
+// Scroll / wheel
+let scrollAccum = 0;
+document.addEventListener('wheel', e => {
+  e.preventDefault();
+  scrollAccum += e.deltaY;
+  if (Math.abs(scrollAccum) > 60) {
+    if (scrollAccum > 0) nextScene(); else prevScene();
+    scrollAccum = 0;
+    stopAutoPlay();
+  }
+}, { passive: false });
+
+// Touch
+let touchStartY = 0;
+document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dy = touchStartY - e.changedTouches[0].clientY;
+  if (Math.abs(dy) > 50) {
+    if (dy > 0) nextScene(); else prevScene();
+    stopAutoPlay();
+  }
+}, { passive: true });
+
+
+// ─── Auto-play ───
+function startAutoPlay() {
+  stopAutoPlay();
+  autoPlayTimer = setInterval(() => {
+    if (currentScene < TOTAL_SCENES - 1) nextScene();
+    else stopAutoPlay();
+  }, AUTO_PLAY_INTERVAL);
+}
+function stopAutoPlay() {
+  if (autoPlayTimer) { clearInterval(autoPlayTimer); autoPlayTimer = null; }
+}
+function toggleAutoPlay() {
+  if (autoPlayTimer) stopAutoPlay(); else startAutoPlay();
+}
+
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+updateUI();
+// Start scene 0 animation after a beat
+setTimeout(() => animateScene(0), 400);
+// Auto-play starts after 3s
+setTimeout(() => startAutoPlay(), 3000);
+</script>
+</body>
+</html>
