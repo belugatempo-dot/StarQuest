@@ -536,6 +536,32 @@ describe("ActivityItem", () => {
       );
       expect(screen.getByText(/Well done!/)).toBeInTheDocument();
     });
+
+    it("shows child note in calendar variant", () => {
+      render(
+        <ActivityItem
+          {...defaultProps}
+          variant="calendar"
+          activity={createActivity({ childNote: "I did great!" })}
+        />
+      );
+      expect(screen.getByText('"I did great!"')).toBeInTheDocument();
+    });
+
+    it("shows parent response for approved items in list variant", () => {
+      render(
+        <ActivityItem
+          {...defaultProps}
+          variant="list"
+          activity={createActivity({
+            status: "approved",
+            parentResponse: "Good job",
+          })}
+        />
+      );
+      expect(screen.getByText(/💬/)).toBeInTheDocument();
+      expect(screen.getByText(/Good job/)).toBeInTheDocument();
+    });
   });
 
   describe("Child name display", () => {
