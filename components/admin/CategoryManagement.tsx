@@ -7,10 +7,14 @@ import { createClient } from "@/lib/supabase/client";
 import { typedUpdate, typedInsert } from "@/lib/supabase/helpers";
 import type { QuestCategoryRow, QuestCategoryInsert } from "@/types/category";
 import { DEFAULT_CATEGORIES } from "@/types/category";
+import type { Quest } from "@/types/quest";
+import { typeLabels } from "@/types/quest";
+import { getQuestName } from "@/lib/localization";
+import QuestFormModal from "./QuestFormModal";
 
 interface CategoryManagementProps {
   categories: QuestCategoryRow[];
-  quests: { category: string | null }[];
+  quests: Quest[];
   locale: string;
   familyId: string;
   onCategoriesChange?: () => void;
@@ -32,6 +36,8 @@ export default function CategoryManagement({
   const [loading, setLoading] = useState(false);
   const [initializingDefaults, setInitializingDefaults] = useState(false);
   const [error, setError] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -200,13 +206,33 @@ export default function CategoryManagement({
       : category.name_en;
   };
 
-  // Build quest count per category
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryName)) {
+        next.delete(categoryName);
+      } else {
+        next.add(categoryName);
+      }
+      return next;
+    });
+  };
+
+  // Build quest count per category and quests-by-category map
   const questCountMap = new Map<string, number>();
+  const questsByCategory = new Map<string, Quest[]>();
   quests.forEach((q) => {
+    const cat = q.category || "__uncategorized__";
     if (q.category) {
       questCountMap.set(q.category, (questCountMap.get(q.category) || 0) + 1);
     }
+    if (!questsByCategory.has(cat)) {
+      questsByCategory.set(cat, []);
+    }
+    questsByCategory.get(cat)!.push(q);
   });
+
+  const uncategorizedQuests = questsByCategory.get("__uncategorized__") || [];
 
   // Sort categories by quest count descending, ties by sort_order
   const sortedCategories = [...categories].sort((a, b) => {
@@ -352,69 +378,187 @@ export default function CategoryManagement({
             </p>
           </div>
         ) : (
-          sortedCategories.map((category) => (
-            <div
-              key={category.id}
-              className={`flex items-center justify-between p-3 rounded-lg border ${
-                category.is_active
-                  ? "bg-white border-gray-200"
-                  : "bg-gray-50 border-gray-100 opacity-60"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{category.icon}</span>
-                <div>
-                  <div className="font-medium">
-                    {getCategoryName(category)}{" "}
-                    <span className="text-sm font-normal text-gray-400">
-                      ({questCountMap.get(category.name) || 0})
-                    </span>
+          <>
+            {sortedCategories.map((category) => {
+              const isExpanded = expandedCategories.has(category.name);
+              const categoryQuests = questsByCategory.get(category.name) || [];
+
+              return (
+                <div key={category.id}>
+                  <div
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      category.is_active
+                        ? "bg-white border-gray-200"
+                        : "bg-gray-50 border-gray-100 opacity-60"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleCategory(category.name)}
+                      className="flex items-center gap-3 text-left flex-1 min-w-0"
+                    >
+                      <span className="text-sm text-gray-400 w-4 flex-shrink-0">
+                        {isExpanded ? "▼" : "▶"}
+                      </span>
+                      <span className="text-2xl">{category.icon}</span>
+                      <div>
+                        <div className="font-medium">
+                          {getCategoryName(category)}{" "}
+                          <span className="text-sm font-normal text-gray-400">
+                            ({questCountMap.get(category.name) || 0})
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {locale === "zh-CN" ? "键名" : "Key"}: {category.name}
+                        </div>
+                      </div>
+                      {!category.is_active && (
+                        <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                          {locale === "zh-CN" ? "已禁用" : "Disabled"}
+                        </span>
+                      )}
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {/* Toggle Active */}
+                      <button
+                        onClick={() => handleToggleActive(category)}
+                        className={`px-3 py-1 rounded text-sm transition ${
+                          category.is_active
+                            ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                            : "bg-green-100 text-green-700 hover:bg-green-200"
+                        }`}
+                        title={category.is_active ? "Disable" : "Enable"}
+                      >
+                        {category.is_active
+                          ? locale === "zh-CN" ? "禁用" : "Disable"
+                          : locale === "zh-CN" ? "启用" : "Enable"}
+                      </button>
+
+                      {/* Edit */}
+                      <button
+                        onClick={() => handleEdit(category)}
+                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition"
+                      >
+                        {t("common.edit")}
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => handleDelete(category)}
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition"
+                      >
+                        {t("common.delete")}
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {locale === "zh-CN" ? "键名" : "Key"}: {category.name}
-                  </div>
+
+                  {/* Expanded quest list */}
+                  {isExpanded && (
+                    <div className="ml-7 mt-1 mb-2 space-y-1">
+                      {categoryQuests.length === 0 ? (
+                        <div className="text-sm text-gray-400 italic py-2 pl-4">
+                          {locale === "zh-CN" ? "此类别下暂无任务" : "No quests in this category"}
+                        </div>
+                      ) : (
+                        categoryQuests.map((quest) => (
+                          <div
+                            key={quest.id}
+                            className="flex items-center justify-between p-2 pl-4 rounded border border-gray-100 bg-gray-50 hover:bg-gray-100 transition"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-lg">{quest.icon}</span>
+                              <span className="text-sm font-medium truncate">
+                                {getQuestName(quest, locale)}
+                              </span>
+                              <span className={`text-xs font-semibold ${quest.stars >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {quest.stars >= 0 ? `+${quest.stars}` : quest.stars}⭐
+                              </span>
+                              <span className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                                {locale === "zh-CN" ? typeLabels[quest.type as keyof typeof typeLabels]?.zh : typeLabels[quest.type as keyof typeof typeLabels]?.en}
+                              </span>
+                              {!quest.is_active && (
+                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded">
+                                  {locale === "zh-CN" ? "已停用" : "Inactive"}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => setEditingQuest(quest)}
+                              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition flex-shrink-0"
+                            >
+                              {t("common.edit")}
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
-                {!category.is_active && (
-                  <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
-                    {locale === "zh-CN" ? "已禁用" : "Disabled"}
-                  </span>
+              );
+            })}
+
+            {/* Uncategorized quests group */}
+            {uncategorizedQuests.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-white border-dashed border-gray-300">
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory("__uncategorized__")}
+                    className="flex items-center gap-3 text-left flex-1 min-w-0"
+                  >
+                    <span className="text-sm text-gray-400 w-4 flex-shrink-0">
+                      {expandedCategories.has("__uncategorized__") ? "▼" : "▶"}
+                    </span>
+                    <span className="text-2xl">📦</span>
+                    <div>
+                      <div className="font-medium text-gray-500">
+                        {locale === "zh-CN" ? "未分类" : "Uncategorized"}{" "}
+                        <span className="text-sm font-normal text-gray-400">
+                          ({uncategorizedQuests.length})
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {expandedCategories.has("__uncategorized__") && (
+                  <div className="ml-7 mt-1 mb-2 space-y-1">
+                    {uncategorizedQuests.map((quest) => (
+                      <div
+                        key={quest.id}
+                        className="flex items-center justify-between p-2 pl-4 rounded border border-gray-100 bg-gray-50 hover:bg-gray-100 transition"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-lg">{quest.icon}</span>
+                          <span className="text-sm font-medium truncate">
+                            {getQuestName(quest, locale)}
+                          </span>
+                          <span className={`text-xs font-semibold ${quest.stars >= 0 ? "text-green-600" : "text-red-600"}`}>
+                            {quest.stars >= 0 ? `+${quest.stars}` : quest.stars}⭐
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                            {locale === "zh-CN" ? typeLabels[quest.type as keyof typeof typeLabels]?.zh : typeLabels[quest.type as keyof typeof typeLabels]?.en}
+                          </span>
+                          {!quest.is_active && (
+                            <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded">
+                              {locale === "zh-CN" ? "已停用" : "Inactive"}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setEditingQuest(quest)}
+                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition flex-shrink-0"
+                        >
+                          {t("common.edit")}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-
-              <div className="flex items-center gap-2">
-                {/* Toggle Active */}
-                <button
-                  onClick={() => handleToggleActive(category)}
-                  className={`px-3 py-1 rounded text-sm transition ${
-                    category.is_active
-                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                      : "bg-green-100 text-green-700 hover:bg-green-200"
-                  }`}
-                  title={category.is_active ? "Disable" : "Enable"}
-                >
-                  {category.is_active
-                    ? locale === "zh-CN" ? "禁用" : "Disable"
-                    : locale === "zh-CN" ? "启用" : "Enable"}
-                </button>
-
-                {/* Edit */}
-                <button
-                  onClick={() => handleEdit(category)}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition"
-                >
-                  {t("common.edit")}
-                </button>
-
-                {/* Delete */}
-                <button
-                  onClick={() => handleDelete(category)}
-                  className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition"
-                >
-                  {t("common.delete")}
-                </button>
-              </div>
-            </div>
-          ))
+            )}
+          </>
         )}
       </div>
 
@@ -430,6 +574,22 @@ export default function CategoryManagement({
           </>
         )}
       </div>
+
+      {/* Quest Edit Modal */}
+      {editingQuest && (
+        <QuestFormModal
+          quest={editingQuest}
+          familyId={familyId}
+          locale={locale}
+          categories={categories}
+          onClose={() => setEditingQuest(null)}
+          onSuccess={() => {
+            setEditingQuest(null);
+            router.refresh();
+            onCategoriesChange?.();
+          }}
+        />
+      )}
     </div>
   );
 }

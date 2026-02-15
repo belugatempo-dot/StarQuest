@@ -84,7 +84,7 @@ describe("ActivityPage", () => {
     });
     render(jsx);
 
-    expect(screen.getByText(/Activity Log/)).toBeInTheDocument();
+    expect(screen.getByText(/Star Calendar/)).toBeInTheDocument();
   });
 
   it("renders statistics cards", async () => {
@@ -141,7 +141,7 @@ describe("ActivityPage", () => {
     });
     render(jsx);
 
-    expect(screen.getByText(/活动记录/)).toBeInTheDocument();
+    expect(screen.getByText(/星星日历/)).toBeInTheDocument();
   });
 
   it("renders zh-CN stat labels for zh-CN locale", async () => {
