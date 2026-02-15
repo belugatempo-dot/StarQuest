@@ -106,7 +106,6 @@ export default function RegisterForm() {
 
     try {
       // Step 1: Create Supabase Auth user
-      console.log("🔐 Creating auth user...");
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -118,11 +117,8 @@ export default function RegisterForm() {
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error("No user returned from signup");
 
-      console.log("✅ Auth user created:", authData.user.id);
-
       if (isJoiningFamily) {
         // Step 2a: Join existing family with invite code
-        console.log("👨‍👩‍👧 Joining family via invite code...");
         const { data: familyId, error: joinError } = await (supabase.rpc as any)(
           "join_family_with_invite",
           {
@@ -135,16 +131,12 @@ export default function RegisterForm() {
         );
 
         if (joinError) {
-          console.error("❌ Join family error:", joinError);
           // Note: Cannot delete auth user from frontend (requires service_role key).
           // The database function will heal orphaned records automatically on retry.
           throw joinError;
         }
-
-        console.log("✅ Joined family:", familyId);
       } else {
         // Step 2b: Create new family
-        console.log("👨‍👩‍👧 Creating family and user record...");
         const { data: familyId, error: familyError } = await (supabase.rpc as any)(
           "create_family_with_templates",
           {
@@ -157,16 +149,11 @@ export default function RegisterForm() {
         );
 
         if (familyError) {
-          console.error("❌ Family creation error:", familyError);
           // Note: Cannot delete auth user from frontend (requires service_role key).
           // The database function will heal orphaned records automatically on retry.
           throw familyError;
         }
-
-        console.log("✅ Family created:", familyId);
       }
-
-      console.log("🔄 Redirecting to verify email page...");
 
       // Success! Redirect to verify-email page
       window.location.href = `/${locale}/auth/verify-email?email=${encodeURIComponent(email)}`;

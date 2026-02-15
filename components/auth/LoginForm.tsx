@@ -48,17 +48,12 @@ export default function LoginForm() {
     }
 
     if (data.user) {
-      console.log("✅ Login successful, user ID:", data.user.id);
-
       // Fetch user role to determine redirect
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("role, family_id")
         .eq("id", data.user.id)
         .maybeSingle();
-
-      console.log("📊 User data:", userData);
-      console.log("❌ User error:", userError);
 
       if (userError) {
         const message = locale === "zh-CN"
@@ -82,7 +77,6 @@ export default function LoginForm() {
         ? `/${locale}/admin`
         : `/${locale}/app`;
 
-      console.log("🔄 Redirecting to:", redirectPath);
       window.location.href = redirectPath;
 
       // Keep loading state to prevent UI flicker during redirect
