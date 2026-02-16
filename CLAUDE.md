@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2600 tests, ~99% coverage)
+# Testing (2602 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -127,7 +127,7 @@ components/
 ```
 lib/
 ├── localization.ts              # getLocalizedName(), getQuestName(), getRewardName()
-├── date-utils.ts                # formatDateTime(), formatDateOnly() + existing utils
+├── date-utils.ts                # formatDateTime(), formatDateOnly(), combineDateWithCurrentTime()
 ├── activity-utils.ts            # Activity list helpers
 ├── batch-operations.ts          # Batch approve/reject operations
 ├── hooks/useBatchSelection.ts   # Batch selection state hook
@@ -423,4 +423,4 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 
 ---
 
-**Last Updated:** 2026-02-15 | **Tests:** 2600 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-15 | **Tests:** 2602 passing | **Coverage:** ~99%

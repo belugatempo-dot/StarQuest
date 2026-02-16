@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
-import { getTodayString } from "@/lib/date-utils";
+import { getTodayString, combineDateWithCurrentTime } from "@/lib/date-utils";
 import { getQuestName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 
@@ -125,9 +125,7 @@ export default function RequestStarsModal({
       // ========== END DUPLICATE PREVENTION ==========
 
       // Create timestamp from selected date at current time
-      const selectedDateTime = new Date(
-        requestDate + "T" + new Date().toTimeString().split(" ")[0]
-      );
+      const selectedDateTime = combineDateWithCurrentTime(requestDate);
 
       // Create star transaction request
       const { error: insertError } = await typedInsert(supabase, "star_transactions", {

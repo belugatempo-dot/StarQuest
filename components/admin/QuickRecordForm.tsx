@@ -1,16 +1,145 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
-import { getTodayString } from "@/lib/date-utils";
+import { getTodayString, combineDateWithCurrentTime } from "@/lib/date-utils";
 import { getQuestName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
+
+const COLOR_VARIANTS = {
+  success: {
+    selectedBorder: "border-success bg-success/10",
+    starsClass: "text-success",
+  },
+  warning: {
+    selectedBorder: "border-warning bg-warning/10",
+    starsClass: "text-warning",
+  },
+  danger: {
+    selectedBorder: "border-danger bg-danger/10",
+    starsClass: "text-danger",
+  },
+} as const;
+
+interface QuestCardGroupProps {
+  quests: Quest[];
+  sectionIcon: string;
+  sectionLabel: string;
+  colorVariant: keyof typeof COLOR_VARIANTS;
+  defaultQuestIcon: string;
+  selectedQuestId: string;
+  onSelectQuest: (questId: string) => void;
+  locale: string;
+}
+
+function QuestCardGroup({
+  quests,
+  sectionIcon,
+  sectionLabel,
+  colorVariant,
+  defaultQuestIcon,
+  selectedQuestId,
+  onSelectQuest,
+  locale,
+}: QuestCardGroupProps) {
+  if (quests.length === 0) return null;
+
+  const colors = COLOR_VARIANTS[colorVariant];
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
+        <span className="text-xl">{sectionIcon}</span>
+        <span>{sectionLabel}</span>
+      </label>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {quests.map((quest) => (
+          <div
+            key={quest.id}
+            onClick={() => onSelectQuest(quest.id)}
+            className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+              selectedQuestId === quest.id
+                ? colors.selectedBorder
+                : "border-white/10 hover:border-white/20"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">{quest.icon || defaultQuestIcon}</span>
+                <span className="font-medium text-sm">
+                  {getQuestName(quest, locale)}
+                </span>
+              </div>
+              <span className={`${colors.starsClass} font-bold`}>
+                {quest.stars >= 0 ? "+" : ""}{quest.stars}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface FormState {
+  selectedChild: string;
+  selectedQuest: string;
+  customDescription: string;
+  customStars: number;
+}
+
+function validateForm({ selectedChild, selectedQuest, customDescription, customStars }: FormState): string | null {
+  if (!selectedChild) return "Please select a child";
+  if (!selectedQuest && !customDescription) return "Please select a quest or enter a custom description";
+  if (!selectedQuest && customDescription && customStars === 0) return "Please enter the number of stars";
+  return null;
+}
+
+interface TransactionPayloadParams {
+  familyId: string;
+  selectedChild: string;
+  selectedQuest: string;
+  customDescription: string;
+  starsToRecord: number;
+  parentNote: string;
+  parentId: string;
+  recordDate: string;
+}
+
+function buildTransactionPayload({
+  familyId,
+  selectedChild,
+  selectedQuest,
+  customDescription,
+  starsToRecord,
+  parentNote,
+  parentId,
+  recordDate,
+}: TransactionPayloadParams) {
+  const selectedDateTime = combineDateWithCurrentTime(recordDate);
+  const isCustom = !selectedQuest && customDescription;
+
+  return {
+    family_id: familyId,
+    child_id: selectedChild,
+    quest_id: selectedQuest || null,
+    custom_description: isCustom ? customDescription : null,
+    stars: starsToRecord,
+    source: "parent_record" as const,
+    status: "approved" as const,
+    parent_response: parentNote || null,
+    created_by: parentId,
+    reviewed_by: parentId,
+    created_at: selectedDateTime.toISOString(),
+    reviewed_at: selectedDateTime.toISOString(),
+  };
+}
 
 interface QuickRecordFormProps {
   familyChildren: User[];
@@ -46,6 +175,14 @@ export default function QuickRecordForm({
   // Store max date in state to avoid SSR timezone mismatch
   const [maxDate, setMaxDate] = useState<string>("");
 
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    };
+  }, []);
+
   // Fix SSR hydration mismatch: set correct date on client mount
   useEffect(() => {
     const today = getTodayString();
@@ -54,7 +191,6 @@ export default function QuickRecordForm({
   }, []);
 
   const selectedQuestData = quests.find((q) => q.id === selectedQuest);
-  const isCustom = !selectedQuest && customDescription;
 
   // Auto-select child if there's only one
   useEffect(() => {
@@ -63,71 +199,75 @@ export default function QuickRecordForm({
     }
   }, [children, selectedChild]);
 
+  // Single-pass quest grouping
+  const { bonus: bonusQuests, duty: dutyQuests, violation: violationQuests } = useMemo(() => {
+    const grouped: Record<string, Quest[]> = { bonus: [], duty: [], violation: [] };
+    for (const quest of quests) {
+      if (quest.type in grouped) grouped[quest.type].push(quest);
+    }
+    return grouped as { bonus: Quest[]; duty: Quest[]; violation: Quest[] };
+  }, [quests]);
+
+  const handleQuestSelect = (questId: string) => {
+    setSelectedQuest(questId);
+    setCustomDescription("");
+    setCustomStars(0);
+    setMultiplier(1);
+  };
+
+  const resetForm = () => {
+    setSelectedChild("");
+    setSelectedQuest("");
+    setCustomDescription("");
+    setCustomStars(0);
+    setMultiplier(1);
+    setParentNote("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(false);
 
-    if (!selectedChild) {
-      setError("Please select a child");
-      setLoading(false);
-      return;
-    }
-
-    if (!selectedQuest && !customDescription) {
-      setError("Please select a quest or enter a custom description");
-      setLoading(false);
-      return;
-    }
-
-    if (isCustom && customStars === 0) {
-      setError("Please enter the number of stars");
+    const validationError = validateForm({
+      selectedChild,
+      selectedQuest,
+      customDescription,
+      customStars,
+    });
+    if (validationError) {
+      setError(validationError);
       setLoading(false);
       return;
     }
 
     try {
-      // Calculate stars with multiplier
       const baseStars = selectedQuestData?.stars || customStars;
       const starsToRecord = baseStars * multiplier;
 
-      // Create timestamp from selected date at current time
-      const selectedDateTime = new Date(recordDate + "T" + new Date().toTimeString().split(" ")[0]);
+      const payload = buildTransactionPayload({
+        familyId,
+        selectedChild,
+        selectedQuest,
+        customDescription,
+        starsToRecord,
+        parentNote,
+        parentId,
+        recordDate,
+      });
 
-      const { error: insertError } = await typedInsert(supabase, "star_transactions", {
-          family_id: familyId,
-          child_id: selectedChild,
-          quest_id: selectedQuest || null,
-          custom_description: isCustom ? customDescription : null,
-          stars: starsToRecord,
-          source: "parent_record",
-          status: "approved", // 家长直接记录，自动批准
-          parent_response: parentNote || null,
-          created_by: parentId,
-          reviewed_by: parentId,
-          created_at: selectedDateTime.toISOString(),
-          reviewed_at: selectedDateTime.toISOString(),
-        });
+      const { error: insertError } = await typedInsert(supabase, "star_transactions", payload);
 
       if (insertError) throw insertError;
 
-      // Success!
       setSuccess(true);
-
-      // Reset form (keep recordDate for consecutive entries on same day)
-      setSelectedChild("");
-      setSelectedQuest("");
-      setCustomDescription("");
-      setCustomStars(0);
-      setMultiplier(1);
-      setParentNote("");
-
-      // Refresh page data
+      resetForm();
       router.refresh();
 
       // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Error recording stars:", err);
       setError(err instanceof Error ? err.message : "Failed to record stars");
@@ -136,10 +276,7 @@ export default function QuickRecordForm({
     }
   };
 
-  // Group quests by type
-  const bonusQuests = quests.filter((q) => q.type === "bonus");
-  const dutyQuests = quests.filter((q) => q.type === "duty");
-  const violationQuests = quests.filter((q) => q.type === "violation");
+  const isCustom = !selectedQuest && customDescription;
 
   return (
     <form onSubmit={handleSubmit} className="dark-card rounded-lg shadow-md p-6 space-y-6">
@@ -211,131 +348,51 @@ export default function QuickRecordForm({
         />
       </div>
 
-      {/* Bonus Quests - Did Good */}
-      {bonusQuests.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
-            <span className="text-xl">⭐</span>
-            <span>Did Good / 做了好事 (Bonus)</span>
-          </label>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {bonusQuests.map((quest) => (
-              <div
-                key={quest.id}
-                onClick={() => {
-                  setSelectedQuest(quest.id);
-                  setCustomDescription("");
-                  setCustomStars(0);
-                  setMultiplier(1);
-                }}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition ${
-                  selectedQuest === quest.id
-                    ? "border-success bg-success/10"
-                    : "border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{quest.icon || "⭐"}</span>
-                    <span className="font-medium text-sm">
-                      {getQuestName(quest, locale)}
-                    </span>
-                  </div>
-                  <span className="text-success font-bold">+{quest.stars}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Quest Sections */}
+      <QuestCardGroup
+        quests={bonusQuests}
+        sectionIcon="⭐"
+        sectionLabel="Did Good / 做了好事 (Bonus)"
+        colorVariant="success"
+        defaultQuestIcon="⭐"
+        selectedQuestId={selectedQuest}
+        onSelectQuest={handleQuestSelect}
+        locale={locale}
+      />
 
-      {/* Duty Quests - Missed Duty */}
-      {dutyQuests.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
-            <span className="text-xl">📋</span>
-            <span>Missed Duty / 漏做本分</span>
-          </label>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {dutyQuests.map((quest) => (
-              <div
-                key={quest.id}
-                onClick={() => {
-                  setSelectedQuest(quest.id);
-                  setCustomDescription("");
-                  setCustomStars(0);
-                  setMultiplier(1);
-                }}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition ${
-                  selectedQuest === quest.id
-                    ? "border-warning bg-warning/10"
-                    : "border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{quest.icon || "📋"}</span>
-                    <span className="font-medium text-sm">
-                      {getQuestName(quest, locale)}
-                    </span>
-                  </div>
-                  <span className="text-warning font-bold">{quest.stars}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <QuestCardGroup
+        quests={dutyQuests}
+        sectionIcon="📋"
+        sectionLabel="Missed Duty / 漏做本分"
+        colorVariant="warning"
+        defaultQuestIcon="📋"
+        selectedQuestId={selectedQuest}
+        onSelectQuest={handleQuestSelect}
+        locale={locale}
+      />
 
-      {/* Violation Quests */}
-      {violationQuests.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center space-x-2">
-            <span className="text-xl">⚠️</span>
-            <span>Violation / 违规了</span>
-          </label>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {violationQuests.map((quest) => (
-              <div
-                key={quest.id}
-                onClick={() => {
-                  setSelectedQuest(quest.id);
-                  setCustomDescription("");
-                  setCustomStars(0);
-                  setMultiplier(1);
-                }}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition ${
-                  selectedQuest === quest.id
-                    ? "border-danger bg-danger/10"
-                    : "border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{quest.icon || "⚠️"}</span>
-                    <span className="font-medium text-sm">
-                      {getQuestName(quest, locale)}
-                    </span>
-                  </div>
-                  <span className="text-danger font-bold">{quest.stars}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <QuestCardGroup
+        quests={violationQuests}
+        sectionIcon="⚠️"
+        sectionLabel="Violation / 违规了"
+        colorVariant="danger"
+        defaultQuestIcon="⚠️"
+        selectedQuestId={selectedQuest}
+        onSelectQuest={handleQuestSelect}
+        locale={locale}
+      />
 
       {/* Multiplier for selected quest */}
       {selectedQuestData && (
         <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-lg p-4">
           <label className="block text-sm font-medium text-slate-300 mb-3">
-            {locale === "zh-CN" ? "调整倍数 / 程度" : "Adjust Multiplier / Severity"}
+            {t("admin.adjustMultiplier")}
           </label>
           <div className="flex items-center space-x-4">
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-slate-400">
-                  {locale === "zh-CN" ? "倍数:" : "Multiplier:"}
+                  {t("admin.multiplierLabel")}
                 </span>
                 <input
                   type="number"
@@ -351,14 +408,12 @@ export default function QuickRecordForm({
                 </span>
               </div>
               <div className="mt-2 text-xs text-slate-400">
-                {locale === "zh-CN"
-                  ? "💡 例如：超过10分钟 = 1×，超过20分钟 = 2×，以此类推"
-                  : "💡 Example: 10 mins over = 1×, 20 mins over = 2×, etc."}
+                💡 {t("admin.multiplierExample")}
               </div>
             </div>
             <div className="text-right">
               <div className="text-xs text-slate-400 mb-1">
-                {locale === "zh-CN" ? "实际星星:" : "Actual Stars:"}
+                {t("admin.actualStars")}
               </div>
               <div className={`text-3xl font-bold ${
                 (selectedQuestData.stars || 0) >= 0 ? 'text-success' : 'text-danger'
@@ -424,12 +479,12 @@ export default function QuickRecordForm({
       <div className="space-y-2">
         {!selectedChild && !success && (
           <div className="text-sm text-red-600 text-center">
-            ⚠️ {locale === "zh-CN" ? "请先选择一个孩子" : "Please select a child first"}
+            ⚠️ {t("admin.selectChildFirst")}
           </div>
         )}
         {selectedChild && !selectedQuest && !customDescription && !success && (
           <div className="text-sm text-red-600 text-center">
-            ⚠️ {locale === "zh-CN" ? "请选择一个任务或输入自定义描述" : "Please select a quest or enter custom description"}
+            ⚠️ {t("admin.selectQuestOrCustom")}
           </div>
         )}
         <button

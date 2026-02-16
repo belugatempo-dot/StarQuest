@@ -16,6 +16,7 @@ jest.mock("@/lib/localization", () => ({
 jest.mock("@/lib/date-utils", () => ({
   formatDateOnly: (_date: string, _locale: string) => "Jan 15, 2025",
   getTodayString: () => "2025-01-15",
+  combineDateWithCurrentTime: (dateString: string) => new Date(`${dateString}T12:00:00`),
 }));
 
 jest.mock("@/components/ui/ModalFrame", () => {
