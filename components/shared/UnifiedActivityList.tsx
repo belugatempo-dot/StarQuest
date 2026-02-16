@@ -210,7 +210,34 @@ export default function UnifiedActivityList({
 
   return (
     <div className="space-y-6">
-      {/* Main Layout: Calendar + Filters */}
+      {/* Filter Bar — full width, above everything */}
+      <ActivityFilterBar
+        filterType={filterType}
+        setFilterType={setFilterType}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        filterDate={filterDate}
+        setFilterDate={setFilterDate}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        hasActiveFilters={hasActiveFilters}
+        clearFilters={clearFilters}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        stats={stats}
+        displayedCount={displayedActivities.length}
+        totalCount={activities.length}
+        permissions={permissions}
+        pendingCount={pendingTransactions.length}
+        selectionMode={batch.selectionMode}
+        setSelectionMode={batch.setSelectionMode}
+        selectedCount={batch.selectedIds.size}
+        onSelectAll={() => batch.selectAll(pendingTransactions.map((t) => t.id))}
+      />
+
+      {/* Main Layout: Calendar + Activity List */}
       <div
         className={`${viewMode === "calendar" ? "grid lg:grid-cols-2 gap-6" : ""}`}
       >
@@ -244,34 +271,8 @@ export default function UnifiedActivityList({
           </div>
         )}
 
-        {/* Filters and List - Right Side or Full Width */}
+        {/* Activity List - Right Side or Full Width */}
         <div className="space-y-6">
-          <ActivityFilterBar
-            filterType={filterType}
-            setFilterType={setFilterType}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            filterDate={filterDate}
-            setFilterDate={setFilterDate}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            hasActiveFilters={hasActiveFilters}
-            clearFilters={clearFilters}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            stats={stats}
-            displayedCount={displayedActivities.length}
-            totalCount={activities.length}
-            permissions={permissions}
-            pendingCount={pendingTransactions.length}
-            selectionMode={batch.selectionMode}
-            setSelectionMode={batch.setSelectionMode}
-            selectedCount={batch.selectedIds.size}
-            onSelectAll={() => batch.selectAll(pendingTransactions.map((t) => t.id))}
-          />
-
           {/* List View */}
           {viewMode === "list" && (
             <div className="space-y-4">

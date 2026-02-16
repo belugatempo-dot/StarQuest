@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TransactionList from "@/components/child/TransactionList";
 import type { Database } from "@/types/database";
@@ -17,6 +17,11 @@ type Transaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
 jest.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
+
+/** Helper: expand the collapsible filter panel */
+function expandFilters() {
+  fireEvent.click(screen.getByTestId("filter-toggle"));
+}
 
 describe("TransactionList", () => {
   const mockTransactions: Transaction[] = [
@@ -129,6 +134,7 @@ describe("TransactionList", () => {
   describe("Rendering", () => {
     it("should render filter tabs with counts", () => {
       render(<TransactionList transactions={mockTransactions} locale="en" />);
+      expandFilters();
 
       expect(screen.getByRole("button", { name: /history\.allTransactions/ })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /status\.approved/ })).toBeInTheDocument();
@@ -271,6 +277,7 @@ describe("TransactionList", () => {
     it("should filter transactions by approved status", async () => {
       const user = userEvent.setup();
       render(<TransactionList transactions={mockTransactions} locale="en" />);
+      expandFilters();
 
       const approvedButton = screen.getByRole("button", { name: /status\.approved/ });
       await user.click(approvedButton);
@@ -285,6 +292,7 @@ describe("TransactionList", () => {
     it("should filter transactions by pending status", async () => {
       const user = userEvent.setup();
       render(<TransactionList transactions={mockTransactions} locale="en" />);
+      expandFilters();
 
       const pendingButton = screen.getByRole("button", { name: /status\.pending/ });
       await user.click(pendingButton);
@@ -297,6 +305,7 @@ describe("TransactionList", () => {
     it("should filter transactions by rejected status", async () => {
       const user = userEvent.setup();
       render(<TransactionList transactions={mockTransactions} locale="en" />);
+      expandFilters();
 
       const rejectedButton = screen.getByRole("button", { name: /status\.rejected/ });
       await user.click(rejectedButton);
@@ -309,6 +318,7 @@ describe("TransactionList", () => {
     it("should show all transactions when all filter is selected", async () => {
       const user = userEvent.setup();
       render(<TransactionList transactions={mockTransactions} locale="en" />);
+      expandFilters();
 
       // First filter by approved
       const approvedButton = screen.getByRole("button", { name: /status\.approved/ });
@@ -328,6 +338,7 @@ describe("TransactionList", () => {
     it("should highlight active filter button", async () => {
       const user = userEvent.setup();
       render(<TransactionList transactions={mockTransactions} locale="en" />);
+      expandFilters();
 
       const pendingButton = screen.getByRole("button", { name: /status\.pending/ });
       await user.click(pendingButton);
@@ -340,6 +351,7 @@ describe("TransactionList", () => {
       const singleTransaction = [mockTransactions[0]]; // Only approved
 
       render(<TransactionList transactions={singleTransaction} locale="en" />);
+      expandFilters();
 
       const rejectedButton = screen.getByRole("button", { name: /status\.rejected/ });
       await user.click(rejectedButton);

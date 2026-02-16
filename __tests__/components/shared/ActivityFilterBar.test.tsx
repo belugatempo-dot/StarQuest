@@ -41,6 +41,62 @@ describe("ActivityFilterBar", () => {
     ...overrides,
   });
 
+  /** Helper: expand the filter panel before asserting inner content */
+  function expandFilters() {
+    fireEvent.click(screen.getByTestId("filter-toggle"));
+  }
+
+  describe("Collapse / expand behavior", () => {
+    it("is collapsed by default — filter content not visible", () => {
+      render(<ActivityFilterBar {...createProps()} />);
+      expect(screen.queryByTestId("filter-content")).not.toBeInTheDocument();
+    });
+
+    it("expands when header toggle is clicked", () => {
+      render(<ActivityFilterBar {...createProps()} />);
+      expandFilters();
+      expect(screen.getByTestId("filter-content")).toBeInTheDocument();
+    });
+
+    it("collapses again on second click", () => {
+      render(<ActivityFilterBar {...createProps()} />);
+      expandFilters();
+      expect(screen.getByTestId("filter-content")).toBeInTheDocument();
+      expandFilters();
+      expect(screen.queryByTestId("filter-content")).not.toBeInTheDocument();
+    });
+
+    it("shows active filter badge when collapsed with active filters", () => {
+      render(<ActivityFilterBar {...createProps({ hasActiveFilters: true, statusFilter: "pending" })} />);
+      expect(screen.getByTestId("active-filter-badge")).toBeInTheDocument();
+      expect(screen.getByTestId("active-filter-badge")).toHaveTextContent(/activity.activeFilters/);
+    });
+
+    it("does not show active filter badge when no active filters", () => {
+      render(<ActivityFilterBar {...createProps({ hasActiveFilters: false })} />);
+      expect(screen.queryByTestId("active-filter-badge")).not.toBeInTheDocument();
+    });
+
+    it("hides active filter badge when expanded", () => {
+      render(<ActivityFilterBar {...createProps({ hasActiveFilters: true, statusFilter: "pending" })} />);
+      expect(screen.getByTestId("active-filter-badge")).toBeInTheDocument();
+      expandFilters();
+      expect(screen.queryByTestId("active-filter-badge")).not.toBeInTheDocument();
+    });
+
+    it("shows results count even when collapsed", () => {
+      render(<ActivityFilterBar {...createProps({ displayedCount: 5, totalCount: 20 })} />);
+      expect(screen.getByText(/activity.showingRecords/)).toBeInTheDocument();
+    });
+
+    it("shows down chevron when collapsed and up chevron when expanded", () => {
+      render(<ActivityFilterBar {...createProps()} />);
+      expect(screen.getByText("\u25BC")).toBeInTheDocument();
+      expandFilters();
+      expect(screen.getByText("\u25B2")).toBeInTheDocument();
+    });
+  });
+
   describe("View mode toggle", () => {
     it("renders list and calendar toggle buttons", () => {
       render(<ActivityFilterBar {...createProps()} />);
@@ -72,6 +128,7 @@ describe("ActivityFilterBar", () => {
   describe("Type filter (parent only)", () => {
     it("renders type filter buttons for parent", () => {
       render(<ActivityFilterBar {...createProps()} />);
+      expandFilters();
       expect(screen.getByText(/activity.type/)).toBeInTheDocument();
       expect(screen.getByText(/activity.starsType/)).toBeInTheDocument();
       expect(screen.getByText(/activity.redemptionsType/)).toBeInTheDocument();
@@ -81,18 +138,21 @@ describe("ActivityFilterBar", () => {
 
     it("does not render type filter for child", () => {
       render(<ActivityFilterBar {...createProps({ permissions: childPermissions })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.type/)).not.toBeInTheDocument();
     });
 
     it("calls setFilterType when type button clicked", () => {
       const setFilterType = jest.fn();
       render(<ActivityFilterBar {...createProps({ setFilterType })} />);
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.starsType/));
       expect(setFilterType).toHaveBeenCalledWith("stars");
     });
 
     it("highlights the active type filter", () => {
       render(<ActivityFilterBar {...createProps({ filterType: "stars" })} />);
+      expandFilters();
       const starsBtn = screen.getByText(/activity.starsType/).closest("button");
       expect(starsBtn?.className).toContain("text-white");
     });
@@ -101,6 +161,7 @@ describe("ActivityFilterBar", () => {
   describe("Status filter", () => {
     it("renders status filter buttons with counts", () => {
       render(<ActivityFilterBar {...createProps()} />);
+      expandFilters();
       expect(screen.getByText(/history.allTransactions/)).toBeInTheDocument();
       expect(screen.getByText(/status.approved/)).toBeInTheDocument();
       expect(screen.getByText(/status.pending/)).toBeInTheDocument();
@@ -109,6 +170,7 @@ describe("ActivityFilterBar", () => {
 
     it("renders status counts", () => {
       render(<ActivityFilterBar {...createProps()} />);
+      expandFilters();
       expect(screen.getByText("(10)")).toBeInTheDocument();
       expect(screen.getByText("(6)")).toBeInTheDocument();
       expect(screen.getByText("(3)")).toBeInTheDocument();
@@ -118,18 +180,21 @@ describe("ActivityFilterBar", () => {
     it("calls setStatusFilter when status button clicked", () => {
       const setStatusFilter = jest.fn();
       render(<ActivityFilterBar {...createProps({ setStatusFilter })} />);
+      expandFilters();
       fireEvent.click(screen.getByText(/status.pending/));
       expect(setStatusFilter).toHaveBeenCalledWith("pending");
     });
 
     it("highlights the active status filter", () => {
       render(<ActivityFilterBar {...createProps({ statusFilter: "pending" })} />);
+      expandFilters();
       const pendingBtn = screen.getByText(/status.pending/).closest("button");
       expect(pendingBtn?.className).toContain("bg-primary");
     });
 
     it("renders for child too", () => {
       render(<ActivityFilterBar {...createProps({ permissions: childPermissions })} />);
+      expandFilters();
       expect(screen.getByText(/status.approved/)).toBeInTheDocument();
     });
   });
@@ -137,6 +202,7 @@ describe("ActivityFilterBar", () => {
   describe("Date filters", () => {
     it("renders date inputs in parent list view", () => {
       render(<ActivityFilterBar {...createProps({ viewMode: "list" })} />);
+      expandFilters();
       expect(screen.getByText(/activity.singleDate/)).toBeInTheDocument();
       expect(screen.getByText(/activity.startDate/)).toBeInTheDocument();
       expect(screen.getByText(/activity.endDate/)).toBeInTheDocument();
@@ -144,11 +210,13 @@ describe("ActivityFilterBar", () => {
 
     it("does not render date inputs in calendar view", () => {
       render(<ActivityFilterBar {...createProps({ viewMode: "calendar" })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.singleDate/)).not.toBeInTheDocument();
     });
 
     it("does not render date inputs for child", () => {
       render(<ActivityFilterBar {...createProps({ permissions: childPermissions, viewMode: "list" })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.singleDate/)).not.toBeInTheDocument();
     });
 
@@ -157,6 +225,7 @@ describe("ActivityFilterBar", () => {
       const setStartDate = jest.fn();
       const setEndDate = jest.fn();
       render(<ActivityFilterBar {...createProps({ setFilterDate, setStartDate, setEndDate })} />);
+      expandFilters();
 
       const dateInputs = screen.getAllByDisplayValue("");
       // First date input is the single date
@@ -170,6 +239,7 @@ describe("ActivityFilterBar", () => {
       const setStartDate = jest.fn();
       const setFilterDate = jest.fn();
       render(<ActivityFilterBar {...createProps({ setStartDate, setFilterDate })} />);
+      expandFilters();
 
       const dateInputs = screen.getAllByDisplayValue("");
       // Second date input is start date
@@ -182,6 +252,7 @@ describe("ActivityFilterBar", () => {
       const setEndDate = jest.fn();
       const setFilterDate = jest.fn();
       render(<ActivityFilterBar {...createProps({ setEndDate, setFilterDate })} />);
+      expandFilters();
 
       const dateInputs = screen.getAllByDisplayValue("");
       // Third date input is end date
@@ -194,17 +265,20 @@ describe("ActivityFilterBar", () => {
   describe("Clear filters", () => {
     it("shows clear button when filters are active", () => {
       render(<ActivityFilterBar {...createProps({ hasActiveFilters: true })} />);
+      expandFilters();
       expect(screen.getByText(/activity.clearFilters/)).toBeInTheDocument();
     });
 
     it("does not show clear button when no active filters", () => {
       render(<ActivityFilterBar {...createProps({ hasActiveFilters: false })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.clearFilters/)).not.toBeInTheDocument();
     });
 
     it("calls clearFilters on click", () => {
       const clearFilters = jest.fn();
       render(<ActivityFilterBar {...createProps({ hasActiveFilters: true, clearFilters })} />);
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.clearFilters/));
       expect(clearFilters).toHaveBeenCalled();
     });
@@ -220,50 +294,59 @@ describe("ActivityFilterBar", () => {
   describe("Batch selection controls", () => {
     it("shows selection mode toggle for parent with pending items", () => {
       render(<ActivityFilterBar {...createProps({ pendingCount: 3 })} />);
+      expandFilters();
       expect(screen.getByText(/activity.selectionMode/)).toBeInTheDocument();
     });
 
     it("does not show batch controls when no pending items", () => {
       render(<ActivityFilterBar {...createProps({ pendingCount: 0 })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.selectionMode/)).not.toBeInTheDocument();
     });
 
     it("does not show batch controls for child", () => {
       render(<ActivityFilterBar {...createProps({ permissions: childPermissions, pendingCount: 3 })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.selectionMode/)).not.toBeInTheDocument();
     });
 
     it("toggles selection mode on click", () => {
       const setSelectionMode = jest.fn();
       render(<ActivityFilterBar {...createProps({ setSelectionMode, selectionMode: false })} />);
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       expect(setSelectionMode).toHaveBeenCalledWith(true);
     });
 
     it("shows select all button in selection mode", () => {
       render(<ActivityFilterBar {...createProps({ selectionMode: true, pendingCount: 3 })} />);
+      expandFilters();
       expect(screen.getByText(/activity.selectAllPending/)).toBeInTheDocument();
     });
 
     it("calls onSelectAll when select all clicked", () => {
       const onSelectAll = jest.fn();
       render(<ActivityFilterBar {...createProps({ selectionMode: true, pendingCount: 3, onSelectAll })} />);
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
       expect(onSelectAll).toHaveBeenCalled();
     });
 
     it("shows selected count when items are selected", () => {
       render(<ActivityFilterBar {...createProps({ selectionMode: true, selectedCount: 2, pendingCount: 3 })} />);
+      expandFilters();
       expect(screen.getByText(/activity.selectedItems/)).toBeInTheDocument();
     });
 
     it("does not show selected count when no items selected", () => {
       render(<ActivityFilterBar {...createProps({ selectionMode: true, selectedCount: 0, pendingCount: 3 })} />);
+      expandFilters();
       expect(screen.queryByText(/activity.selectedItems/)).not.toBeInTheDocument();
     });
 
     it("applies active class when selection mode is on", () => {
       render(<ActivityFilterBar {...createProps({ selectionMode: true, pendingCount: 3 })} />);
+      expandFilters();
       const btn = screen.getByText(/activity.selectionMode/).closest("button");
       expect(btn?.className).toContain("bg-purple-500");
     });

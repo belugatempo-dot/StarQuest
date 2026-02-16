@@ -158,6 +158,11 @@ jest.mock("@/lib/activity-utils", () => ({
   }),
 }));
 
+/** Helper: expand the collapsible filter panel */
+function expandFilters() {
+  fireEvent.click(screen.getByTestId("filter-toggle"));
+}
+
 describe("UnifiedActivityList", () => {
   // Helper to create activities
   const createActivity = (
@@ -268,6 +273,7 @@ describe("UnifiedActivityList", () => {
 
     it("shows type filter buttons for parent", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
       expect(screen.getByText("common.all")).toBeInTheDocument();
       expect(screen.getByText(/activity.starsType/)).toBeInTheDocument();
       expect(screen.getByText(/activity.redemptionsType/)).toBeInTheDocument();
@@ -277,6 +283,7 @@ describe("UnifiedActivityList", () => {
 
     it("shows status filter buttons", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
       expect(screen.getByText(/history.allTransactions/)).toBeInTheDocument();
       expect(screen.getByText(/status.approved/)).toBeInTheDocument();
       expect(screen.getByText(/status.pending/)).toBeInTheDocument();
@@ -285,6 +292,7 @@ describe("UnifiedActivityList", () => {
 
     it("shows batch selection mode button when pending transactions exist", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
       expect(
         screen.getByText(/activity.selectionMode/)
       ).toBeInTheDocument();
@@ -370,6 +378,7 @@ describe("UnifiedActivityList", () => {
   describe("Status Filtering", () => {
     it("filters by approved status", () => {
       render(<UnifiedActivityList {...childProps} />);
+      expandFilters();
 
       // Click on the first "status.approved" (the filter button, not item badges)
       const approvedBtns = screen.getAllByText(/status.approved/);
@@ -383,6 +392,7 @@ describe("UnifiedActivityList", () => {
 
     it("filters by pending status", () => {
       render(<UnifiedActivityList {...childProps} />);
+      expandFilters();
 
       // "status.pending" may also appear in item badges
       const pendingBtns = screen.getAllByText(/status.pending/);
@@ -401,6 +411,7 @@ describe("UnifiedActivityList", () => {
 
       // Switch to list view first
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       // Click stars filter
       fireEvent.click(screen.getByText(/activity.starsType/));
@@ -415,6 +426,7 @@ describe("UnifiedActivityList", () => {
       render(<UnifiedActivityList {...parentProps} />);
 
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.redemptionsType/));
 
       expect(
@@ -426,6 +438,7 @@ describe("UnifiedActivityList", () => {
       render(<UnifiedActivityList {...parentProps} />);
 
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.positiveType/));
 
       expect(
@@ -437,6 +450,7 @@ describe("UnifiedActivityList", () => {
       render(<UnifiedActivityList {...parentProps} />);
 
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
       fireEvent.click(screen.getByText(/activity.negativeType/));
 
       expect(
@@ -448,6 +462,7 @@ describe("UnifiedActivityList", () => {
   describe("Clear Filters", () => {
     it("shows clear filters button when a filter is active", () => {
       render(<UnifiedActivityList {...childProps} />);
+      expandFilters();
 
       // Click first matching "status.approved" (the filter button)
       const approvedBtns = screen.getAllByText(/status.approved/);
@@ -460,6 +475,7 @@ describe("UnifiedActivityList", () => {
 
     it("clears all filters when clear button is clicked", () => {
       render(<UnifiedActivityList {...childProps} />);
+      expandFilters();
 
       // Activate a filter
       const approvedBtns = screen.getAllByText(/status.approved/);
@@ -622,6 +638,7 @@ describe("UnifiedActivityList", () => {
   describe("Batch Selection (Parent Only)", () => {
     it("enters selection mode when selection mode button is clicked", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
 
@@ -633,6 +650,7 @@ describe("UnifiedActivityList", () => {
 
     it("shows select all pending button in selection mode", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
 
@@ -786,6 +804,7 @@ describe("UnifiedActivityList", () => {
 
       // Switch to list view
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       expect(screen.getByText("activity.singleDate")).toBeInTheDocument();
       expect(screen.getByText("activity.startDate")).toBeInTheDocument();
@@ -839,6 +858,7 @@ describe("UnifiedActivityList", () => {
 
       render(<UnifiedActivityList activities={activities} locale="en" role="parent" />);
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       const { startInput } = getDateInputs();
       fireEvent.change(startInput, { target: { value: "2025-01-15" } });
@@ -855,6 +875,7 @@ describe("UnifiedActivityList", () => {
 
       render(<UnifiedActivityList activities={activities} locale="en" role="parent" />);
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       const { endInput } = getDateInputs();
       fireEvent.change(endInput, { target: { value: "2025-01-15" } });
@@ -872,6 +893,7 @@ describe("UnifiedActivityList", () => {
 
       render(<UnifiedActivityList activities={activities} locale="en" role="parent" />);
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       const { startInput, endInput } = getDateInputs();
       fireEvent.change(startInput, { target: { value: "2025-01-10" } });
@@ -885,6 +907,7 @@ describe("UnifiedActivityList", () => {
     it("single date filter clears start/end dates", () => {
       render(<UnifiedActivityList {...parentProps} />);
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       const { singleInput, startInput } = getDateInputs();
       fireEvent.change(startInput, { target: { value: "2025-01-10" } });
@@ -896,6 +919,7 @@ describe("UnifiedActivityList", () => {
     it("start date clears single date filter", () => {
       render(<UnifiedActivityList {...parentProps} />);
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       const { singleInput, startInput } = getDateInputs();
       fireEvent.change(singleInput, { target: { value: "2025-01-15" } });
@@ -907,6 +931,7 @@ describe("UnifiedActivityList", () => {
     it("end date clears single date filter", () => {
       render(<UnifiedActivityList {...parentProps} />);
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       const { singleInput, endInput } = getDateInputs();
       fireEvent.change(singleInput, { target: { value: "2025-01-15" } });
@@ -919,6 +944,7 @@ describe("UnifiedActivityList", () => {
   describe("Batch Approve (Parent Only)", () => {
     it("approves selected transactions", async () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       // Enter selection mode
       fireEvent.click(screen.getByText(/activity.selectionMode/));
@@ -941,6 +967,7 @@ describe("UnifiedActivityList", () => {
 
     it("does nothing when no items selected", async () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       // Enter selection mode but don't select any items
       fireEvent.click(screen.getByText(/activity.selectionMode/));
@@ -953,6 +980,7 @@ describe("UnifiedActivityList", () => {
     it("cancels batch approve when confirm is rejected", async () => {
       (global.confirm as jest.Mock).mockReturnValueOnce(false);
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -964,6 +992,7 @@ describe("UnifiedActivityList", () => {
     it("shows error alert when batch approve fails", async () => {
       mockInHelper.mockResolvedValueOnce({ error: { message: "batch error" } });
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -978,6 +1007,7 @@ describe("UnifiedActivityList", () => {
   describe("Batch Reject (Parent Only)", () => {
     it("opens batch reject modal", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -988,6 +1018,7 @@ describe("UnifiedActivityList", () => {
 
     it("rejects selected transactions with reason", async () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -1015,6 +1046,7 @@ describe("UnifiedActivityList", () => {
 
     it("closes batch reject modal on cancel", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -1029,6 +1061,7 @@ describe("UnifiedActivityList", () => {
     it("shows error alert when batch reject fails", async () => {
       mockInHelper.mockResolvedValueOnce({ error: { message: "reject error" } });
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -1099,6 +1132,7 @@ describe("UnifiedActivityList", () => {
   describe("Batch Selection Actions", () => {
     it("shows selected count and exits selection mode on clear", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       fireEvent.click(screen.getByText(/activity.selectionMode/));
       fireEvent.click(screen.getByText(/activity.selectAllPending/));
@@ -1120,6 +1154,7 @@ describe("UnifiedActivityList", () => {
 
       // Switch to list view
       fireEvent.click(screen.getByText(/activity.list/));
+      expandFilters();
 
       // Enter selection mode
       fireEvent.click(screen.getByText(/activity.selectionMode/));
@@ -1137,6 +1172,7 @@ describe("UnifiedActivityList", () => {
 
     it("toggles individual checkbox in calendar view selection mode", () => {
       render(<UnifiedActivityList {...parentProps} />);
+      expandFilters();
 
       // Already in calendar view (default for parent)
       // Enter selection mode
