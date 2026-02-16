@@ -47,6 +47,18 @@ export function formatDateTime(
 }
 
 /**
+ * Combine a YYYY-MM-DD date string with the current time.
+ * Replaces the fragile `new Date(date + "T" + new Date().toTimeString().split(" ")[0])` pattern.
+ */
+export function combineDateWithCurrentTime(dateString: string): Date {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  return new Date(`${dateString}T${hours}:${minutes}:${seconds}`);
+}
+
+/**
  * Format a date string for display (date only, no time).
  */
 export function formatDateOnly(

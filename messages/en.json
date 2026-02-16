@@ -190,7 +190,13 @@
     "redeemNow": "Redeem Now",
     "autoApproveInfo": "This redemption will be approved immediately.",
     "approvalDate": "Approval Date",
-    "confirmApproval": "Confirm Approval"
+    "confirmApproval": "Confirm Approval",
+    "adjustMultiplier": "Adjust Multiplier / Severity",
+    "multiplierLabel": "Multiplier:",
+    "multiplierExample": "Example: 10 mins over = 1\u00d7, 20 mins over = 2\u00d7, etc.",
+    "actualStars": "Actual Stars:",
+    "selectChildFirst": "Please select a child first",
+    "selectQuestOrCustom": "Please select a quest or enter custom description"
   },
   "editRedemption": {
     "title": "Edit Redemption Date",

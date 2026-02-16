@@ -190,7 +190,13 @@
     "redeemNow": "立即兑换",
     "autoApproveInfo": "此兑换将立即生效。",
     "approvalDate": "批准日期",
-    "confirmApproval": "确认批准"
+    "confirmApproval": "确认批准",
+    "adjustMultiplier": "调整倍数 / 程度",
+    "multiplierLabel": "倍数:",
+    "multiplierExample": "例如：超过10分钟 = 1×，超过20分钟 = 2×，以此类推",
+    "actualStars": "实际星星:",
+    "selectChildFirst": "请先选择一个孩子",
+    "selectQuestOrCustom": "请选择一个任务或输入自定义描述"
   },
   "editRedemption": {
     "title": "编辑兑换日期",

@@ -4,6 +4,7 @@ import {
   getTodayString,
   formatDateTime,
   formatDateOnly,
+  combineDateWithCurrentTime,
 } from "@/lib/date-utils";
 
 describe("date-utils", () => {
@@ -101,6 +102,52 @@ describe("date-utils", () => {
       const enResult = formatDateTime("2025-06-15T14:30:00Z", "en");
       const frResult = formatDateTime("2025-06-15T14:30:00Z", "fr");
       expect(enResult).toBe(frResult);
+    });
+  });
+
+  describe("combineDateWithCurrentTime", () => {
+    it("combines date string with current time", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 1, 15, 14, 30, 45)); // Feb 15, 2026 14:30:45
+      const result = combineDateWithCurrentTime("2026-02-10");
+      expect(result.getFullYear()).toBe(2026);
+      expect(result.getMonth()).toBe(1); // Feb = 1
+      expect(result.getDate()).toBe(10);
+      expect(result.getHours()).toBe(14);
+      expect(result.getMinutes()).toBe(30);
+      expect(result.getSeconds()).toBe(45);
+      jest.useRealTimers();
+    });
+
+    it("pads single-digit hours, minutes, and seconds", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 0, 1, 5, 3, 7)); // Jan 1, 2026 05:03:07
+      const result = combineDateWithCurrentTime("2026-01-01");
+      expect(result.getHours()).toBe(5);
+      expect(result.getMinutes()).toBe(3);
+      expect(result.getSeconds()).toBe(7);
+      jest.useRealTimers();
+    });
+
+    it("uses the date from the string, not the current date", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 5, 20, 10, 0, 0)); // June 20, 2026
+      const result = combineDateWithCurrentTime("2025-12-25");
+      expect(result.getFullYear()).toBe(2025);
+      expect(result.getMonth()).toBe(11); // Dec = 11
+      expect(result.getDate()).toBe(25);
+      expect(result.getHours()).toBe(10);
+      jest.useRealTimers();
+    });
+
+    it("handles midnight", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 0, 1, 0, 0, 0));
+      const result = combineDateWithCurrentTime("2026-01-01");
+      expect(result.getHours()).toBe(0);
+      expect(result.getMinutes()).toBe(0);
+      expect(result.getSeconds()).toBe(0);
+      jest.useRealTimers();
     });
   });
 

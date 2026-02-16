@@ -24,6 +24,12 @@ const messages = {
     recordSuccess: "Stars recorded successfully!",
     processing: "Processing...",
     recordDate: "Record Date",
+    adjustMultiplier: "Adjust Multiplier / Severity",
+    multiplierLabel: "Multiplier:",
+    multiplierExample: "Example: 10 mins over = 1\u00d7, 20 mins over = 2\u00d7, etc.",
+    actualStars: "Actual Stars:",
+    selectChildFirst: "Please select a child first",
+    selectQuestOrCustom: "Please select a quest or enter custom description",
   },
 };
 
@@ -162,6 +168,27 @@ const mockQuests: Quest[] = [
   },
 ];
 
+const zhMessages = {
+  common: {
+    stars: "星星",
+  },
+  admin: {
+    selectChild: "选择孩子",
+    orCustom: "或输入自定义描述",
+    recordNote: "给孩子的备注（可选）",
+    recordStars: "记录星星",
+    recordSuccess: "记录成功！",
+    processing: "处理中...",
+    recordDate: "记录日期",
+    adjustMultiplier: "调整倍数 / 程度",
+    multiplierLabel: "倍数:",
+    multiplierExample: "例如：超过10分钟 = 1×，超过20分钟 = 2×，以此类推",
+    actualStars: "实际星星:",
+    selectChildFirst: "请先选择一个孩子",
+    selectQuestOrCustom: "请选择一个任务或输入自定义描述",
+  },
+};
+
 // Mock router
 const mockRefresh = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -197,8 +224,9 @@ describe("QuickRecordForm Component", () => {
     children: User[] = mockChildren,
     locale = "en"
   ) => {
+    const msgs = locale === "zh-CN" ? zhMessages : messages;
     return render(
-      <NextIntlClientProvider messages={messages} locale={locale}>
+      <NextIntlClientProvider messages={msgs} locale={locale}>
         <QuickRecordForm
           quests={quests}
           familyChildren={children}
@@ -471,8 +499,7 @@ describe("QuickRecordForm Component", () => {
       renderComponent();
 
       // Multiplier section should not be visible
-      expect(screen.queryByText(/Adjust Multiplier/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/调整倍数/)).not.toBeInTheDocument();
+      expect(screen.queryByText("admin.adjustMultiplier")).not.toBeInTheDocument();
     });
 
     it("should show multiplier section when a quest is selected", () => {
@@ -485,7 +512,7 @@ describe("QuickRecordForm Component", () => {
       }
 
       // Multiplier section should be visible
-      expect(screen.getByText(/Adjust Multiplier/i)).toBeInTheDocument();
+      expect(screen.getByText("admin.adjustMultiplier")).toBeInTheDocument();
     });
 
     it("should display default multiplier value of 1", () => {
@@ -625,7 +652,7 @@ describe("QuickRecordForm Component", () => {
       expect(multiplierInput).toHaveValue(1);
     });
 
-    it("should display helpful example text in English", () => {
+    it("should display helpful example text via i18n key", () => {
       renderComponent(mockQuests, mockChildren, "en");
 
       // Select a quest
@@ -634,21 +661,8 @@ describe("QuickRecordForm Component", () => {
         fireEvent.click(questCard);
       }
 
-      // Should show example text
-      expect(screen.getByText(/10 mins over = 1×, 20 mins over = 2×/i)).toBeInTheDocument();
-    });
-
-    it("should display helpful example text in Chinese", () => {
-      renderComponent(mockQuests, mockChildren, "zh-CN");
-
-      // Select a quest
-      const questCard = screen.getByText("帮忙洗碗").closest("div");
-      if (questCard) {
-        fireEvent.click(questCard);
-      }
-
-      // Should show Chinese example text
-      expect(screen.getByText(/超过10分钟 = 1×，超过20分钟 = 2×/)).toBeInTheDocument();
+      // Should show example text via translation key
+      expect(screen.getByText(/admin\.multiplierExample/)).toBeInTheDocument();
     });
 
     it("should show multiplier range (1-10×)", () => {
@@ -664,7 +678,7 @@ describe("QuickRecordForm Component", () => {
       expect(screen.getByText("(1-10×)")).toBeInTheDocument();
     });
 
-    it("should display actual stars label in English", () => {
+    it("should display actual stars label via i18n key", () => {
       renderComponent(mockQuests, mockChildren, "en");
 
       // Select a quest
@@ -673,19 +687,7 @@ describe("QuickRecordForm Component", () => {
         fireEvent.click(questCard);
       }
 
-      expect(screen.getByText("Actual Stars:")).toBeInTheDocument();
-    });
-
-    it("should display actual stars label in Chinese", () => {
-      renderComponent(mockQuests, mockChildren, "zh-CN");
-
-      // Select a quest
-      const questCard = screen.getByText("帮忙洗碗").closest("div");
-      if (questCard) {
-        fireEvent.click(questCard);
-      }
-
-      expect(screen.getByText("实际星星:")).toBeInTheDocument();
+      expect(screen.getByText("admin.actualStars")).toBeInTheDocument();
     });
 
     it("should handle multiplier with maximum value of 10", () => {
@@ -733,7 +735,7 @@ describe("QuickRecordForm Component", () => {
         fireEvent.click(questCard);
       }
 
-      expect(screen.getByText(/Adjust Multiplier/i)).toBeInTheDocument();
+      expect(screen.getByText("admin.adjustMultiplier")).toBeInTheDocument();
 
       // Enter custom description
       const customInput = screen.getByPlaceholderText(
@@ -744,7 +746,7 @@ describe("QuickRecordForm Component", () => {
       });
 
       // Multiplier section should be hidden
-      expect(screen.queryByText(/Adjust Multiplier/i)).not.toBeInTheDocument();
+      expect(screen.queryByText("admin.adjustMultiplier")).not.toBeInTheDocument();
     });
 
     it("should apply multiplier correctly in star calculation for duty quest", () => {
@@ -943,7 +945,7 @@ describe("QuickRecordForm Component", () => {
       expect(noteTextarea).toHaveValue("");
 
       // Multiplier section should be hidden (no quest selected after reset)
-      expect(screen.queryByText(/Adjust Multiplier/i)).not.toBeInTheDocument();
+      expect(screen.queryByText("admin.adjustMultiplier")).not.toBeInTheDocument();
     });
 
     it("should call router.refresh() after successful submission", async () => {
@@ -1125,7 +1127,7 @@ describe("QuickRecordForm Component", () => {
 
       // With multiple children, none selected by default
       expect(
-        screen.getByText(/Please select a child first/i)
+        screen.getByText(/admin\.selectChildFirst/)
       ).toBeInTheDocument();
     });
 
@@ -1138,7 +1140,7 @@ describe("QuickRecordForm Component", () => {
 
       // Should show quest hint
       expect(
-        screen.getByText(/Please select a quest or enter custom description/i)
+        screen.getByText(/admin\.selectQuestOrCustom/)
       ).toBeInTheDocument();
     });
 
@@ -1148,7 +1150,7 @@ describe("QuickRecordForm Component", () => {
 
       // With single child auto-selected, should NOT show child hint
       expect(
-        screen.queryByText(/Please select a child first/i)
+        screen.queryByText(/admin\.selectChildFirst/)
       ).not.toBeInTheDocument();
     });
   });
@@ -1198,10 +1200,10 @@ describe("QuickRecordForm Component", () => {
 
       // After reset, warnings should NOT appear alongside the success message
       expect(
-        screen.queryByText(/Please select a child first/i)
+        screen.queryByText(/admin\.selectChildFirst/)
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/Please select a quest or enter custom description/i)
+        screen.queryByText(/admin\.selectQuestOrCustom/)
       ).not.toBeInTheDocument();
     });
   });

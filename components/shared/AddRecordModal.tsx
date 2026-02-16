@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import { getQuestName } from "@/lib/localization";
-import { formatDateOnly } from "@/lib/date-utils";
+import { formatDateOnly, combineDateWithCurrentTime } from "@/lib/date-utils";
 import ModalFrame from "@/components/ui/ModalFrame";
 import type { Database } from "@/types/database";
 import type { ActivityRole } from "@/types/activity";
@@ -147,9 +147,7 @@ export default function AddRecordModal({
       const starsToRecord = quest.stars * multiplier;
 
       // Create timestamp from selected date at current time
-      const selectedDateTime = new Date(
-        date + "T" + new Date().toTimeString().split(" ")[0]
-      );
+      const selectedDateTime = combineDateWithCurrentTime(date);
 
       const insertData: Record<string, unknown> = {
         family_id: familyId,
