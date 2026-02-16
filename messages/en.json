@@ -271,7 +271,14 @@
     "duplicatePending": "You already have a pending request for this quest today",
     "rateLimited": "Too many requests, please try again later",
     "addRecordCta": "Add a record for this day",
-    "requestStarsCta": "Request stars for this day"
+    "requestStarsCta": "Request stars for this day",
+    "redeemReward": "Redeem Reward",
+    "redeemRewardCta": "Redeem a reward",
+    "selectChildToRedeem": "Please select a child first",
+    "availableStars": "Available Stars",
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters",
+    "activeFilters": "{count} active"
   },
   "categoryManagement": {
     "title": "Quest Categories",

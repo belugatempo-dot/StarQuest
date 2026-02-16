@@ -271,7 +271,14 @@
     "duplicatePending": "你已经为这个任务在这一天提交过待审批申请了",
     "rateLimited": "请求太频繁，请稍后再试",
     "addRecordCta": "为这一天添加记录",
-    "requestStarsCta": "为这一天申请星星"
+    "requestStarsCta": "为这一天申请星星",
+    "redeemReward": "兑换奖励",
+    "redeemRewardCta": "兑换奖励",
+    "selectChildToRedeem": "请先选择一个孩子",
+    "availableStars": "可用星星",
+    "showFilters": "显示筛选",
+    "hideFilters": "隐藏筛选",
+    "activeFilters": "{count} 个筛选"
   },
   "categoryManagement": {
     "title": "任务类别",
