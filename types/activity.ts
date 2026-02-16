@@ -8,7 +8,15 @@
 import type { Database } from "@/types/database";
 
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
+type Reward = Database["public"]["Tables"]["rewards"]["Row"];
 type User = Database["public"]["Tables"]["users"]["Row"];
+
+/** Child balance from the child_balances view */
+export interface ChildBalance {
+  child_id: string;
+  current_stars: number;
+  spendable_stars: number;
+}
 
 /** Star transaction from Supabase query with joined relations */
 export type StarTransaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
@@ -136,4 +144,6 @@ export interface UnifiedActivityListProps {
   familyChildren?: User[];
   currentUserId?: string;
   familyId?: string;
+  rewards?: Reward[];
+  childBalances?: ChildBalance[];
 }
