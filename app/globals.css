@@ -4,8 +4,8 @@
 
 :root {
   --foreground-rgb: 226, 232, 240;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 30, 58, 95;
+  --background-start-rgb: 91, 106, 191;
+  --background-end-rgb: 124, 92, 192;
 }
 
 body {
@@ -86,12 +86,12 @@ body {
     0 0 30px rgba(255, 215, 0, 0.2);
 }
 
-/* Glass card for dark backgrounds */
+/* Glass card for periwinkle backgrounds */
 .glass-card {
-  background: rgba(30, 58, 95, 0.6);
+  background: rgba(75, 85, 160, 0.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Night header gradient */
@@ -174,20 +174,20 @@ body {
 
 /* Dark card for replacing bg-white cards */
 .dark-card {
-  background: rgba(30, 58, 95, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(65, 75, 150, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Dark surface for modals and drawers */
 .dark-surface {
-  background: #162a46;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #5060b0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Dark input styling */
 .dark-input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(55, 65, 140, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #e2e8f0;
 }
 
