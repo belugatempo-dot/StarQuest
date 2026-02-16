@@ -1,7 +1,11 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import RedeemRewardModal from "@/components/child/RedeemRewardModal";
+import RedeemRewardModal, {
+  computeCreditState,
+  buildRedemptionPayload,
+  getSubmitButtonConfig,
+} from "@/components/child/RedeemRewardModal";
 import type { Database } from "@/types/database";
 
 type Reward = Database["public"]["Tables"]["rewards"]["Row"];
@@ -1144,5 +1148,309 @@ describe("RedeemRewardModal", () => {
       const submitButton = screen.getByRole("button", { name: "admin.redeemNow" });
       expect(submitButton.className).toContain("bg-success");
     });
+  });
+});
+
+describe("computeCreditState", () => {
+  it("should compute basic state without credit", () => {
+    const result = computeCreditState({
+      currentStars: 100,
+      rewardCost: 50,
+      creditEnabled: false,
+      availableCredit: 0,
+      creditUsed: 0,
+    });
+
+    expect(result).toEqual({
+      actualSpendable: 100,
+      willUseCredit: false,
+      creditToUse: 0,
+      newTotalDebt: 0,
+      canAfford: true,
+      remainingStars: 50,
+    });
+  });
+
+  it("should return canAfford false when insufficient stars without credit", () => {
+    const result = computeCreditState({
+      currentStars: 30,
+      rewardCost: 50,
+      creditEnabled: false,
+      availableCredit: 0,
+      creditUsed: 0,
+    });
+
+    expect(result.canAfford).toBe(false);
+    expect(result.remainingStars).toBe(-20);
+    expect(result.willUseCredit).toBe(false);
+  });
+
+  it("should include available credit in spendable when credit enabled", () => {
+    const result = computeCreditState({
+      currentStars: 20,
+      rewardCost: 50,
+      creditEnabled: true,
+      availableCredit: 50,
+      creditUsed: 0,
+    });
+
+    expect(result.actualSpendable).toBe(70);
+    expect(result.willUseCredit).toBe(true);
+    expect(result.creditToUse).toBe(30);
+    expect(result.newTotalDebt).toBe(30);
+    expect(result.canAfford).toBe(true);
+  });
+
+  it("should use spendableStars override when provided", () => {
+    const result = computeCreditState({
+      currentStars: 10,
+      rewardCost: 50,
+      creditEnabled: true,
+      availableCredit: 100,
+      creditUsed: 0,
+      spendableStars: 200,
+    });
+
+    expect(result.actualSpendable).toBe(200);
+    expect(result.canAfford).toBe(true);
+  });
+
+  it("should handle negative currentStars with credit", () => {
+    const result = computeCreditState({
+      currentStars: -10,
+      rewardCost: 50,
+      creditEnabled: true,
+      availableCredit: 100,
+      creditUsed: 5,
+    });
+
+    expect(result.actualSpendable).toBe(100);
+    expect(result.willUseCredit).toBe(true);
+    expect(result.creditToUse).toBe(50);
+    expect(result.newTotalDebt).toBe(55);
+    expect(result.remainingStars).toBe(-60);
+  });
+
+  it("should handle exact affordability boundary", () => {
+    const result = computeCreditState({
+      currentStars: 50,
+      rewardCost: 50,
+      creditEnabled: false,
+      availableCredit: 0,
+      creditUsed: 0,
+    });
+
+    expect(result.canAfford).toBe(true);
+    expect(result.remainingStars).toBe(0);
+    expect(result.willUseCredit).toBe(false);
+  });
+
+  it("should handle negative currentStars without credit", () => {
+    const result = computeCreditState({
+      currentStars: -5,
+      rewardCost: 10,
+      creditEnabled: false,
+      availableCredit: 0,
+      creditUsed: 0,
+    });
+
+    expect(result.actualSpendable).toBe(0);
+    expect(result.canAfford).toBe(false);
+    expect(result.remainingStars).toBe(-15);
+  });
+
+  it("should cap creditToUse at availableCredit", () => {
+    const result = computeCreditState({
+      currentStars: 0,
+      rewardCost: 100,
+      creditEnabled: true,
+      availableCredit: 30,
+      creditUsed: 0,
+    });
+
+    expect(result.creditToUse).toBe(30);
+    expect(result.actualSpendable).toBe(30);
+    expect(result.canAfford).toBe(false);
+  });
+
+  it("should not use credit when currentStars >= rewardCost even if credit enabled", () => {
+    const result = computeCreditState({
+      currentStars: 100,
+      rewardCost: 50,
+      creditEnabled: true,
+      availableCredit: 200,
+      creditUsed: 0,
+    });
+
+    expect(result.willUseCredit).toBe(false);
+    expect(result.creditToUse).toBe(0);
+    expect(result.newTotalDebt).toBe(0);
+  });
+});
+
+describe("buildRedemptionPayload", () => {
+  const testReward: Reward = {
+    id: "reward-123",
+    family_id: "family-123",
+    name_en: "Screen Time",
+    name_zh: "屏幕时间",
+    description: null,
+    stars_cost: 50,
+    icon: null,
+    category: null,
+    is_active: true,
+    created_at: "2025-01-01",
+  };
+
+  it("should build child pending payload without credit", () => {
+    const payload = buildRedemptionPayload({
+      familyId: "fam-1",
+      childId: "child-1",
+      reward: testReward,
+      note: "please",
+      isParent: false,
+      willUseCredit: false,
+      creditToUse: 0,
+    });
+
+    expect(payload).toEqual({
+      family_id: "fam-1",
+      child_id: "child-1",
+      reward_id: "reward-123",
+      stars_spent: 50,
+      status: "pending",
+      child_note: "please",
+      uses_credit: false,
+      credit_amount: 0,
+      reviewed_at: null,
+    });
+  });
+
+  it("should build child payload with credit", () => {
+    const payload = buildRedemptionPayload({
+      familyId: "fam-1",
+      childId: "child-1",
+      reward: testReward,
+      note: "",
+      isParent: false,
+      willUseCredit: true,
+      creditToUse: 30,
+    });
+
+    expect(payload).toEqual({
+      family_id: "fam-1",
+      child_id: "child-1",
+      reward_id: "reward-123",
+      stars_spent: 50,
+      status: "pending",
+      child_note: null,
+      uses_credit: true,
+      credit_amount: 30,
+      reviewed_at: null,
+    });
+  });
+
+  it("should build parent auto-approved payload with no credit", () => {
+    const payload = buildRedemptionPayload({
+      familyId: "fam-1",
+      childId: "child-1",
+      reward: testReward,
+      note: "for good behavior",
+      isParent: true,
+      willUseCredit: true,
+      creditToUse: 30,
+    });
+
+    expect(payload).toEqual({
+      family_id: "fam-1",
+      child_id: "child-1",
+      reward_id: "reward-123",
+      stars_spent: 50,
+      status: "approved",
+      child_note: "for good behavior",
+      uses_credit: false,
+      credit_amount: 0,
+      reviewed_at: expect.any(String),
+    });
+  });
+
+  it("should convert empty note to null", () => {
+    const payload = buildRedemptionPayload({
+      familyId: "fam-1",
+      childId: "child-1",
+      reward: testReward,
+      note: "   ",
+      isParent: false,
+      willUseCredit: false,
+      creditToUse: 0,
+    });
+
+    expect(payload.child_note).toBeNull();
+  });
+});
+
+describe("getSubmitButtonConfig", () => {
+  it("should return loading state", () => {
+    const config = getSubmitButtonConfig({
+      loading: true,
+      isParent: false,
+      willUseCredit: false,
+      creditToUse: 0,
+      confirmCredit: false,
+    });
+
+    expect(config.label).toBe("common.loading");
+  });
+
+  it("should return parent redeemNow with success style", () => {
+    const config = getSubmitButtonConfig({
+      loading: false,
+      isParent: true,
+      willUseCredit: false,
+      creditToUse: 0,
+      confirmCredit: false,
+    });
+
+    expect(config.label).toBe("admin.redeemNow");
+    expect(config.className).toContain("bg-success");
+  });
+
+  it("should return confirmBorrow with warning style when credit pending confirmation", () => {
+    const config = getSubmitButtonConfig({
+      loading: false,
+      isParent: false,
+      willUseCredit: true,
+      creditToUse: 30,
+      confirmCredit: false,
+    });
+
+    expect(config.label).toBe("credit.confirmBorrow");
+    expect(config.className).toContain("bg-warning");
+  });
+
+  it("should return default submit with primary style", () => {
+    const config = getSubmitButtonConfig({
+      loading: false,
+      isParent: false,
+      willUseCredit: false,
+      creditToUse: 0,
+      confirmCredit: false,
+    });
+
+    expect(config.label).toBe("common.submit");
+    expect(config.className).toContain("bg-primary");
+  });
+
+  it("should return default submit after credit confirmed", () => {
+    const config = getSubmitButtonConfig({
+      loading: false,
+      isParent: false,
+      willUseCredit: true,
+      creditToUse: 30,
+      confirmCredit: true,
+    });
+
+    expect(config.label).toBe("common.submit");
+    expect(config.className).toContain("bg-primary");
   });
 });
