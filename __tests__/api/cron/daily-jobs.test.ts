@@ -394,6 +394,7 @@ describe("Daily Jobs Cron Route", () => {
       expect(result.body.results.settlement.errors).toHaveLength(0);
       expect(mockRpc).toHaveBeenCalledWith("run_monthly_settlement", {
         p_settlement_date: null,
+        p_family_id: "fam-1",
       });
     });
 
@@ -1957,6 +1958,20 @@ describe("Daily Jobs Cron Route", () => {
       expect(result.body.results.settlement.errors[1]).toContain(
         "Exception Family"
       );
+
+      // Verify each RPC call received the correct family ID
+      expect(mockRpc).toHaveBeenNthCalledWith(1, "run_monthly_settlement", {
+        p_settlement_date: null,
+        p_family_id: "fam-1",
+      });
+      expect(mockRpc).toHaveBeenNthCalledWith(2, "run_monthly_settlement", {
+        p_settlement_date: null,
+        p_family_id: "fam-2",
+      });
+      expect(mockRpc).toHaveBeenNthCalledWith(3, "run_monthly_settlement", {
+        p_settlement_date: null,
+        p_family_id: "fam-3",
+      });
     });
   });
 

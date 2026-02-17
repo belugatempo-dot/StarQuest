@@ -12,13 +12,15 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Get optional settlement date from query params (for testing)
+    // Get optional params from query string (for testing/manual triggering)
     const searchParams = request.nextUrl.searchParams;
     const settlementDateParam = searchParams.get("date");
+    const familyIdParam = searchParams.get("family_id");
 
     // Run the monthly settlement
     const { data, error } = await (adminClient.rpc as any)("run_monthly_settlement", {
       p_settlement_date: settlementDateParam || null,
+      p_family_id: familyIdParam || null,
     });
 
     if (error) {

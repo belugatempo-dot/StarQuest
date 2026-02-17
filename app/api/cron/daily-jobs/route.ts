@@ -127,6 +127,7 @@ async function runSettlementIfDue(
         "run_monthly_settlement",
         {
           p_settlement_date: null,
+          p_family_id: family.id,
         }
       );
 
