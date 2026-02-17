@@ -20,6 +20,7 @@ import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
 import AddRecordModal from "@/components/shared/AddRecordModal";
+import RedeemFromCalendarModal from "@/components/shared/RedeemFromCalendarModal";
 import type {
   UnifiedActivityItem,
   UnifiedActivityListProps,
@@ -42,6 +43,8 @@ export default function UnifiedActivityList({
   familyChildren: childrenProp,
   currentUserId,
   familyId,
+  rewards,
+  childBalances,
 }: UnifiedActivityListProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -92,6 +95,9 @@ export default function UnifiedActivityList({
 
   // Add record modal state
   const [showAddRecordModal, setShowAddRecordModal] = useState(false);
+
+  // Redeem reward modal state
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
 
   // Batch selection state (parent only)
   const batch = useBatchSelection();
@@ -198,6 +204,14 @@ export default function UnifiedActivityList({
     return filterDate <= today;
   }, [quests, filterDate, currentUserId, familyId]);
 
+  // Determine if "Redeem Reward" button should be shown (parent only)
+  const canRedeem = useMemo(() => {
+    if (role !== "parent" || !rewards || rewards.length === 0) return false;
+    if (!filterDate || !currentUserId || !familyId) return false;
+    const today = getTodayString();
+    return filterDate <= today;
+  }, [role, rewards, filterDate, currentUserId, familyId]);
+
   // Convert activities to transaction format for CalendarView
   const transactionsForCalendar = useMemo(() => {
     return activities.map((a) => ({
@@ -254,19 +268,33 @@ export default function UnifiedActivityList({
                 setEndDate("");
               }}
             />
-            {canAddRecord && (
-              <button
-                onClick={() => setShowAddRecordModal(true)}
-                className="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-medium flex items-center justify-center space-x-2"
-                data-testid="add-record-button"
-              >
-                <span>➕</span>
-                <span>
-                  {role === "parent"
-                    ? t("activity.addRecord")
-                    : t("activity.requestStars")}
-                </span>
-              </button>
+            {(canAddRecord || canRedeem) && (
+              <div className="space-y-2">
+                {canAddRecord && (
+                  <button
+                    onClick={() => setShowAddRecordModal(true)}
+                    className="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-medium flex items-center justify-center space-x-2"
+                    data-testid="add-record-button"
+                  >
+                    <span>➕</span>
+                    <span>
+                      {role === "parent"
+                        ? t("activity.addRecord")
+                        : t("activity.requestStars")}
+                    </span>
+                  </button>
+                )}
+                {canRedeem && (
+                  <button
+                    onClick={() => setShowRedeemModal(true)}
+                    className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center space-x-2"
+                    data-testid="redeem-reward-button"
+                  >
+                    <span>🎁</span>
+                    <span>{t("activity.redeemReward")}</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -317,16 +345,29 @@ export default function UnifiedActivityList({
                   <p className="text-slate-400">
                     {t("activity.noRecordsFound")}
                   </p>
-                  {canAddRecord && (
-                    <button
-                      onClick={() => setShowAddRecordModal(true)}
-                      className="mt-4 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm"
-                      data-testid="add-record-cta"
-                    >
-                      ➕ {role === "parent"
-                        ? t("activity.addRecordCta")
-                        : t("activity.requestStarsCta")}
-                    </button>
+                  {(canAddRecord || canRedeem) && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+                      {canAddRecord && (
+                        <button
+                          onClick={() => setShowAddRecordModal(true)}
+                          className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm"
+                          data-testid="add-record-cta"
+                        >
+                          ➕ {role === "parent"
+                            ? t("activity.addRecordCta")
+                            : t("activity.requestStarsCta")}
+                        </button>
+                      )}
+                      {canRedeem && (
+                        <button
+                          onClick={() => setShowRedeemModal(true)}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+                          data-testid="redeem-reward-cta"
+                        >
+                          🎁 {t("activity.redeemRewardCta")}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ) : (
@@ -411,6 +452,20 @@ export default function UnifiedActivityList({
           familyId={familyId}
           onClose={() => setShowAddRecordModal(false)}
           onSuccess={() => setShowAddRecordModal(false)}
+        />
+      )}
+
+      {/* Redeem Reward Modal */}
+      {showRedeemModal && currentUserId && familyId && rewards && childrenProp && childBalances && (
+        <RedeemFromCalendarModal
+          locale={locale}
+          rewards={rewards}
+          familyChildren={childrenProp}
+          childBalances={childBalances}
+          currentUserId={currentUserId}
+          familyId={familyId}
+          onClose={() => setShowRedeemModal(false)}
+          onSuccess={() => setShowRedeemModal(false)}
         />
       )}
 
