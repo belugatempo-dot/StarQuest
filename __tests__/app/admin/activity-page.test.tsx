@@ -36,6 +36,16 @@ jest.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
+jest.mock("@/components/admin/ActivityPageHeader", () => {
+  return function MockActivityPageHeader({ locale }: any) {
+    return (
+      <div data-testid="activity-page-header">
+        {locale === "zh-CN" ? "星星日历" : "Star Calendar"}
+      </div>
+    );
+  };
+});
+
 jest.mock("@/components/shared/UnifiedActivityList", () => {
   return function MockUnifiedActivityList({ activities, locale, role, rewards, childBalances }: any) {
     return (

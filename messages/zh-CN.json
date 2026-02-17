@@ -452,5 +452,19 @@
     "afterRedemption": "兑换后",
     "confirmBorrow": "确认并借用",
     "redemptionPendingInfo": "你的申请将发送给家长。星星将在批准后扣除。"
+  },
+  "reports": {
+    "generateReport": "生成报告",
+    "periodType": "报告周期",
+    "dateRange": "日期范围",
+    "filename": "文件名",
+    "download": "下载",
+    "generating": "生成中...",
+    "downloadError": "生成报告失败，请重试。",
+    "daily": "每日",
+    "weekly": "每周",
+    "monthly": "每月",
+    "quarterly": "每季度",
+    "yearly": "每年"
   }
 }
