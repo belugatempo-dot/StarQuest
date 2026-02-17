@@ -162,6 +162,28 @@ body {
   pointer-events: none;
 }
 
+/* Stat tile with starry night background (varied star positions) */
+.stat-night-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-night-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%, #FFD700, transparent),
+    radial-gradient(1.5px 1.5px at 55% 45%, #FEF08A, transparent),
+    radial-gradient(1px 1px at 85% 65%, #FBBF24, transparent);
+  animation: twinkle 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
 /* Date header in calendar view */
 .night-date-header {
   background: linear-gradient(135deg, #1e3a5f 0%, #312e81 100%);

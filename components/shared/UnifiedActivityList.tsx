@@ -222,42 +222,45 @@ export default function UnifiedActivityList({
     }));
   }, [activities]);
 
+  const filterBarProps = {
+    filterType,
+    setFilterType,
+    statusFilter,
+    setStatusFilter,
+    filterDate,
+    setFilterDate,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    hasActiveFilters,
+    clearFilters,
+    viewMode,
+    setViewMode,
+    stats,
+    displayedCount: displayedActivities.length,
+    totalCount: activities.length,
+    permissions,
+    pendingCount: pendingTransactions.length,
+    selectionMode: batch.selectionMode,
+    setSelectionMode: batch.setSelectionMode,
+    selectedCount: batch.selectedIds.size,
+    onSelectAll: () => batch.selectAll(pendingTransactions.map((t) => t.id)),
+  } as const;
+
   return (
     <div className="space-y-6">
-      {/* Filter Bar — full width, above everything */}
-      <ActivityFilterBar
-        filterType={filterType}
-        setFilterType={setFilterType}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        filterDate={filterDate}
-        setFilterDate={setFilterDate}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        hasActiveFilters={hasActiveFilters}
-        clearFilters={clearFilters}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        stats={stats}
-        displayedCount={displayedActivities.length}
-        totalCount={activities.length}
-        permissions={permissions}
-        pendingCount={pendingTransactions.length}
-        selectionMode={batch.selectionMode}
-        setSelectionMode={batch.setSelectionMode}
-        selectedCount={batch.selectedIds.size}
-        onSelectAll={() => batch.selectAll(pendingTransactions.map((t) => t.id))}
-      />
+      {/* Filter Bar — full width in list mode only */}
+      {viewMode === "list" && <ActivityFilterBar {...filterBarProps} />}
 
       {/* Main Layout: Calendar + Activity List */}
       <div
         className={`${viewMode === "calendar" ? "grid lg:grid-cols-2 gap-6" : ""}`}
       >
-        {/* Calendar Picker - Left Side */}
+        {/* Left Column: Filter Bar + Calendar Picker */}
         {viewMode === "calendar" && (
           <div className="lg:sticky lg:top-4 lg:self-start space-y-3">
+            <ActivityFilterBar {...filterBarProps} />
             <CalendarView
               transactions={transactionsForCalendar as any}
               locale={locale}
