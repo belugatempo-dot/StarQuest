@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2628 tests, ~99% coverage)
+# Testing (2653 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -118,7 +118,8 @@ components/
     ├── ActivityItem.tsx         # Single activity row
     ├── ActivityDateGroup.tsx    # Date-grouped activity section
     ├── ActivityFilterBar.tsx    # Filter/search controls
-    └── BatchActionBar.tsx       # Batch action toolbar
+    ├── BatchActionBar.tsx       # Batch action toolbar
+    └── RedeemFromCalendarModal.tsx # Redeem reward from calendar view
 ```
 
 **Rule:** Components using Supabase must be Client Components (`"use client"`)
@@ -423,4 +424,4 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 
 ---
 
-**Last Updated:** 2026-02-16 | **Tests:** 2628 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-16 | **Tests:** 2653 passing | **Coverage:** ~99%
