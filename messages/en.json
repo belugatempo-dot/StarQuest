@@ -453,5 +453,19 @@
     "afterRedemption": "After Redemption",
     "confirmBorrow": "Confirm & Borrow",
     "redemptionPendingInfo": "Your request will be sent to your parents. Stars will be deducted after approval."
+  },
+  "reports": {
+    "generateReport": "Generate Report",
+    "periodType": "Period Type",
+    "dateRange": "Date Range",
+    "filename": "Filename",
+    "download": "Download",
+    "generating": "Generating...",
+    "downloadError": "Failed to generate report. Please try again.",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly"
   }
 }

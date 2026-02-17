@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { requireParent } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import UnifiedActivityList from "@/components/shared/UnifiedActivityList";
+import ActivityPageHeader from "@/components/admin/ActivityPageHeader";
 import type { UnifiedActivityItem } from "@/types/activity";
 import {
   transformStarTransaction,
@@ -141,17 +142,8 @@ export default async function ActivityPage({
 
   return (
     <div className="space-y-6">
-      {/* Header - Starry Night Theme */}
-      <div className="night-header rounded-lg p-6 shadow-lg">
-        <h1 className="text-3xl font-bold mb-2 text-white star-glow relative z-10">
-          ✨ {locale === "zh-CN" ? "星星日历" : "Star Calendar"}
-        </h1>
-        <p className="text-white/80 relative z-10">
-          {locale === "zh-CN"
-            ? "查看所有记录的星星活动，按日期和类型筛选"
-            : "View all recorded star activities, filter by date and type"}
-        </p>
-      </div>
+      {/* Header - Starry Night Theme with Generate Report button */}
+      <ActivityPageHeader locale={locale} />
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

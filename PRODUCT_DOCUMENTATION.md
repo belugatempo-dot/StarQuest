@@ -1,7 +1,7 @@
 # ⭐ StarQuest Product Documentation
 
 **Version:** 1.1.0
-**Last Updated:** 2026-01-29
+**Last Updated:** 2026-02-16
 
 ---
 
@@ -91,6 +91,7 @@ To make family task management fun, engaging, and educational by applying game m
    - Star transaction history
    - Child progress reports
    - Behavioral insights
+   - **On-demand markdown reports**: Generate and download formatted summary reports from the Activity page (daily/weekly/monthly/quarterly/yearly)
 
 ### For Children
 
