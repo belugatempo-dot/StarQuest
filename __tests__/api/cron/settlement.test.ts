@@ -104,6 +104,7 @@ describe("Settlement Cron Route", () => {
       expect(response.status).toBe(200);
       expect(mockRpc).toHaveBeenCalledWith("run_monthly_settlement", {
         p_settlement_date: null,
+        p_family_id: null,
       });
     });
 
@@ -133,6 +134,37 @@ describe("Settlement Cron Route", () => {
 
       expect(mockRpc).toHaveBeenCalledWith("run_monthly_settlement", {
         p_settlement_date: "2025-06-01",
+        p_family_id: null,
+      });
+      expect(response.status).toBe(200);
+    });
+
+    it("passes family_id param from query string to RPC", async () => {
+      mockRpc.mockResolvedValue({ data: {}, error: null });
+
+      const request = new NextRequest(
+        "http://localhost/api/cron/settlement?family_id=abc-123"
+      );
+      const response = await GET(request);
+
+      expect(mockRpc).toHaveBeenCalledWith("run_monthly_settlement", {
+        p_settlement_date: null,
+        p_family_id: "abc-123",
+      });
+      expect(response.status).toBe(200);
+    });
+
+    it("passes both date and family_id params to RPC", async () => {
+      mockRpc.mockResolvedValue({ data: {}, error: null });
+
+      const request = new NextRequest(
+        "http://localhost/api/cron/settlement?date=2025-06-01&family_id=fam-99"
+      );
+      const response = await GET(request);
+
+      expect(mockRpc).toHaveBeenCalledWith("run_monthly_settlement", {
+        p_settlement_date: "2025-06-01",
+        p_family_id: "fam-99",
       });
       expect(response.status).toBe(200);
     });
