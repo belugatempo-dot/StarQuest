@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2653 tests, ~99% coverage)
+# Testing (2752 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -113,6 +113,8 @@ components/
 ├── auth/      # Login/register (use hard navigation!)
 ├── child/     # Child UI (bonus quests only)
 ├── admin/     # Parent UI (all quest types)
+│   ├── ActivityPageHeader.tsx        # Activity page header with Generate Report button
+│   └── GenerateReportModal.tsx       # Modal for on-demand markdown report generation
 └── shared/    # Cross-role components
     ├── UnifiedActivityList.tsx  # Main list orchestrator
     ├── ActivityItem.tsx         # Single activity row
@@ -135,6 +137,8 @@ lib/
 ├── hooks/useActivityFilters.ts  # Activity filter/search state hook
 ├── api/cron-auth.ts             # verifyCronAuth() for cron route authorization
 ├── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
+├── reports/date-ranges.ts       # getAvailablePeriods(), getReportFilename(), getPreviousPeriodBounds()
+├── reports/markdown-formatter.ts # generateMarkdownReport() — Markdown report with inline i18n
 └── demo/                        # Demo seed system
     ├── demo-config.ts           # Constants, child profiles, behavioral params
     ├── demo-cleanup.ts          # FK-ordered cleanup of demo family data
@@ -218,6 +222,15 @@ Transactional email infrastructure using Resend.
 - Cron endpoint: `GET /api/cron/daily-jobs` — handles settlements, weekly/monthly reports
 - Settings page: `/admin/settings` — report preferences (email, timezone, enabled reports)
 
+### Generate Markdown Reports (`components/admin/GenerateReportModal.tsx`)
+Parents can generate and download a markdown-formatted summary report on demand from the Activity page.
+- Period types: Daily, Weekly, Monthly, Quarterly, Yearly
+- Modal triggered from `ActivityPageHeader` (client component)
+- API: `POST /api/reports/generate-markdown` — auth + fetch + format + download
+- Reuses `fetchReportBaseData()` and `buildChildrenStats()` from `lib/reports/report-utils.ts`
+- New utilities: `lib/reports/date-ranges.ts`, `lib/reports/markdown-formatter.ts`
+- Bilingual (EN/中文): modal uses `reports.*` i18n keys; markdown body uses inline labels
+
 ---
 
 ## Email Verification
@@ -275,7 +288,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 ### Structure
 ```
 __tests__/
-├── api/{admin,cron,invite-parent,seed-demo}/
+├── api/{admin,cron,invite-parent,reports,seed-demo}/
 ├── app/{admin,auth,child}/
 ├── components/{admin,auth,child,shared,ui}/
 ├── hooks/
@@ -424,4 +437,4 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 
 ---
 
-**Last Updated:** 2026-02-16 | **Tests:** 2653 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-17 | **Tests:** 2752 passing | **Coverage:** ~99%
