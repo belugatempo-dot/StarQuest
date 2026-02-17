@@ -37,10 +37,12 @@ jest.mock("@/lib/supabase/server", () => ({
 }));
 
 jest.mock("@/components/shared/UnifiedActivityList", () => {
-  return function MockUnifiedActivityList({ activities, locale, role }: any) {
+  return function MockUnifiedActivityList({ activities, locale, role, rewards, childBalances }: any) {
     return (
       <div data-testid="unified-activity-list">
         UnifiedActivityList - {activities.length} items - {role}
+        {rewards && <span data-testid="rewards-count">{rewards.length} rewards</span>}
+        {childBalances && <span data-testid="balances-count">{childBalances.length} balances</span>}
       </div>
     );
   };
@@ -416,5 +418,43 @@ describe("ActivityPage with data", () => {
     expect(screen.getByText("+50")).toBeInTheDocument();
     expect(screen.getByText("-15")).toBeInTheDocument();
     expect(screen.getByText("+35")).toBeInTheDocument();
+  });
+
+  it("fetches and passes rewards and child balances to UnifiedActivityList", async () => {
+    const { createClient, createAdminClient } = require("@/lib/supabase/server");
+    const { sortActivitiesByDate } = require("@/lib/activity-utils");
+
+    const mockRewards = [
+      { id: "r1", name_en: "Ice Cream", stars_cost: 10, is_active: true },
+    ];
+    const mockBalances = [
+      { child_id: "c1", current_stars: 50, spendable_stars: 60 },
+    ];
+
+    const supabaseFrom = jest.fn().mockImplementation((table: string) => {
+      if (table === "rewards") {
+        return buildChainMock({ data: mockRewards, error: null });
+      }
+      return buildChainMock({ data: [], error: null });
+    });
+    createClient.mockResolvedValue({ from: supabaseFrom });
+
+    const adminFrom = jest.fn().mockImplementation((table: string) => {
+      if (table === "child_balances") {
+        return buildChainMock({ data: mockBalances, error: null });
+      }
+      return buildChainMock({ data: [], error: null });
+    });
+    createAdminClient.mockReturnValue({ from: adminFrom });
+
+    sortActivitiesByDate.mockReturnValue([]);
+
+    const jsx = await ActivityPage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    expect(screen.getByTestId("rewards-count")).toHaveTextContent("1 rewards");
+    expect(screen.getByTestId("balances-count")).toHaveTextContent("1 balances");
   });
 });

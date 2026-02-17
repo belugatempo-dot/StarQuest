@@ -97,6 +97,19 @@ export default async function ActivityPage({
     .eq("family_id", user.family_id!)
     .eq("is_active", true);
 
+  // Fetch active rewards for redeem-from-calendar modal
+  const { data: activeRewards } = await supabase
+    .from("rewards")
+    .select("*")
+    .eq("family_id", user.family_id!)
+    .eq("is_active", true);
+
+  // Fetch child balances for redeem-from-calendar modal
+  const { data: childBalances } = (await adminClient
+    .from("child_balances")
+    .select("child_id, current_stars, spendable_stars")
+    .eq("family_id", user.family_id!)) as { data: any[] | null; error: any };
+
   const t = await getTranslations();
 
   // Convert to unified activity items using utility functions
@@ -203,6 +216,8 @@ export default async function ActivityPage({
         familyChildren={familyChildren || []}
         currentUserId={user.id}
         familyId={user.family_id!}
+        rewards={activeRewards || []}
+        childBalances={childBalances || []}
       />
     </div>
   );

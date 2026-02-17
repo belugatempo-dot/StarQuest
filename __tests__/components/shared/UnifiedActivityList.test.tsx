@@ -104,6 +104,18 @@ jest.mock("@/components/shared/AddRecordModal", () => {
   };
 });
 
+// Mock RedeemFromCalendarModal
+jest.mock("@/components/shared/RedeemFromCalendarModal", () => {
+  return function MockRedeemFromCalendarModal(props: any) {
+    return (
+      <div data-testid="redeem-from-calendar-modal">
+        <button onClick={props.onClose}>Close Redeem</button>
+        <button onClick={props.onSuccess}>Redeem Success</button>
+      </div>
+    );
+  };
+});
+
 // Mock activity-utils
 jest.mock("@/lib/activity-utils", () => ({
   getActivityDescription: (activity: any, locale: string) => {
@@ -1487,6 +1499,166 @@ describe("UnifiedActivityList", () => {
       fireEvent.click(screen.getByTestId("calendar-date-select"));
 
       expect(screen.queryByTestId("add-record-button")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Redeem Reward Button", () => {
+    const mockRewards = [
+      { id: "r1", name_en: "Ice Cream", stars_cost: 10, is_active: true, family_id: "fam-1" },
+    ] as any[];
+
+    const mockChildBalances = [
+      { child_id: "child-1", current_stars: 50, spendable_stars: 60 },
+    ];
+
+    const mockChildren = [
+      { id: "child-1", name: "Alice", avatar_url: null, role: "child", family_id: "fam-1" },
+    ] as any[];
+
+    const parentPropsWithRewards = {
+      ...parentProps,
+      quests: [
+        { id: "q1", name_en: "Clean Room", type: "bonus", stars: 5, icon: "🧹", is_active: true, family_id: "fam-1" },
+      ] as any[],
+      rewards: mockRewards,
+      childBalances: mockChildBalances,
+      familyChildren: mockChildren,
+      currentUserId: "parent-1",
+      familyId: "fam-1",
+    };
+
+    it("should not show redeem button when no rewards available", () => {
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithRewards}
+          rewards={[]}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.queryByTestId("redeem-reward-button")).not.toBeInTheDocument();
+    });
+
+    it("should not show redeem button for child role", () => {
+      render(
+        <UnifiedActivityList
+          {...childProps}
+          rewards={mockRewards}
+          childBalances={mockChildBalances}
+        />
+      );
+
+      // Switch to calendar view
+      fireEvent.click(screen.getByText(/activity.calendar/));
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.queryByTestId("redeem-reward-button")).not.toBeInTheDocument();
+    });
+
+    it("should not show redeem button when no date is selected", () => {
+      render(<UnifiedActivityList {...parentPropsWithRewards} />);
+
+      expect(screen.queryByTestId("redeem-reward-button")).not.toBeInTheDocument();
+    });
+
+    it("should show redeem button when date selected + rewards available + parent role", () => {
+      render(<UnifiedActivityList {...parentPropsWithRewards} />);
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.getByTestId("redeem-reward-button")).toBeInTheDocument();
+      expect(screen.getByText("activity.redeemReward")).toBeInTheDocument();
+    });
+
+    it("should open redeem modal when button is clicked", () => {
+      render(<UnifiedActivityList {...parentPropsWithRewards} />);
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("redeem-reward-button"));
+
+      expect(screen.getByTestId("redeem-from-calendar-modal")).toBeInTheDocument();
+    });
+
+    it("should close redeem modal when close is clicked", () => {
+      render(<UnifiedActivityList {...parentPropsWithRewards} />);
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("redeem-reward-button"));
+
+      expect(screen.getByTestId("redeem-from-calendar-modal")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText("Close Redeem"));
+
+      expect(screen.queryByTestId("redeem-from-calendar-modal")).not.toBeInTheDocument();
+    });
+
+    it("should close redeem modal on success", () => {
+      render(<UnifiedActivityList {...parentPropsWithRewards} />);
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("redeem-reward-button"));
+
+      fireEvent.click(screen.getByText("Redeem Success"));
+
+      expect(screen.queryByTestId("redeem-from-calendar-modal")).not.toBeInTheDocument();
+    });
+
+    it("should show redeem CTA in empty state when date selected and rewards available", () => {
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithRewards}
+          activities={[]}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.getByTestId("redeem-reward-cta")).toBeInTheDocument();
+      expect(screen.getByText(/activity.redeemRewardCta/)).toBeInTheDocument();
+    });
+
+    it("should open redeem modal from CTA in empty state", () => {
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithRewards}
+          activities={[]}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+      fireEvent.click(screen.getByTestId("redeem-reward-cta"));
+
+      expect(screen.getByTestId("redeem-from-calendar-modal")).toBeInTheDocument();
+    });
+
+    it("should not show redeem CTA in empty state for child role", () => {
+      render(
+        <UnifiedActivityList
+          {...childProps}
+          rewards={mockRewards}
+          childBalances={mockChildBalances}
+          activities={[]}
+        />
+      );
+
+      fireEvent.click(screen.getByText(/activity.calendar/));
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.queryByTestId("redeem-reward-cta")).not.toBeInTheDocument();
+    });
+
+    it("should not show redeem button when rewards prop is missing", () => {
+      render(
+        <UnifiedActivityList
+          {...parentPropsWithRewards}
+          rewards={undefined}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId("calendar-date-select"));
+
+      expect(screen.queryByTestId("redeem-reward-button")).not.toBeInTheDocument();
     });
   });
 });
