@@ -53,6 +53,11 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Comprehensive test coverage (2752 tests, ~99% coverage)
 - [x] Demo seed API (fully-populated demo family with 30 days of activity)
 - [x] Generate markdown summary reports (on-demand report download from activity page)
+- [x] Unified admin dashboard (consolidated parent pages)
+- [x] Dark starry night theme (app-wide visual overhaul)
+- [x] Child notes and parent responses in activity views
+- [x] Redeem reward directly from calendar view
+- [x] Collapsible filter panels in activity lists
 
 ---
 
@@ -260,8 +265,10 @@ Language can be switched via the UI. User language preference is saved in their 
 9. ✅ Comprehensive test coverage (2752 tests, ~99% coverage)
 10. ✅ Demo seed API (realistic demo family with 30 days of activity)
 11. ✅ Generate markdown summary reports (on-demand from activity page)
-12. PWA support
-12. Data export
+12. ✅ Unified admin dashboard, dark starry night theme
+13. ✅ Redeem from calendar, child notes, collapsible filters
+14. PWA support
+15. Data export
 
 ### Phase 5: Polish & Launch
 12. Performance optimization
