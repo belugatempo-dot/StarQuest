@@ -88,4 +88,31 @@ describe("HomePage (Locale Root Page)", () => {
     const loginLink = screen.getByText("common.login");
     expect(loginLink.closest("a")).toHaveAttribute("href", "/zh-CN/login");
   });
+
+  it("renders introduction link to visualization page", async () => {
+    const jsx = await HomePage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    const introLink = screen.getByText("auth.introduction");
+    expect(introLink.closest("a")).toHaveAttribute(
+      "href",
+      "/starquest-visualization.html"
+    );
+    expect(introLink.closest("a")).toHaveAttribute("target", "_blank");
+  });
+
+  it("renders try demo link with correct locale", async () => {
+    const jsx = await HomePage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    const demoLink = screen.getByText("auth.tryDemo");
+    expect(demoLink.closest("a")).toHaveAttribute(
+      "href",
+      "/en/login?demo=true"
+    );
+  });
 });

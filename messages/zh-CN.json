@@ -56,7 +56,11 @@
     "familyName": "家庭名称",
     "role": "角色",
     "parent": "家长",
-    "child": "孩子"
+    "child": "孩子",
+    "tryDemo": "体验演示",
+    "introduction": "产品介绍",
+    "demoHint": "邮箱: demo@starquest.app",
+    "orExplore": "或先了解一下"
   },
   "verification": {
     "checkEmailTitle": "请查收邮件",

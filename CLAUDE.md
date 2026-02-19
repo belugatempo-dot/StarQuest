@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2752 tests, ~99% coverage)
+# Testing (2778 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -135,6 +135,8 @@ lib/
 ├── batch-operations.ts          # Batch approve/reject operations
 ├── hooks/useBatchSelection.ts   # Batch selection state hook
 ├── hooks/useActivityFilters.ts  # Activity filter/search state hook
+├── hooks/useActivityModals.ts   # Modal open/close state for UnifiedActivityList (typed, no any)
+├── hooks/useActivityActions.ts  # handleDelete/handleBatchApprove/handleBatchReject + deletingId
 ├── api/cron-auth.ts             # verifyCronAuth() for cron route authorization
 ├── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
 ├── reports/date-ranges.ts       # getAvailablePeriods(), getReportFilename(), getPreviousPeriodBounds()
@@ -437,4 +439,4 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 
 ---
 
-**Last Updated:** 2026-02-17 | **Tests:** 2752 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-18 | **Tests:** 2778 passing | **Coverage:** ~99%

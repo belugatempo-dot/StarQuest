@@ -44,6 +44,29 @@ export default async function LoginPage({
               {t("common.register")}
             </Link>
           </div>
+
+          {/* Demo & Introduction */}
+          <div className="mt-4 pt-4 border-t border-slate-700">
+            <p className="text-xs text-slate-500 text-center mb-3">
+              {t("auth.orExplore")}
+            </p>
+            <div className="flex gap-3">
+              <a
+                href="/starquest-visualization.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 px-4 py-2 border border-slate-600 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-800 transition text-center"
+              >
+                {t("auth.introduction")}
+              </a>
+              <Link
+                href={`/${locale}/login?demo=true`}
+                className="flex-1 px-4 py-2 border border-primary/50 text-primary rounded-lg text-sm font-medium hover:bg-primary/10 transition text-center"
+              >
+                {t("auth.tryDemo")}
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

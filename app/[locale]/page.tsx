@@ -46,7 +46,7 @@ export default async function HomePage({
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex gap-4 justify-center mt-12">
+        <div className="flex flex-wrap gap-4 justify-center mt-12">
           <Link
             href={`/${locale}/login`}
             className="px-8 py-3 bg-secondary text-white rounded-lg font-semibold hover:bg-secondary/90 transition"
@@ -58,6 +58,24 @@ export default async function HomePage({
             className="px-8 py-3 bg-primary text-gray-900 rounded-lg font-semibold hover:bg-primary/90 transition"
           >
             {t("common.register")}
+          </Link>
+        </div>
+
+        {/* Demo & Introduction */}
+        <div className="flex flex-wrap gap-4 justify-center mt-4">
+          <a
+            href="/starquest-visualization.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-3 border border-slate-600 text-slate-300 rounded-lg font-semibold hover:bg-slate-800 transition"
+          >
+            {t("auth.introduction")}
+          </a>
+          <Link
+            href={`/${locale}/login?demo=true`}
+            className="px-8 py-3 border border-primary/50 text-primary rounded-lg font-semibold hover:bg-primary/10 transition"
+          >
+            {t("auth.tryDemo")}
           </Link>
         </div>
 

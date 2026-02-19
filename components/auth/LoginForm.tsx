@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -11,9 +11,11 @@ export default function LoginForm() {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1];
+  const isDemo = searchParams.get("demo") === "true";
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(isDemo ? "demo@starquest.app" : "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +90,12 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">
+      {isDemo && (
+        <div className="bg-primary/10 border border-primary/30 text-primary px-4 py-3 rounded text-sm">
+          <p className="font-medium">{t("auth.demoHint")}</p>
+        </div>
+      )}
+
       {error && (
         <div className="bg-danger/10 border border-danger text-danger px-4 py-3 rounded">
           {error}

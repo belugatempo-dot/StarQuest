@@ -17,18 +17,20 @@ jest.mock('@/lib/supabase/client', () => ({
 
 // Mock next/navigation
 let mockPathname = '/en/login'
+let mockSearchParams = new URLSearchParams()
 const mockRouter = { push: jest.fn() }
 
 jest.mock('next/navigation', () => ({
   useRouter: () => mockRouter,
   usePathname: jest.fn(() => mockPathname),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }))
 
 describe('LoginForm', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockPathname = '/en/login' // Reset to English
+    mockSearchParams = new URLSearchParams() // Reset search params
   })
 
   it('renders login form fields', () => {
@@ -489,6 +491,36 @@ describe('LoginForm', () => {
       await waitFor(() => {
         expect(screen.getByText(/please complete family setup/i)).toBeInTheDocument()
       })
+    })
+  })
+
+  describe('Demo Mode', () => {
+    it('pre-fills email with demo account when demo=true', () => {
+      mockSearchParams = new URLSearchParams('demo=true')
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i) as HTMLInputElement
+      expect(emailInput.value).toBe('demo@starquest.app')
+    })
+
+    it('shows demo hint banner when demo=true', () => {
+      mockSearchParams = new URLSearchParams('demo=true')
+      render(<LoginForm />)
+
+      expect(screen.getByText('auth.demoHint')).toBeInTheDocument()
+    })
+
+    it('does not show demo hint when demo param is absent', () => {
+      render(<LoginForm />)
+
+      expect(screen.queryByText('auth.demoHint')).not.toBeInTheDocument()
+    })
+
+    it('does not pre-fill email when demo param is absent', () => {
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i) as HTMLInputElement
+      expect(emailInput.value).toBe('')
     })
   })
 })

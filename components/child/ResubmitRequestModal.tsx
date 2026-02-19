@@ -10,10 +10,11 @@ import { getQuestName } from "@/lib/localization";
 import type { Database } from "@/types/database";
 
 type Transaction = Database["public"]["Tables"]["star_transactions"]["Row"] & {
-  quests: {
+  quests?: {
     name_en: string;
     name_zh: string | null;
     icon: string | null;
+    category?: string | null;
   } | null;
 };
 
