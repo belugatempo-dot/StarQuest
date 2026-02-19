@@ -1,0 +1,3355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarQuest: How the Magic Works ✨</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================ */
+:root {
+  --night-deep: #0f172a;
+  --night-swirl: #1e3a5f;
+  --night-bright: #2563eb;
+  --cosmic: #312e81;
+  --star-gold: #FFD700;
+  --star-glow: #FEF08A;
+  --star-warm: #FBBF24;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --glass-bg: rgba(75, 85, 160, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --text-primary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --indigo: #4F46E5;
+  --section-pad: 80px 24px;
+  --radius: 16px;
+  --radius-sm: 8px;
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+@keyframes cosmicShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+  100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes pendingPulse {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(251,191,36,0.3); }
+  50% { box-shadow: 0 0 18px 6px rgba(251,191,36,0.8); }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes starBounce {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(4deg); }
+  80% { transform: scale(0.95); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes rowInsert {
+  0% { background: rgba(255,215,0,0.4); transform: translateX(-20px); opacity: 0; }
+  40% { background: rgba(255,215,0,0.3); transform: translateX(4px); opacity: 1; }
+  100% { background: transparent; transform: translateX(0); opacity: 1; }
+}
+
+@keyframes goldFlash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(255,215,0,0.4); }
+}
+
+@keyframes navGlow {
+  0%, 100% { box-shadow: 0 0 4px rgba(255,215,0,0.3); }
+  50% { box-shadow: 0 0 12px rgba(255,215,0,0.8); }
+}
+
+@keyframes spinStar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dataPacket {
+  0% { offset-distance: 0%; opacity: 1; }
+  90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+@keyframes counterUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes shimmerText {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ============================================================
+   BASE RESET & LAYOUT
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--night-deep);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+#nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+#nav-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--star-gold);
+  text-shadow: 0 0 12px rgba(255,215,0,0.4);
+  letter-spacing: 0.5px;
+}
+
+#nav-dots {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.nav-dot:hover { background: var(--star-warm); }
+
+.nav-dot.active {
+  background: var(--star-gold);
+  border-color: rgba(255,215,0,0.4);
+  animation: navGlow 2s ease-in-out infinite;
+}
+
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--star-gold), var(--star-warm), var(--indigo));
+  z-index: 1001;
+  transition: width 0.2s ease;
+  width: 0%;
+}
+
+/* ============================================================
+   SECTION BASE
+   ============================================================ */
+section {
+  min-height: 100vh;
+  padding: var(--section-pad);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--star-warm);
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+h2.section-title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--star-gold), var(--star-warm), var(--star-glow));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerText 4s linear infinite;
+}
+
+.section-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 600px;
+  margin-bottom: 48px;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ============================================================
+   GLASS CARD
+   ============================================================ */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.cosmic-border {
+  border: 1px solid rgba(255,215,0,0.3);
+  box-shadow: 0 0 20px rgba(255,215,0,0.1), inset 0 0 20px rgba(49,46,129,0.3);
+}
+
+/* ============================================================
+   SECTION 1: HERO
+   ============================================================ */
+#section-hero {
+  background: linear-gradient(135deg, var(--night-deep) 0%, var(--night-swirl) 50%, var(--cosmic) 100%);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#starfield-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+#hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+}
+
+#hero-title {
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 12px;
+  text-shadow: 0 0 30px rgba(255,215,0,0.3);
+  background: linear-gradient(135deg, #FEF08A, var(--star-gold), var(--star-warm));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#hero-subtitle-zh {
+  font-size: 1.3rem;
+  color: rgba(254,240,138,0.7);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+#hero-intro {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  max-width: 580px;
+  margin: 0 auto 36px;
+  background: rgba(15,23,42,0.5);
+  border-radius: var(--radius);
+  padding: 20px 28px;
+  border: 1px solid var(--glass-border);
+  line-height: 1.8;
+  text-align: left;
+}
+
+#hero-intro-tagline {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--glass-border);
+  font-style: italic;
+}
+
+.hero-feature-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.hero-feature-icon {
+  font-size: 1.6rem;
+  min-width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+#floating-emojis {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.float-emoji {
+  position: absolute;
+  font-size: 1.8rem;
+  animation: floatUp linear infinite;
+  opacity: 0.7;
+  bottom: -50px;
+}
+
+#scroll-cue {
+  margin-top: 32px;
+  font-size: 1rem;
+  color: rgba(254,240,138,0.7);
+  letter-spacing: 1px;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   SECTION 2: ARCHITECTURE
+   ============================================================ */
+#section-arch {
+  background: linear-gradient(180deg, var(--night-deep) 0%, #0d1b2a 100%);
+}
+
+#arch-container {
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+}
+
+.arch-layer {
+  border-radius: var(--radius);
+  padding: 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+
+.arch-layer:hover { transform: scale(1.01); }
+
+.arch-layer.active { border-color: var(--star-gold); }
+
+.arch-layer-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.arch-layer-icon {
+  font-size: 2rem;
+  min-width: 48px;
+  text-align: center;
+}
+
+.arch-layer-text h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.arch-layer-text p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.arch-layer-chevron {
+  margin-left: auto;
+  font-size: 1.2rem;
+  transition: transform 0.3s;
+  color: var(--text-muted);
+}
+
+.arch-layer.active .arch-layer-chevron { transform: rotate(180deg); }
+
+.arch-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  border-top: 0px solid var(--glass-border);
+}
+
+.arch-layer.active .arch-detail {
+  max-height: 320px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.arch-detail-inner {
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.arch-component-chip {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+}
+
+.arch-component-chip strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.arch-component-chip span {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+#arch-layer-browser { background: linear-gradient(135deg, rgba(37,99,235,0.3), rgba(30,58,95,0.5)); }
+#arch-layer-server  { background: linear-gradient(135deg, rgba(79,70,229,0.35), rgba(49,46,129,0.5)); }
+#arch-layer-db      { background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,46,22,0.4)); }
+
+/* SVG arrows between arch layers */
+#arch-arrows {
+  position: absolute;
+  left: -60px;
+  top: 0;
+  width: 50px;
+  height: 100%;
+  z-index: 10;
+}
+
+.arch-arrow-group { position: relative; }
+
+#arch-svg-container {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+#arch-svg-panel {
+  width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 68px;
+  gap: 0;
+}
+
+/* ============================================================
+   SECTION 3: TWO WORLDS
+   ============================================================ */
+#section-twoworlds {
+  background: linear-gradient(180deg, #0d1b2a 0%, #0f172a 100%);
+}
+
+#twoworlds-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0;
+  width: 100%;
+  max-width: 900px;
+  align-items: start;
+}
+
+.role-panel {
+  padding: 24px 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  border: 2px solid transparent;
+}
+
+#role-parent {
+  background: linear-gradient(135deg, rgba(37,99,235,0.2), rgba(79,70,229,0.15));
+  border-radius: var(--radius) 0 0 var(--radius);
+  text-align: right;
+}
+
+#role-child {
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1));
+  border-radius: 0 var(--radius) var(--radius) 0;
+  text-align: left;
+}
+
+#role-parent.selected { border-color: var(--indigo); background: linear-gradient(135deg, rgba(37,99,235,0.35), rgba(79,70,229,0.25)); }
+#role-child.selected  { border-color: var(--success); background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15)); }
+
+.role-header {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.role-tagline {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.role-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: color 0.2s;
+}
+
+#role-parent .role-feature { flex-direction: row-reverse; }
+#role-child  .role-feature { flex-direction: row; }
+
+.role-panel.selected .role-feature { color: var(--text-primary); }
+
+.role-feature-icon { font-size: 1.2rem; }
+
+#phone-frame-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+#phone-frame {
+  width: 220px;
+  height: 440px;
+  background: #0a0f1a;
+  border-radius: 32px;
+  border: 3px solid rgba(255,255,255,0.15);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 30px rgba(255,255,255,0.03);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s ease;
+}
+
+#phone-notch {
+  width: 80px;
+  height: 22px;
+  background: #0a0f1a;
+  border-radius: 0 0 14px 14px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top: none;
+}
+
+#phone-screen {
+  position: absolute;
+  inset: 0;
+  padding: 36px 12px 16px;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.phone-app-header {
+  background: linear-gradient(135deg, #1e3a5f, #312e81);
+  margin: 0 -12px;
+  padding: 12px 16px;
+  margin-top: -36px;
+  padding-top: 48px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.phone-quest-card {
+  background: rgba(75,85,160,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  animation: starBounce 0.5s ease;
+}
+
+.phone-badge {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.badge-gold { background: rgba(255,215,0,0.2); color: var(--star-gold); border: 1px solid rgba(255,215,0,0.3); }
+.badge-green { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.badge-red { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+
+#phone-role-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+#twoworlds-insight {
+  margin-top: 32px;
+  max-width: 600px;
+  text-align: center;
+  padding: 16px 24px;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  color: var(--star-glow);
+}
+
+/* ============================================================
+   SECTION 4: JOURNEY
+   ============================================================ */
+#section-journey {
+  background: linear-gradient(180deg, #0f172a 0%, var(--night-swirl) 100%);
+}
+
+#journey-progress {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 40px;
+  align-items: center;
+}
+
+.journey-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.journey-dot.active {
+  background: var(--star-gold);
+  border-color: var(--star-warm);
+  color: var(--night-deep);
+  transform: scale(1.2);
+  box-shadow: 0 0 16px rgba(255,215,0,0.5);
+}
+
+.journey-dot.done {
+  background: rgba(16,185,129,0.3);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.journey-connector {
+  width: 24px;
+  height: 2px;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.3s;
+}
+
+.journey-connector.done { background: var(--success); }
+
+#journey-stage {
+  width: 100%;
+  max-width: 700px;
+  min-height: 360px;
+  position: relative;
+}
+
+#journey-step-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 32px;
+  animation: slideInUp 0.4s ease;
+}
+
+.journey-step-label {
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--star-warm);
+  margin-bottom: 8px;
+}
+
+.journey-step-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.journey-step-body {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.journey-db-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--success);
+  font-family: monospace;
+}
+
+.journey-visual {
+  margin-top: 20px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* Simulated UI elements */
+.sim-quest-card {
+  background: rgba(75,85,160,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sim-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sim-badge-pending {
+  background: rgba(251,191,36,0.2);
+  border: 1px solid rgba(251,191,36,0.4);
+  color: var(--star-warm);
+  animation: pendingPulse 1.5s ease-in-out infinite;
+}
+
+.sim-badge-approved {
+  background: rgba(16,185,129,0.2);
+  border: 1px solid rgba(16,185,129,0.4);
+  color: var(--success);
+}
+
+.sim-star-counter {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--star-gold);
+  text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  text-align: center;
+  margin-top: 8px;
+}
+
+#journey-nav {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.journey-btn {
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.journey-btn-prev {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.journey-btn-prev:hover {
+  background: rgba(255,255,255,0.14);
+  color: var(--text-primary);
+}
+
+.journey-btn-next {
+  background: linear-gradient(135deg, var(--star-gold), var(--star-warm));
+  color: var(--night-deep);
+  font-weight: 700;
+}
+
+.journey-btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255,215,0,0.4);
+}
+
+.journey-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================
+   SECTION 5: STAR ECONOMY
+   ============================================================ */
+#section-economy {
+  background: linear-gradient(180deg, var(--night-swirl) 0%, var(--cosmic) 100%);
+}
+
+#economy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* Quest matrix */
+#quest-matrix {
+  display: grid;
+  grid-template-columns: 80px repeat(3, 1fr);
+  grid-template-rows: 44px repeat(3, 1fr);
+  gap: 4px;
+}
+
+.matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+
+.matrix-header-bonus  { background: rgba(255,215,0,0.15); color: var(--star-gold); }
+.matrix-header-duty   { background: rgba(239,68,68,0.12); color: var(--danger); }
+.matrix-header-violation { background: rgba(245,158,11,0.12); color: var(--warning); }
+.matrix-header-scope  { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+.matrix-row-label     {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding-right: 4px;
+}
+
+.matrix-cell {
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+}
+
+.matrix-cell:hover { transform: scale(1.06); border-color: var(--star-gold); }
+
+.matrix-cell-bonus {
+  background: rgba(255,215,0,0.1);
+  color: var(--star-gold);
+}
+
+.matrix-cell-duty {
+  background: rgba(239,68,68,0.1);
+  color: var(--danger);
+}
+
+.matrix-cell-violation {
+  background: rgba(245,158,11,0.1);
+  color: var(--warning);
+}
+
+.matrix-stars {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.matrix-range {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+#matrix-tooltip {
+  position: absolute;
+  background: rgba(15,23,42,0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  max-width: 220px;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+#matrix-tooltip.visible { opacity: 1; }
+
+/* Star flow diagram */
+#star-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.flow-node {
+  padding: 14px 24px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  text-align: center;
+  width: 180px;
+  position: relative;
+}
+
+.flow-node-earn {
+  background: rgba(255,215,0,0.15);
+  border: 2px solid rgba(255,215,0,0.4);
+  color: var(--star-gold);
+}
+
+.flow-node-balance {
+  background: rgba(79,70,229,0.25);
+  border: 2px solid rgba(79,70,229,0.5);
+  color: #a5b4fc;
+}
+
+.flow-node-reward {
+  background: rgba(16,185,129,0.15);
+  border: 2px solid rgba(16,185,129,0.4);
+  color: var(--success);
+}
+
+.flow-arrow-down {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.flow-animated-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--star-gold);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(255,215,0,0.7);
+}
+
+/* Credit diagram */
+#credit-mini {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+}
+
+#credit-mini h4 {
+  color: var(--warning);
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+#credit-mini p { color: var(--text-muted); line-height: 1.5; }
+
+/* ============================================================
+   SECTION 6: DATABASE
+   ============================================================ */
+#section-db {
+  background: linear-gradient(180deg, var(--cosmic) 0%, #0a0f1a 100%);
+}
+
+#db-layout {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+#schema-container {
+  position: relative;
+  overflow-x: auto;
+  padding: 20px 0;
+}
+
+#schema-tables {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.db-table {
+  background: #0d1117;
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: var(--radius-sm);
+  min-width: 140px;
+  overflow: hidden;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  transition: all 0.2s ease;
+}
+
+.db-table:hover {
+  border-color: rgba(255,215,0,0.4);
+  box-shadow: 0 0 16px rgba(255,215,0,0.1);
+}
+
+.db-table.view-table {
+  border: 2px solid rgba(255,215,0,0.5);
+  box-shadow: 0 0 20px rgba(255,215,0,0.1);
+}
+
+.db-table-header {
+  padding: 8px 12px;
+  background: rgba(16,185,129,0.12);
+  border-bottom: 1px solid rgba(16,185,129,0.2);
+  font-weight: 700;
+  color: var(--success);
+  font-size: 0.85rem;
+}
+
+.db-table.view-table .db-table-header {
+  background: rgba(255,215,0,0.1);
+  color: var(--star-gold);
+}
+
+.db-table-row {
+  padding: 5px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.db-table-row:last-child { border-bottom: none; }
+
+.db-table-row.pk { color: var(--star-warm); }
+.db-table-row.fk { color: #a5b4fc; }
+.db-table-row.highlight-insert { animation: rowInsert 1s ease forwards; }
+.db-table-row.highlight-update { animation: goldFlash 0.8s ease 2; }
+
+.col-icon { font-size: 0.78rem; opacity: 0.7; }
+
+.db-rls-banner {
+  padding: 12px 20px;
+  background: rgba(79,70,229,0.15);
+  border: 1px solid rgba(79,70,229,0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: #a5b4fc;
+  text-align: center;
+}
+
+/* Interactive DB demo */
+#db-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#db-demo-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+#db-demo-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.db-demo-btn {
+  padding: 10px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.db-demo-btn-insert {
+  background: linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2));
+  border: 1px solid rgba(16,185,129,0.5);
+  color: var(--success);
+}
+
+.db-demo-btn-approve {
+  background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(251,191,36,0.1));
+  border: 1px solid rgba(255,215,0,0.4);
+  color: var(--star-gold);
+}
+
+.db-demo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.db-demo-btn:active { transform: translateY(0); }
+
+#db-live-table {
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+}
+
+#db-live-table-header {
+  display: grid;
+  grid-template-columns: 80px 160px 80px 80px 100px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.db-live-row {
+  display: grid;
+  grid-template-columns: 80px 160px 80px 80px 100px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.db-live-row:last-child { border-bottom: none; }
+.db-live-row .id-col { color: #a5b4fc; }
+.db-live-row .desc-col { color: var(--text-primary); }
+.db-live-row .stars-col { color: var(--star-gold); }
+
+#db-balance-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: rgba(255,215,0,0.08);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+}
+
+#db-balance-label { color: var(--text-muted); font-size: 0.85rem; }
+#db-balance-value { font-size: 1.6rem; font-weight: 900; color: var(--star-gold); font-family: monospace; }
+
+/* ============================================================
+   SECTION 7: TECH STACK
+   ============================================================ */
+#section-tech {
+  background: linear-gradient(180deg, #0a0f1a 0%, var(--night-deep) 100%);
+}
+
+#tech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 860px;
+}
+
+.tech-card-wrapper {
+  perspective: 1000px;
+  height: 200px;
+  cursor: pointer;
+}
+
+.tech-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tech-card-wrapper.flipped .tech-card-inner { transform: rotateY(180deg); }
+
+.tech-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  padding: 20px;
+  text-align: center;
+}
+
+.tech-card-front {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+.tech-card-back {
+  background: #0d1117;
+  border: 1px solid rgba(255,215,0,0.3);
+  transform: rotateY(180deg);
+  overflow: hidden;
+}
+
+.tech-card-emoji { font-size: 2.5rem; }
+.tech-card-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.tech-card-tagline { font-size: 0.8rem; color: var(--text-muted); }
+
+.tech-card-back pre {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  color: #10B981;
+  text-align: left;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.tech-card-back .back-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--star-gold);
+  margin-bottom: 4px;
+}
+
+.tech-hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 16px;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+#footer {
+  padding: 40px 24px;
+  text-align: center;
+  background: var(--night-deep);
+  border-top: 1px solid var(--glass-border);
+}
+
+#footer p {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+#footer .brand {
+  color: var(--star-gold);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  section { padding: 60px 16px; }
+
+  #twoworlds-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  #phone-frame-wrapper {
+    grid-row: 2;
+    padding: 20px 0;
+  }
+
+  #role-parent, #role-child {
+    border-radius: var(--radius);
+    text-align: left;
+  }
+
+  #role-parent .role-feature { flex-direction: row; }
+
+  #economy-grid { grid-template-columns: 1fr; }
+
+  #tech-grid { grid-template-columns: repeat(2, 1fr); }
+
+  #db-live-table-header,
+  .db-live-row { grid-template-columns: 60px 120px 60px 60px 80px; font-size: 0.78rem; }
+
+  #arch-svg-panel { display: none; }
+}
+
+/* ============================================================
+   BADGE STATUS
+   ============================================================ */
+.badge-pending {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(251,191,36,0.15);
+  border: 1px solid rgba(251,191,36,0.35);
+  color: var(--star-warm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  animation: pendingPulse 1.5s ease-in-out infinite;
+}
+
+.badge-approved {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.35);
+  color: var(--success);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.badge-rejected {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.35);
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* Utility */
+.text-gold { color: var(--star-gold); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-muted { color: var(--text-muted); }
+.font-mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+.font-bold { font-weight: 700; }
+.text-center { text-align: center; }
+.mt-4 { margin-top: 16px; }
+.mb-2 { margin-bottom: 8px; }
+
+/* Language toggle */
+#lang-toggle {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+#lang-toggle:hover {
+  background: rgba(255,215,0,0.15);
+  border-color: rgba(255,215,0,0.4);
+  color: var(--star-gold);
+}
+@media (max-width: 600px) {
+  #lang-toggle {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar"></div>
+
+<!-- NAVIGATION -->
+<nav id="nav">
+  <div id="nav-brand">⭐ StarQuest</div>
+  <div id="nav-dots">
+    <div class="nav-dot active" data-target="section-hero" title="Hero" data-i18n-title="nav.hero"></div>
+    <div class="nav-dot" data-target="section-arch" title="Architecture" data-i18n-title="nav.arch"></div>
+    <div class="nav-dot" data-target="section-twoworlds" title="Two Worlds" data-i18n-title="nav.twoworlds"></div>
+    <div class="nav-dot" data-target="section-journey" title="Quest Journey" data-i18n-title="nav.journey"></div>
+    <div class="nav-dot" data-target="section-economy" title="Star Economy" data-i18n-title="nav.economy"></div>
+    <div class="nav-dot" data-target="section-db" title="Database" data-i18n-title="nav.db"></div>
+    <div class="nav-dot" data-target="section-tech" title="Tech Stack" data-i18n-title="nav.tech"></div>
+  </div>
+  <button id="lang-toggle" onclick="toggleLanguage()">🇺🇸 EN</button>
+</nav>
+
+<!-- ============================================================
+     SECTION 1: HERO
+     ============================================================ -->
+<section id="section-hero">
+  <canvas id="starfield-canvas"></canvas>
+
+  <div id="floating-emojis">
+    <span class="float-emoji" style="left:8%;animation-duration:12s;animation-delay:0s;font-size:2rem;">⭐</span>
+    <span class="float-emoji" style="left:22%;animation-duration:9s;animation-delay:2s;font-size:1.5rem;">✨</span>
+    <span class="float-emoji" style="left:38%;animation-duration:14s;animation-delay:1s;font-size:2.2rem;">🎁</span>
+    <span class="float-emoji" style="left:55%;animation-duration:10s;animation-delay:3s;font-size:1.8rem;">📋</span>
+    <span class="float-emoji" style="left:72%;animation-duration:11s;animation-delay:0.5s;font-size:2rem;">🏆</span>
+    <span class="float-emoji" style="left:85%;animation-duration:8s;animation-delay:4s;font-size:1.5rem;">⭐</span>
+    <span class="float-emoji" style="left:15%;animation-duration:13s;animation-delay:5s;font-size:1.8rem;">✨</span>
+    <span class="float-emoji" style="left:65%;animation-duration:10s;animation-delay:2.5s;font-size:1.6rem;">🎁</span>
+  </div>
+
+  <div id="hero-content">
+    <h1 id="hero-title" data-i18n="hero.title">StarQuest:<br>How the Magic Works</h1>
+    <p id="hero-subtitle-zh" data-i18n="hero.subtitleZh">星际任务：魔法是如何运作的</p>
+    <div id="hero-intro">
+      <div id="hero-intro-tagline" data-i18n="hero.tagline">🚀 A real-life star chart adventure for the whole family</div>
+      <div class="hero-feature-row">
+        <span class="hero-feature-icon">⭐</span>
+        <span data-i18n="hero.feature1">Kids earn shining stars by completing <strong>fun quests</strong></span>
+      </div>
+      <div class="hero-feature-row">
+        <span class="hero-feature-icon">✅</span>
+        <span data-i18n="hero.feature2">Parents set the adventures, approve requests, and watch children grow</span>
+      </div>
+      <div class="hero-feature-row" style="border-bottom:none">
+        <span class="hero-feature-icon">🎁</span>
+        <span data-i18n="hero.feature3">Spend stars to unlock <strong>awesome rewards!</strong></span>
+      </div>
+    </div>
+    <p id="scroll-cue" data-i18n="hero.scrollCue">Scroll to explore the magic ↓</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 2: ARCHITECTURE
+     ============================================================ -->
+<section id="section-arch">
+  <div class="section-label" data-i18n="section2.label">Section 2</div>
+  <h2 class="section-title" data-i18n="section2.title">The Big Picture 🗺️</h2>
+  <p class="section-subtitle reveal" data-i18n="section2.subtitle">
+    StarQuest is built in <strong>three layers</strong> that talk to each other — like floors in a magical building!
+    Click each layer to see what lives inside.
+  </p>
+
+  <div style="display:flex;gap:16px;width:100%;max-width:800px;" class="reveal reveal-delay-1">
+    <!-- SVG arrows panel -->
+    <div id="arch-svg-panel">
+      <svg id="arch-svg" width="50" height="560" viewBox="0 0 50 560">
+        <!-- Arrow: Browser ↔ Server -->
+        <line id="arrow-bs" x1="25" y1="90" x2="25" y2="290" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle id="packet-down-1" cx="25" cy="90" r="5" fill="#FFD700" opacity="0"/>
+        <circle id="packet-up-1" cx="25" cy="290" r="5" fill="#10B981" opacity="0"/>
+        <!-- Arrowhead -->
+        <polygon points="19,280 25,296 31,280" fill="rgba(255,255,255,0.3)"/>
+        <polygon points="19,104 25,88 31,104" fill="rgba(255,255,255,0.3)"/>
+
+        <!-- Arrow: Server ↔ DB -->
+        <line id="arrow-sd" x1="25" y1="305" x2="25" y2="470" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle id="packet-down-2" cx="25" cy="305" r="5" fill="#FFD700" opacity="0"/>
+        <circle id="packet-up-2" cx="25" cy="470" r="5" fill="#10B981" opacity="0"/>
+        <polygon points="19,460 25,476 31,460" fill="rgba(255,255,255,0.3)"/>
+        <polygon points="19,315 25,299 31,315" fill="rgba(255,255,255,0.3)"/>
+
+        <!-- Labels -->
+        <text x="25" y="200" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" transform="rotate(-90,25,200)" data-i18n="arch.arrow.reqRes">Request / Response</text>
+        <text x="25" y="395" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" transform="rotate(-90,25,395)" data-i18n="arch.arrow.sqlData">SQL / Data</text>
+      </svg>
+    </div>
+
+    <!-- Arch layers -->
+    <div id="arch-container" style="flex:1">
+      <!-- Browser Layer -->
+      <div class="arch-layer glass-card" id="arch-layer-browser" onclick="toggleArchLayer(this)">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">🌐</div>
+          <div class="arch-layer-text">
+            <h3 data-i18n="arch.browser.title">Your Web Browser</h3>
+            <p data-i18n="arch.browser.desc">The part you look at and click!</p>
+          </div>
+          <div class="arch-layer-chevron">▼</div>
+        </div>
+        <div class="arch-detail">
+          <div class="arch-detail-inner">
+            <div class="arch-component-chip">
+              <strong>React Components</strong>
+              <span data-i18n="arch.browser.reactDesc">Like LEGO bricks — each piece of the screen is a "component"</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Tailwind CSS</strong>
+              <span data-i18n="arch.browser.tailwindDesc">Paint and brushes that make things look pretty</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Next.js (Client)</strong>
+              <span data-i18n="arch.browser.nextClientDesc">Handles clicking, typing, and page transitions</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>next-intl</strong>
+              <span data-i18n="arch.browser.intlDesc">Speaks English 🇬🇧 or Chinese 🇨🇳 — you pick!</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Anime.js</strong>
+              <span data-i18n="arch.browser.animeDesc">Makes things bounce, slide, and sparkle ✨</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Canvas API</strong>
+              <span data-i18n="arch.browser.canvasDesc">Draws the twinkling starfield in the background</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Server Layer -->
+      <div class="arch-layer glass-card" id="arch-layer-server" onclick="toggleArchLayer(this)" style="margin-top:8px">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">🧠</div>
+          <div class="arch-layer-text">
+            <h3 data-i18n="arch.server.title">Next.js Server</h3>
+            <p data-i18n="arch.server.desc">The brain that prepares your pages!</p>
+          </div>
+          <div class="arch-layer-chevron">▼</div>
+        </div>
+        <div class="arch-detail">
+          <div class="arch-detail-inner">
+            <div class="arch-component-chip">
+              <strong>Server Components</strong>
+              <span data-i18n="arch.server.componentsDesc">Pre-cook pages on the server before sending them — super fast!</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>API Routes</strong>
+              <span data-i18n="arch.server.apiDesc">Secret doors for the app to talk to itself</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Middleware</strong>
+              <span data-i18n="arch.server.middlewareDesc">Security guard at the front door — checks your login badge</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Cron Jobs</strong>
+              <span data-i18n="arch.server.cronDesc">Alarm clock tasks — sends weekly reports automatically!</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>Resend Email</strong>
+              <span data-i18n="arch.server.emailDesc">Sends invitation and report emails to parents</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>TypeScript</strong>
+              <span data-i18n="arch.server.tsDesc">The rulebook — makes sure nobody passes the wrong kind of data</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Database Layer -->
+      <div class="arch-layer glass-card" id="arch-layer-db" onclick="toggleArchLayer(this)" style="margin-top:8px">
+        <div class="arch-layer-header">
+          <div class="arch-layer-icon">🗄️</div>
+          <div class="arch-layer-text">
+            <h3 data-i18n="arch.db.title">Supabase + PostgreSQL</h3>
+            <p data-i18n="arch.db.desc">The giant filing cabinet that remembers everything!</p>
+          </div>
+          <div class="arch-layer-chevron">▼</div>
+        </div>
+        <div class="arch-detail">
+          <div class="arch-detail-inner">
+            <div class="arch-component-chip">
+              <strong>families</strong>
+              <span data-i18n="arch.db.familiesDesc">Each family gets their own magical vault of data</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>star_transactions</strong>
+              <span data-i18n="arch.db.transactionsDesc">Every star earned or spent, forever recorded</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>quests</strong>
+              <span data-i18n="arch.db.questsDesc">All the adventures kids can go on</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>rewards</strong>
+              <span data-i18n="arch.db.rewardsDesc">The treasure chest of prizes to spend stars on</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong data-i18n="arch.db.rlsLabel">Row-Level Security</strong>
+              <span data-i18n="arch.db.rlsDesc">🔒 Magic spell: your family can ONLY see YOUR data!</span>
+            </div>
+            <div class="arch-component-chip">
+              <strong>child_balances VIEW</strong>
+              <span data-i18n="arch.db.balancesDesc">Auto-calculates how many stars each child has right now</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3: TWO WORLDS
+     ============================================================ -->
+<section id="section-twoworlds">
+  <div class="section-label" data-i18n="section3.label">Section 3</div>
+  <h2 class="section-title" data-i18n="section3.title">Two Worlds 🌍</h2>
+  <p class="section-subtitle reveal" data-i18n="section3.subtitle">
+    StarQuest shows <strong>different things</strong> to parents and children.
+    Click a side to see what each role can do!
+  </p>
+
+  <div id="twoworlds-grid" class="reveal reveal-delay-1">
+    <!-- Parent side -->
+    <div class="role-panel selected" id="role-parent" onclick="selectRole('parent')">
+      <div class="role-header" data-i18n="worlds.parent.title">👨‍👩 Parent</div>
+      <div class="role-tagline" data-i18n="worlds.parent.tagline">The Quest Master!</div>
+      <div class="role-feature">
+        <span class="role-feature-icon">✅</span>
+        <span data-i18n="worlds.parent.f1">Approve star requests</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">📊</span>
+        <span data-i18n="worlds.parent.f2">See all children</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">⭐</span>
+        <span data-i18n="worlds.parent.f3">Record stars directly</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">📋</span>
+        <span data-i18n="worlds.parent.f4">Manage all quest types</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">📈</span>
+        <span data-i18n="worlds.parent.f5">Weekly &amp; monthly reports</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">⚙️</span>
+        <span data-i18n="worlds.parent.f6">Configure credit &amp; levels</span>
+      </div>
+    </div>
+
+    <!-- Phone frame center -->
+    <div id="phone-frame-wrapper">
+      <div id="phone-frame">
+        <div id="phone-notch"></div>
+        <div id="phone-screen" data-role="parent">
+          <div class="phone-app-header">
+            ⭐ StarQuest — Admin
+          </div>
+          <div id="phone-content-parent">
+            <div class="phone-quest-card">
+              <span>📋</span>
+              <span style="flex:1;font-size:0.82rem;">Emma: Help with Dishes</span>
+              <span class="phone-badge badge-gold">+15 ⭐</span>
+            </div>
+            <div class="phone-quest-card">
+              <span>⭐</span>
+              <span style="flex:1;font-size:0.82rem;">Lucas: Read 30 min</span>
+              <span class="phone-badge badge-gold">pending</span>
+            </div>
+            <div class="phone-quest-card">
+              <span>🎁</span>
+              <span style="flex:1;font-size:0.82rem;">Emma: Movie Night</span>
+              <span class="phone-badge badge-green">approved</span>
+            </div>
+            <div class="phone-quest-card">
+              <span>⚠️</span>
+              <span style="flex:1;font-size:0.82rem;">Lucas: Late for bed</span>
+              <span class="phone-badge badge-red">-20 ⭐</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="phone-role-label" data-i18n="worlds.phone.switchLabel">👆 Click a side to switch</div>
+    </div>
+
+    <!-- Child side -->
+    <div class="role-panel" id="role-child" onclick="selectRole('child')">
+      <div class="role-header" data-i18n="worlds.child.title">👧 Child</div>
+      <div class="role-tagline" data-i18n="worlds.child.tagline">The Star Hunter!</div>
+      <div class="role-feature">
+        <span class="role-feature-icon">⭐</span>
+        <span data-i18n="worlds.child.f1">Bonus quests ONLY</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">📝</span>
+        <span data-i18n="worlds.child.f2">Request stars with a note</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">🎁</span>
+        <span data-i18n="worlds.child.f3">Redeem rewards</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">📊</span>
+        <span data-i18n="worlds.child.f4">My own history only</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">🔄</span>
+        <span data-i18n="worlds.child.f5">Resubmit rejected quests</span>
+      </div>
+      <div class="role-feature">
+        <span class="role-feature-icon">💰</span>
+        <span data-i18n="worlds.child.f6">Borrow stars (credit)</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="twoworlds-insight" class="reveal reveal-delay-2" data-i18n="worlds.insight">
+    💡 <strong>Key Insight:</strong> Children <em>NEVER</em> see Duty or Violation quests —
+    only the fun, optional bonus ones! This keeps the experience <strong>positive and encouraging</strong> 🌟
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4: QUEST JOURNEY
+     ============================================================ -->
+<section id="section-journey">
+  <div class="section-label" data-i18n="section4.label">Section 4</div>
+  <h2 class="section-title" data-i18n="section4.title">The Quest Journey 🚀</h2>
+  <p class="section-subtitle reveal" data-i18n="section4.subtitle">
+    Follow <strong>Emma</strong> as she completes a quest and earns stars!
+    Click the arrows to step through the whole adventure.
+  </p>
+
+  <!-- Progress dots -->
+  <div id="journey-progress" class="reveal">
+    <!-- Filled dynamically by JS -->
+  </div>
+
+  <!-- Step card -->
+  <div id="journey-stage" class="reveal reveal-delay-1">
+    <div id="journey-step-card"></div>
+  </div>
+
+  <!-- Nav buttons -->
+  <div id="journey-nav" class="reveal reveal-delay-2">
+    <button class="journey-btn journey-btn-prev" id="journey-prev" onclick="journeyNav(-1)" data-i18n="journey.prev">← Prev</button>
+    <button class="journey-btn journey-btn-next" id="journey-next" onclick="journeyNav(1)" data-i18n="journey.next">Next →</button>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5: STAR ECONOMY
+     ============================================================ -->
+<section id="section-economy">
+  <div class="section-label" data-i18n="section5.label">Section 5</div>
+  <h2 class="section-title" data-i18n="section5.title">The Star Economy 💰</h2>
+  <p class="section-subtitle reveal" data-i18n="section5.subtitle">
+    Different quests earn (or lose!) different amounts of stars.
+    Click any cell to learn more!
+  </p>
+
+  <div id="economy-grid" class="reveal" style="position:relative">
+    <!-- Quest Matrix -->
+    <div>
+      <h3 style="color:var(--text-primary);margin-bottom:16px;font-size:1rem;font-weight:700;" data-i18n="matrix.title">Quest Matrix — Stars by Type × Scope</h3>
+      <div id="quest-matrix">
+        <!-- Filled by JS -->
+      </div>
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-top:12px;" data-i18n="matrix.clickHint">👆 Click any cell to see details</p>
+    </div>
+
+    <!-- Star Flow + Credit -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <h3 style="color:var(--text-primary);margin-bottom:8px;font-size:1rem;font-weight:700;align-self:flex-start" data-i18n="flow.title">Star Flow Diagram</h3>
+
+      <div id="star-flow">
+        <div class="flow-node flow-node-earn">
+          <span data-i18n="flow.earn">⭐ Earn Stars</span>
+          <div style="font-size:0.88rem;opacity:0.7;font-weight:400;margin-top:4px" data-i18n="flow.earnSub">Complete quests → parent approves</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-node flow-node-balance" style="position:relative">
+          <span data-i18n="flow.balance">💰 Star Balance</span>
+          <div style="font-size:0.88rem;opacity:0.7;font-weight:400;margin-top:4px">child_balances VIEW</div>
+          <div id="flow-dot" style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--star-gold);box-shadow:0 0 8px rgba(255,215,0,0.7);display:none"></div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-node flow-node-reward">
+          <span data-i18n="flow.redeem">🎁 Redeem Reward</span>
+          <div style="font-size:0.88rem;opacity:0.7;font-weight:400;margin-top:4px" data-i18n="flow.redeemSub">Stars deducted → parent confirms</div>
+        </div>
+      </div>
+
+      <div id="credit-mini" class="reveal reveal-delay-2">
+        <h4 data-i18n="credit.title">💳 Credit System</h4>
+        <p data-i18n="credit.desc">Like a piggy bank loan! Kids can <strong>borrow stars</strong> when they run low.
+        Each month, a small <em>interest charge</em> is automatically settled. 🏦</p>
+        <div style="margin-top:8px;font-size:0.88rem;color:var(--star-warm);" data-i18n="credit.tables">
+          Tables: <span class="font-mono">credit_settings</span> · <span class="font-mono">credit_transactions</span> · <span class="font-mono">interest_tiers</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tooltip (absolute) -->
+  <div id="matrix-tooltip"></div>
+</section>
+
+<!-- ============================================================
+     SECTION 6: DATABASE
+     ============================================================ -->
+<section id="section-db">
+  <div class="section-label" data-i18n="section6.label">Section 6</div>
+  <h2 class="section-title" data-i18n="section6.title">The Database Memory 🗄️</h2>
+  <p class="section-subtitle reveal" data-i18n="section6.subtitle">
+    Everything in StarQuest is saved in a <strong>PostgreSQL database</strong>.
+    Tables hold the data, and arrows show how they connect!
+  </p>
+
+  <div id="db-layout">
+    <!-- Schema visual -->
+    <div id="schema-container" class="reveal">
+      <div id="schema-tables">
+        <!-- Tables filled by JS -->
+      </div>
+    </div>
+
+    <div class="db-rls-banner reveal reveal-delay-1" data-i18n="db.rls">
+      🔒 <strong>Row-Level Security (RLS):</strong> Every table has a magic shield — you can
+      <em>only</em> read or write data that belongs to <strong>your own family</strong>. Even if someone
+      guessed another family's ID, the database refuses! This is built right into PostgreSQL.
+    </div>
+
+    <!-- Interactive demo -->
+    <div id="db-demo" class="reveal reveal-delay-2">
+      <div id="db-demo-title" data-i18n="db.demoTitle">🎮 Interactive Demo — Try it yourself!</div>
+      <div id="db-demo-btns">
+        <button class="db-demo-btn db-demo-btn-insert" onclick="dbDemoInsert()" data-i18n="db.btnInsert">
+          ➕ Emma completes a quest
+        </button>
+        <button class="db-demo-btn db-demo-btn-approve" onclick="dbDemoApprove()" id="btn-approve" disabled data-i18n="db.btnApprove">
+          ✅ Parent approves it
+        </button>
+      </div>
+
+      <div id="db-live-table">
+        <div id="db-live-table-header">
+          <div>id</div>
+          <div data-i18n="db.colDesc">description</div>
+          <div data-i18n="db.colStars">stars</div>
+          <div data-i18n="db.colStatus">status</div>
+          <div data-i18n="db.colChild">child</div>
+        </div>
+        <div id="db-live-rows">
+          <!-- Rows inserted by JS -->
+        </div>
+      </div>
+
+      <div id="db-balance-display">
+        <span id="db-balance-label" data-i18n="db.balanceLabel">⭐ Emma's Balance:</span>
+        <span id="db-balance-value">265</span>
+        <span style="color:var(--text-muted);font-size:0.8rem" data-i18n="db.balanceUnit">stars</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 7: TECH STACK
+     ============================================================ -->
+<section id="section-tech">
+  <div class="section-label" data-i18n="section7.label">Section 7</div>
+  <h2 class="section-title" data-i18n="section7.title">The Code Toolbox 🧰</h2>
+  <p class="section-subtitle reveal" data-i18n="section7.subtitle">
+    StarQuest is built with 6 amazing tools.
+    <strong>Click any card</strong> to flip it and see real code!
+  </p>
+
+  <div id="tech-grid" class="reveal">
+    <!-- Filled by JS -->
+  </div>
+
+  <p class="tech-hint reveal reveal-delay-1" data-i18n="tech.flipHint">💡 Hover or click any card to flip it!</p>
+
+  <div style="margin-top:48px;padding:20px 32px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:var(--radius);max-width:600px;text-align:center" class="reveal reveal-delay-2">
+    <div style="font-size:1.5rem;margin-bottom:12px">🎓</div>
+    <div style="font-weight:700;color:var(--text-primary);margin-bottom:8px" data-i18n="closing.title">You made it to the end!</div>
+    <div style="color:var(--text-muted);font-size:1.05rem;line-height:1.7" data-i18n="closing.body">
+      StarQuest has <strong style="color:var(--star-gold)">2,752 tests</strong> to make sure everything works perfectly.
+      It's bilingual 🇬🇧🇨🇳, has a credit system 💳, sends weekly reports 📧, and even has a demo mode 🎭!
+      <br><br>
+      All of this in one magical Next.js app ✨
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div id="footer">
+  <p class="brand">⭐ StarQuest · Beluga Tempo · 鲸律</p>
+  <p data-i18n="footer.desc">A gamified family behavior tracking app — built with Next.js 15 + Supabase</p>
+  <p style="margin-top:8px;font-size:0.9rem" data-i18n="footer.stats">Production: starquest-kappa.vercel.app · 2,752 tests · ~99% coverage</p>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* ============================================================
+   I18N — BILINGUAL SUPPORT (EN / ZH-CN)
+   ============================================================ */
+let currentLang = 'en';
+let currentRole = 'parent';
+
+const TRANSLATIONS = {
+  en: {
+    // Page
+    'page.title': 'StarQuest: How the Magic Works ✨',
+
+    // Nav
+    'nav.hero': 'Hero',
+    'nav.arch': 'Architecture',
+    'nav.twoworlds': 'Two Worlds',
+    'nav.journey': 'Quest Journey',
+    'nav.economy': 'Star Economy',
+    'nav.db': 'Database',
+    'nav.tech': 'Tech Stack',
+
+    // Hero
+    'hero.title': 'StarQuest:<br>How the Magic Works',
+    'hero.subtitleZh': '星际任务：魔法是如何运作的',
+    'hero.tagline': '🚀 A real-life star chart adventure for the whole family',
+    'hero.feature1': 'Kids earn shining stars by completing <strong>fun quests</strong>',
+    'hero.feature2': 'Parents set the adventures, approve requests, and watch children grow',
+    'hero.feature3': 'Spend stars to unlock <strong>awesome rewards!</strong>',
+    'hero.scrollCue': 'Scroll to explore the magic ↓',
+
+    // Section 2: Architecture
+    'section2.label': 'Section 2',
+    'section2.title': 'The Big Picture 🗺️',
+    'section2.subtitle': 'StarQuest is built in <strong>three layers</strong> that talk to each other — like floors in a magical building! Click each layer to see what lives inside.',
+    'arch.arrow.reqRes': 'Request / Response',
+    'arch.arrow.sqlData': 'SQL / Data',
+    'arch.browser.title': 'Your Web Browser',
+    'arch.browser.desc': 'The part you look at and click!',
+    'arch.browser.reactDesc': 'Like LEGO bricks — each piece of the screen is a "component"',
+    'arch.browser.tailwindDesc': 'Paint and brushes that make things look pretty',
+    'arch.browser.nextClientDesc': 'Handles clicking, typing, and page transitions',
+    'arch.browser.intlDesc': 'Speaks English 🇬🇧 or Chinese 🇨🇳 — you pick!',
+    'arch.browser.animeDesc': 'Makes things bounce, slide, and sparkle ✨',
+    'arch.browser.canvasDesc': 'Draws the twinkling starfield in the background',
+    'arch.server.title': 'Next.js Server',
+    'arch.server.desc': 'The brain that prepares your pages!',
+    'arch.server.componentsDesc': 'Pre-cook pages on the server before sending them — super fast!',
+    'arch.server.apiDesc': 'Secret doors for the app to talk to itself',
+    'arch.server.middlewareDesc': 'Security guard at the front door — checks your login badge',
+    'arch.server.cronDesc': 'Alarm clock tasks — sends weekly reports automatically!',
+    'arch.server.emailDesc': 'Sends invitation and report emails to parents',
+    'arch.server.tsDesc': 'The rulebook — makes sure nobody passes the wrong kind of data',
+    'arch.db.title': 'Supabase + PostgreSQL',
+    'arch.db.desc': 'The giant filing cabinet that remembers everything!',
+    'arch.db.familiesDesc': 'Each family gets their own magical vault of data',
+    'arch.db.transactionsDesc': 'Every star earned or spent, forever recorded',
+    'arch.db.questsDesc': 'All the adventures kids can go on',
+    'arch.db.rewardsDesc': 'The treasure chest of prizes to spend stars on',
+    'arch.db.rlsLabel': 'Row-Level Security',
+    'arch.db.rlsDesc': '🔒 Magic spell: your family can ONLY see YOUR data!',
+    'arch.db.balancesDesc': 'Auto-calculates how many stars each child has right now',
+
+    // Section 3: Two Worlds
+    'section3.label': 'Section 3',
+    'section3.title': 'Two Worlds 🌍',
+    'section3.subtitle': 'StarQuest shows <strong>different things</strong> to parents and children. Click a side to see what each role can do!',
+    'worlds.parent.title': '👨‍👩 Parent',
+    'worlds.parent.tagline': 'The Quest Master!',
+    'worlds.parent.f1': 'Approve star requests',
+    'worlds.parent.f2': 'See all children',
+    'worlds.parent.f3': 'Record stars directly',
+    'worlds.parent.f4': 'Manage all quest types',
+    'worlds.parent.f5': 'Weekly & monthly reports',
+    'worlds.parent.f6': 'Configure credit & levels',
+    'worlds.child.title': '👧 Child',
+    'worlds.child.tagline': 'The Star Hunter!',
+    'worlds.child.f1': 'Bonus quests ONLY',
+    'worlds.child.f2': 'Request stars with a note',
+    'worlds.child.f3': 'Redeem rewards',
+    'worlds.child.f4': 'My own history only',
+    'worlds.child.f5': 'Resubmit rejected quests',
+    'worlds.child.f6': 'Borrow stars (credit)',
+    'worlds.phone.switchLabel': '👆 Click a side to switch',
+    'worlds.insight': '💡 <strong>Key Insight:</strong> Children <em>NEVER</em> see Duty or Violation quests — only the fun, optional bonus ones! This keeps the experience <strong>positive and encouraging</strong> 🌟',
+
+    // Section 4: Quest Journey
+    'section4.label': 'Section 4',
+    'section4.title': 'The Quest Journey 🚀',
+    'section4.subtitle': 'Follow <strong>Emma</strong> as she completes a quest and earns stars! Click the arrows to step through the whole adventure.',
+    'journey.prev': '← Prev',
+    'journey.next': 'Next →',
+    'journey.done': '🎉 Done!',
+    'journey.step0.label': 'Step 1 of 7',
+    'journey.step0.title': '👨‍👩 Parent Creates a Quest',
+    'journey.step0.body': 'Mom opens StarQuest and creates a new quest called "Help with Dishes 🍽️". She sets it as a <strong>Bonus Quest</strong> — which means Emma can choose to do it for extra stars!',
+    'journey.step1.label': 'Step 2 of 7',
+    'journey.step1.title': '👧 Emma Sees the Quest',
+    'journey.step1.body': 'Emma opens her phone and the "Help with Dishes" card bounces in! She only sees <strong>bonus quests</strong> — duty and violation quests are hidden so her experience stays fun and positive.',
+    'journey.step2.label': 'Step 3 of 7',
+    'journey.step2.title': '📝 Emma Requests Stars',
+    'journey.step2.body': 'Emma washes all the dishes and then taps "Request Stars". She adds a note: "I washed ALL the dishes AND put them away! 🫧". The request goes to Mom for approval.',
+    'journey.step3.label': 'Step 4 of 7',
+    'journey.step3.title': '⏳ Request is Pending',
+    'journey.step3.body': 'The request lands in the database with status <strong>"pending"</strong>. It glows yellow to show it\'s waiting. The source is set to <strong>"child_request"</strong> — meaning Emma sent it herself.',
+    'journey.step4.label': 'Step 5 of 7',
+    'journey.step4.title': '👩 Parent Reviews the Request',
+    'journey.step4.body': 'Mom gets a notification and sees Emma\'s request with her note. She can approve it (give the stars) or reject it. The note helps Mom know Emma really did the work!',
+    'journey.step5.label': 'Step 6 of 7',
+    'journey.step5.title': '✅ Quest Approved!',
+    'journey.step5.body': 'Mom clicks Approve! The status in the database instantly changes from <strong>pending → approved</strong>. The cell flashes gold, then settles green. The <code>reviewed_by</code> and <code>reviewed_at</code> fields are recorded.',
+    'journey.step6.label': 'Step 7 of 7',
+    'journey.step6.title': '🌟 Stars Earned!',
+    'journey.step6.body': 'Emma\'s star balance automatically updates! The <strong>child_balances</strong> view recalculates everything instantly. Emma\'s balance jumps from 265 to 280 — with a satisfying animated counter! 🎉',
+    'journey.step0.visual': `
+      <div class="journey-visual sim-quest-card" style="animation:starBounce 0.6s ease">
+        <span style="font-size:1.5rem">🍽️</span>
+        <div style="flex:1">
+          <div style="font-weight:700;color:var(--text-primary)">Help with Dishes</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Bonus · Family · Chores</div>
+        </div>
+        <div><span style="color:var(--star-gold);font-weight:700;font-size:1.1rem">+15 ⭐</span></div>
+      </div>
+      <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);text-align:center">Saved to <span class="font-mono" style="color:var(--success)">quests</span> table</div>`,
+    'journey.step1.visual': `
+      <div class="journey-visual" style="background:rgba(75,85,160,0.2);border-radius:10px;padding:16px">
+        <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:8px">Emma's quest list — bonus only ⭐</div>
+        <div class="sim-quest-card" style="animation:starBounce 0.6s ease 0.1s both">
+          <span style="font-size:1.3rem">🍽️</span>
+          <span style="flex:1;font-size:0.85rem">Help with Dishes</span>
+          <span style="color:var(--star-gold);font-weight:700">+15 ⭐</span>
+        </div>
+        <div class="sim-quest-card" style="animation:starBounce 0.6s ease 0.25s both;margin-top:6px">
+          <span style="font-size:1.3rem">📚</span>
+          <span style="flex:1;font-size:0.85rem">Read for 30 minutes</span>
+          <span style="color:var(--star-gold);font-weight:700">+20 ⭐</span>
+        </div>
+      </div>`,
+    'journey.step2.visual': `
+      <div class="journey-visual glass-card" style="font-size:0.85rem">
+        <div style="font-weight:700;color:var(--text-primary);margin-bottom:12px">📝 Request Stars Modal</div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:4px">Quest</div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px">🍽️ Help with Dishes (+15 ⭐)</div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:4px">My note to Mom</div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;font-style:italic;color:var(--star-glow)">"I washed ALL the dishes AND put them away! 🫧"</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(251,191,36,0.1));border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:10px;text-align:center;color:var(--star-gold);font-weight:700;cursor:pointer">
+          ⭐ Submit Request
+        </div>
+      </div>`,
+    'journey.step3.visual': `
+      <div class="journey-visual" style="background:#0d1117;border-radius:8px;overflow:hidden;font-family:monospace;font-size:0.88rem">
+        <div style="padding:8px 12px;background:rgba(255,255,255,0.05);color:var(--text-muted);font-size:0.82rem;font-weight:700">star_transactions</div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;color:var(--text-muted);font-size:0.78rem;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>child</div><div>quest</div><div>stars</div><div>status</div>
+        </div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;animation:rowInsert 1s ease">
+          <div style="color:#a5b4fc">Emma</div>
+          <div style="color:var(--text-primary)">Help w/ Dishes</div>
+          <div style="color:var(--star-gold)">+15</div>
+          <div><span class="badge-pending">pending</span></div>
+        </div>
+      </div>`,
+    'journey.step4.visual': `
+      <div class="journey-visual glass-card" style="font-size:0.85rem">
+        <div style="font-weight:700;color:var(--text-primary);margin-bottom:12px">✅ Parent Review Panel</div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:1.2rem">🍽️</span>
+            <span style="font-weight:700">Help with Dishes</span>
+            <span style="color:var(--star-gold);margin-left:auto">+15 ⭐</span>
+          </div>
+          <div style="font-size:0.88rem;color:var(--star-glow);font-style:italic">"I washed ALL the dishes AND put them away! 🫧"</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px">— Emma, 2 min ago</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);border-radius:6px;color:var(--success);font-weight:700;cursor:pointer">✅ Approve</div>
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:6px;color:var(--danger);font-weight:700;cursor:pointer">❌ Reject</div>
+        </div>
+      </div>`,
+    'journey.step5.visual': `
+      <div class="journey-visual" style="background:#0d1117;border-radius:8px;overflow:hidden;font-family:monospace;font-size:0.88rem">
+        <div style="padding:8px 12px;background:rgba(255,255,255,0.05);color:var(--text-muted);font-size:0.82rem;font-weight:700">star_transactions — UPDATED</div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;color:var(--text-muted);font-size:0.78rem;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>child</div><div>quest</div><div>stars</div><div>status</div>
+        </div>
+        <div id="journey-approval-row" style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;animation:goldFlash 0.8s ease 2">
+          <div style="color:#a5b4fc">Emma</div>
+          <div style="color:var(--text-primary)">Help w/ Dishes</div>
+          <div style="color:var(--star-gold)">+15</div>
+          <div><span class="badge-approved">approved</span></div>
+        </div>
+      </div>`,
+    'journey.step6.visual': `
+      <div class="journey-visual" style="text-align:center;padding:20px 0">
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">child_balances VIEW — Emma</div>
+        <div class="sim-star-counter" id="journey-counter">265</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">⭐ stars</div>
+        <div style="margin-top:16px;display:flex;justify-content:center;gap:8px">
+          <span style="font-size:2rem;animation:starBounce 0.5s ease 0.3s both;display:inline-block">⭐</span>
+          <span style="font-size:2rem;animation:starBounce 0.5s ease 0.5s both;display:inline-block">⭐</span>
+          <span style="font-size:2rem;animation:starBounce 0.5s ease 0.7s both;display:inline-block">⭐</span>
+        </div>
+        <div style="margin-top:12px;font-size:0.85rem;color:var(--success);font-weight:700">🎉 +15 stars added! Great job, Emma!</div>
+      </div>`,
+
+    // Section 5: Star Economy
+    'section5.label': 'Section 5',
+    'section5.title': 'The Star Economy 💰',
+    'section5.subtitle': 'Different quests earn (or lose!) different amounts of stars. Click any cell to learn more!',
+    'matrix.title': 'Quest Matrix — Stars by Type × Scope',
+    'matrix.clickHint': '👆 Click any cell to see details',
+    'matrix.typeBonus': '⭐ Bonus',
+    'matrix.typeDuty': '📋 Duty',
+    'matrix.typeViolation': '⚠️ Violation',
+    'matrix.scopeSelf': '🙋 Self',
+    'matrix.scopeFamily': '👨‍👩 Family',
+    'matrix.scopeOther': '🌍 Others',
+    'matrix.bonus.self': 'Bonus · Self-improvement quests earn 5–30 stars. Things like reading, exercising, or practicing music. The better the habit, the more stars!',
+    'matrix.bonus.family': 'Bonus · Family quests earn 10–25 stars. Helping wash dishes, tidying up, or taking care of a sibling counts here.',
+    'matrix.bonus.other': 'Bonus · Helping Others earns 10–25 stars (default 20). Volunteering, helping neighbors, or being kind at school.',
+    'matrix.duty.self': 'Duty · Not brushing teeth or doing homework deducts 5–15 stars. These are things you\'re expected to do every day!',
+    'matrix.duty.family': 'Duty · Skipping family responsibilities (like not helping at dinner) deducts 5–15 stars.',
+    'matrix.duty.other': 'Duty · Failing social responsibilities (like being rude to guests) deducts 5–15 stars.',
+    'matrix.violation.self': 'Violation · Serious rule-breaking deducts 10–50 stars! Hitting, lying, or breaking things on purpose. Think carefully before acting!',
+    'matrix.violation.family': 'Violation · Serious family violations (yelling at parents, big tantrums) cost 10–50 stars.',
+    'matrix.violation.other': 'Violation · Hurting friends or misbehaving badly outside the home costs 10–50 stars.',
+    'flow.title': 'Star Flow Diagram',
+    'flow.earn': '⭐ Earn Stars',
+    'flow.earnSub': 'Complete quests → parent approves',
+    'flow.balance': '💰 Star Balance',
+    'flow.redeem': '🎁 Redeem Reward',
+    'flow.redeemSub': 'Stars deducted → parent confirms',
+    'credit.title': '💳 Credit System',
+    'credit.desc': 'Like a piggy bank loan! Kids can <strong>borrow stars</strong> when they run low. Each month, a small <em>interest charge</em> is automatically settled. 🏦',
+    'credit.tables': 'Tables: <span class="font-mono">credit_settings</span> · <span class="font-mono">credit_transactions</span> · <span class="font-mono">interest_tiers</span>',
+
+    // Section 6: Database
+    'section6.label': 'Section 6',
+    'section6.title': 'The Database Memory 🗄️',
+    'section6.subtitle': 'Everything in StarQuest is saved in a <strong>PostgreSQL database</strong>. Tables hold the data, and arrows show how they connect!',
+    'db.rls': '🔒 <strong>Row-Level Security (RLS):</strong> Every table has a magic shield — you can <em>only</em> read or write data that belongs to <strong>your own family</strong>. Even if someone guessed another family\'s ID, the database refuses! This is built right into PostgreSQL.',
+    'db.demoTitle': '🎮 Interactive Demo — Try it yourself!',
+    'db.btnInsert': '➕ Emma completes a quest',
+    'db.btnApprove': '✅ Parent approves it',
+    'db.colDesc': 'description',
+    'db.colStars': 'stars',
+    'db.colStatus': 'status',
+    'db.colChild': 'child',
+    'db.balanceLabel': '⭐ Emma\'s Balance:',
+    'db.balanceUnit': 'stars',
+    'db.computed': '✨ Computed automatically!',
+    'db.view': '(VIEW)',
+    'db.demoDesc': 'Help with Dishes 🍽️',
+    'db.demoPending': 'pending',
+    'db.demoApproved': 'approved',
+
+    // Section 7: Tech Stack
+    'section7.label': 'Section 7',
+    'section7.title': 'The Code Toolbox 🧰',
+    'section7.subtitle': 'StarQuest is built with 6 amazing tools. <strong>Click any card</strong> to flip it and see real code!',
+    'tech.flipHint': '💡 Hover or click any card to flip it!',
+    'tech.nextjs.tagline': '"The chef that prepares pages"',
+    'tech.nextjs.backTitle': 'Server Component',
+    'tech.supabase.tagline': '"The filing cabinet"',
+    'tech.supabase.backTitle': 'Database Query',
+    'tech.tailwind.tagline': '"Paint and brushes"',
+    'tech.tailwind.backTitle': 'Utility Classes',
+    'tech.typescript.tagline': '"The rulebook"',
+    'tech.typescript.backTitle': 'Type Safety',
+    'tech.vercel.tagline': '"The mailman"',
+    'tech.vercel.backTitle': 'Deploy Command',
+    'tech.jest.tagline': '"The quality inspector"',
+    'tech.jest.backTitle': '2,752 Tests!',
+
+    // Closing & footer
+    'closing.title': 'You made it to the end!',
+    'closing.body': 'StarQuest has <strong style="color:var(--star-gold)">2,752 tests</strong> to make sure everything works perfectly. It\'s bilingual 🇬🇧🇨🇳, has a credit system 💳, sends weekly reports 📧, and even has a demo mode 🎭!<br><br>All of this in one magical Next.js app ✨',
+    'footer.desc': 'A gamified family behavior tracking app — built with Next.js 15 + Supabase',
+    'footer.stats': 'Production: starquest-kappa.vercel.app · 2,752 tests · ~99% coverage',
+
+    // Phone content
+    'phone.parent.header': '⭐ StarQuest — Admin',
+    'phone.parent.item1': 'Emma: Help with Dishes',
+    'phone.parent.badge1': '+15 ⭐',
+    'phone.parent.item2': 'Lucas: Read 30 min',
+    'phone.parent.badge2': 'pending',
+    'phone.parent.item3': 'Emma: Movie Night',
+    'phone.parent.badge3': 'approved',
+    'phone.parent.item4': 'Lucas: Late for bed',
+    'phone.parent.badge4': '-20 ⭐',
+    'phone.child.header': '⭐ StarQuest — Emma 👧',
+    'phone.child.balance': 'Balance:',
+    'phone.child.balanceVal': '265 ⭐',
+    'phone.child.item1': 'Help with Dishes',
+    'phone.child.badge1': '+15 ⭐',
+    'phone.child.item2': 'Read for 30 min',
+    'phone.child.badge2': '+20 ⭐',
+    'phone.child.item3': 'Draw something!',
+    'phone.child.badge3': '+15 ⭐',
+    'phone.child.noViolations': 'No duty or violations shown 😊'
+  },
+
+  zh: {
+    // Page
+    'page.title': '夺星大闯关：揭秘魔法 ✨',
+
+    // Nav
+    'nav.hero': '首页',
+    'nav.arch': '架构',
+    'nav.twoworlds': '双重世界',
+    'nav.journey': '任务旅程',
+    'nav.economy': '星星经济',
+    'nav.db': '数据库',
+    'nav.tech': '技术栈',
+
+    // Hero
+    'hero.title': '夺星大闯关：<br>揭秘魔法',
+    'hero.subtitleZh': 'StarQuest: How the Magic Works',
+    'hero.tagline': '🚀 属于全家人的星星冒险之旅',
+    'hero.feature1': '孩子通过完成<strong>有趣的任务</strong>来收集闪亮星星',
+    'hero.feature2': '家长设置冒险、审批请求，陪伴孩子成长',
+    'hero.feature3': '用星星兑换<strong>超棒的奖励！</strong>',
+    'hero.scrollCue': '向下滑动，探索魔法 ↓',
+
+    // Section 2: Architecture
+    'section2.label': '第二章',
+    'section2.title': '全景概览 🗺️',
+    'section2.subtitle': 'StarQuest 由<strong>三个层级</strong>构成，它们相互协作——就像一栋魔法大楼的不同楼层！点击每层看看里面住着什么。',
+    'arch.arrow.reqRes': '请求 / 响应',
+    'arch.arrow.sqlData': 'SQL / 数据',
+    'arch.browser.title': '你的浏览器',
+    'arch.browser.desc': '你看到和点击的部分！',
+    'arch.browser.reactDesc': '像乐高积木——屏幕上的每个部分都是一个"组件"',
+    'arch.browser.tailwindDesc': '让界面变得漂亮的画笔和颜料',
+    'arch.browser.nextClientDesc': '处理点击、输入和页面跳转',
+    'arch.browser.intlDesc': '会说英语 🇬🇧 或中文 🇨🇳——你来选！',
+    'arch.browser.animeDesc': '让元素弹跳、滑动、闪烁 ✨',
+    'arch.browser.canvasDesc': '绘制背景中闪烁的星空',
+    'arch.server.title': 'Next.js 服务器',
+    'arch.server.desc': '准备页面的大脑！',
+    'arch.server.componentsDesc': '在服务器上预先渲染页面再发送——超快！',
+    'arch.server.apiDesc': '应用自我通信的秘密通道',
+    'arch.server.middlewareDesc': '门口的安保——检查你的登录凭证',
+    'arch.server.cronDesc': '定时闹钟任务——自动发送周报！',
+    'arch.server.emailDesc': '向家长发送邀请和报告邮件',
+    'arch.server.tsDesc': '规则手册——确保数据类型正确无误',
+    'arch.db.title': 'Supabase + PostgreSQL',
+    'arch.db.desc': '记住一切的超大文件柜！',
+    'arch.db.familiesDesc': '每个家庭都有自己的数据魔法保险箱',
+    'arch.db.transactionsDesc': '每颗获得或使用的星星，永久记录',
+    'arch.db.questsDesc': '孩子们可以挑战的所有冒险任务',
+    'arch.db.rewardsDesc': '可用星星兑换奖品的宝箱',
+    'arch.db.rlsLabel': '行级安全策略',
+    'arch.db.rlsDesc': '🔒 魔法咒语：你的家庭只能看到自己的数据！',
+    'arch.db.balancesDesc': '自动计算每个孩子当前拥有的星星数',
+
+    // Section 3: Two Worlds
+    'section3.label': '第三章',
+    'section3.title': '双重世界 🌍',
+    'section3.subtitle': 'StarQuest 给家长和孩子展示<strong>不同的内容</strong>。点击一侧看看各自的功能！',
+    'worlds.parent.title': '👨‍👩 家长',
+    'worlds.parent.tagline': '任务大师！',
+    'worlds.parent.f1': '审批星星请求',
+    'worlds.parent.f2': '查看所有孩子',
+    'worlds.parent.f3': '直接记录星星',
+    'worlds.parent.f4': '管理所有任务类型',
+    'worlds.parent.f5': '周报和月报',
+    'worlds.parent.f6': '配置信用和等级',
+    'worlds.child.title': '👧 孩子',
+    'worlds.child.tagline': '星星猎人！',
+    'worlds.child.f1': '只看奖励任务',
+    'worlds.child.f2': '附留言请求星星',
+    'worlds.child.f3': '兑换奖励',
+    'worlds.child.f4': '只看自己的记录',
+    'worlds.child.f5': '重新提交被拒任务',
+    'worlds.child.f6': '借用星星（信用）',
+    'worlds.phone.switchLabel': '👆 点击一侧切换视图',
+    'worlds.insight': '💡 <strong>核心洞察：</strong>孩子<em>永远不会</em>看到日常义务或违规任务——只能看到有趣的、可选的奖励任务！这让体验始终<strong>积极且鼓舞人心</strong> 🌟',
+
+    // Section 4: Quest Journey
+    'section4.label': '第四章',
+    'section4.title': '任务旅程 🚀',
+    'section4.subtitle': '跟随 <strong>Emma</strong> 完成一项任务并赚取星星！点击箭头逐步体验整个冒险。',
+    'journey.prev': '← 上一步',
+    'journey.next': '下一步 →',
+    'journey.done': '🎉 完成！',
+    'journey.step0.label': '第 1 步（共 7 步）',
+    'journey.step0.title': '👨‍👩 家长创建任务',
+    'journey.step0.body': '妈妈打开夺星大闯关，创建了一个叫"帮忙洗碗 🍽️"的新任务。她将其设为<strong>奖励任务</strong>——这意味着 Emma 可以选择完成它来赚取额外星星！',
+    'journey.step1.label': '第 2 步（共 7 步）',
+    'journey.step1.title': '👧 Emma 看到了任务',
+    'journey.step1.body': 'Emma 打开手机，"帮忙洗碗"的卡片弹了出来！她只能看到<strong>奖励任务</strong>——日常义务和违规任务被隐藏了，让她的体验始终有趣且积极。',
+    'journey.step2.label': '第 3 步（共 7 步）',
+    'journey.step2.title': '📝 Emma 请求星星',
+    'journey.step2.body': 'Emma 洗完了所有碗碟，然后点击"请求星星"。她附上了留言："我把所有碗碟都洗了，还放好了！🫧"。请求发送给妈妈审批。',
+    'journey.step3.label': '第 4 步（共 7 步）',
+    'journey.step3.title': '⏳ 请求待审批',
+    'journey.step3.body': '请求进入数据库，状态为<strong>"待审批"</strong>。它闪着黄色光芒表示正在等待。来源标记为 <strong>"child_request"</strong>——表示是 Emma 自己发送的。',
+    'journey.step4.label': '第 5 步（共 7 步）',
+    'journey.step4.title': '👩 家长审核请求',
+    'journey.step4.body': '妈妈收到通知，看到 Emma 的请求和她的留言。她可以批准（给星星）或拒绝。留言帮助妈妈确认 Emma 确实完成了任务！',
+    'journey.step5.label': '第 6 步（共 7 步）',
+    'journey.step5.title': '✅ 任务通过！',
+    'journey.step5.body': '妈妈点击批准！数据库中的状态立即从<strong>待审批 → 已批准</strong>变化。单元格闪烁金色，然后变为绿色。<code>reviewed_by</code> 和 <code>reviewed_at</code> 字段被记录。',
+    'journey.step6.label': '第 7 步（共 7 步）',
+    'journey.step6.title': '🌟 获得星星！',
+    'journey.step6.body': 'Emma 的星星余额自动更新！<strong>child_balances</strong> 视图瞬间重新计算。Emma 的余额从 265 跳到 280——伴随着令人满意的动画计数器！🎉',
+    'journey.step0.visual': `
+      <div class="journey-visual sim-quest-card" style="animation:starBounce 0.6s ease">
+        <span style="font-size:1.5rem">🍽️</span>
+        <div style="flex:1">
+          <div style="font-weight:700;color:var(--text-primary)">帮忙洗碗</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">奖励 · 家庭 · 家务</div>
+        </div>
+        <div><span style="color:var(--star-gold);font-weight:700;font-size:1.1rem">+15 ⭐</span></div>
+      </div>
+      <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);text-align:center">已保存到 <span class="font-mono" style="color:var(--success)">quests</span> 表</div>`,
+    'journey.step1.visual': `
+      <div class="journey-visual" style="background:rgba(75,85,160,0.2);border-radius:10px;padding:16px">
+        <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:8px">Emma 的任务列表 — 仅奖励任务 ⭐</div>
+        <div class="sim-quest-card" style="animation:starBounce 0.6s ease 0.1s both">
+          <span style="font-size:1.3rem">🍽️</span>
+          <span style="flex:1;font-size:0.85rem">帮忙洗碗</span>
+          <span style="color:var(--star-gold);font-weight:700">+15 ⭐</span>
+        </div>
+        <div class="sim-quest-card" style="animation:starBounce 0.6s ease 0.25s both;margin-top:6px">
+          <span style="font-size:1.3rem">📚</span>
+          <span style="flex:1;font-size:0.85rem">阅读30分钟</span>
+          <span style="color:var(--star-gold);font-weight:700">+20 ⭐</span>
+        </div>
+      </div>`,
+    'journey.step2.visual': `
+      <div class="journey-visual glass-card" style="font-size:0.85rem">
+        <div style="font-weight:700;color:var(--text-primary);margin-bottom:12px">📝 请求星星弹窗</div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:4px">任务</div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px">🍽️ 帮忙洗碗 (+15 ⭐)</div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:4px">给妈妈的留言</div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;font-style:italic;color:var(--star-glow)">"我把所有碗碟都洗了，还放好了！🫧"</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(251,191,36,0.1));border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:10px;text-align:center;color:var(--star-gold);font-weight:700;cursor:pointer">
+          ⭐ 提交请求
+        </div>
+      </div>`,
+    'journey.step3.visual': `
+      <div class="journey-visual" style="background:#0d1117;border-radius:8px;overflow:hidden;font-family:monospace;font-size:0.88rem">
+        <div style="padding:8px 12px;background:rgba(255,255,255,0.05);color:var(--text-muted);font-size:0.82rem;font-weight:700">star_transactions</div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;color:var(--text-muted);font-size:0.78rem;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>孩子</div><div>任务</div><div>星星</div><div>状态</div>
+        </div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;animation:rowInsert 1s ease">
+          <div style="color:#a5b4fc">Emma</div>
+          <div style="color:var(--text-primary)">帮忙洗碗</div>
+          <div style="color:var(--star-gold)">+15</div>
+          <div><span class="badge-pending">待审批</span></div>
+        </div>
+      </div>`,
+    'journey.step4.visual': `
+      <div class="journey-visual glass-card" style="font-size:0.85rem">
+        <div style="font-weight:700;color:var(--text-primary);margin-bottom:12px">✅ 家长审核面板</div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:1.2rem">🍽️</span>
+            <span style="font-weight:700">帮忙洗碗</span>
+            <span style="color:var(--star-gold);margin-left:auto">+15 ⭐</span>
+          </div>
+          <div style="font-size:0.88rem;color:var(--star-glow);font-style:italic">"我把所有碗碟都洗了，还放好了！🫧"</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px">— Emma，2 分钟前</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);border-radius:6px;color:var(--success);font-weight:700;cursor:pointer">✅ 批准</div>
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:6px;color:var(--danger);font-weight:700;cursor:pointer">❌ 拒绝</div>
+        </div>
+      </div>`,
+    'journey.step5.visual': `
+      <div class="journey-visual" style="background:#0d1117;border-radius:8px;overflow:hidden;font-family:monospace;font-size:0.88rem">
+        <div style="padding:8px 12px;background:rgba(255,255,255,0.05);color:var(--text-muted);font-size:0.82rem;font-weight:700">star_transactions — 已更新</div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;color:var(--text-muted);font-size:0.78rem;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>孩子</div><div>任务</div><div>星星</div><div>状态</div>
+        </div>
+        <div id="journey-approval-row" style="padding:10px 12px;display:grid;grid-template-columns:100px 120px 60px 100px;gap:4px;animation:goldFlash 0.8s ease 2">
+          <div style="color:#a5b4fc">Emma</div>
+          <div style="color:var(--text-primary)">帮忙洗碗</div>
+          <div style="color:var(--star-gold)">+15</div>
+          <div><span class="badge-approved">已批准</span></div>
+        </div>
+      </div>`,
+    'journey.step6.visual': `
+      <div class="journey-visual" style="text-align:center;padding:20px 0">
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">child_balances 视图 — Emma</div>
+        <div class="sim-star-counter" id="journey-counter">265</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">⭐ 星星</div>
+        <div style="margin-top:16px;display:flex;justify-content:center;gap:8px">
+          <span style="font-size:2rem;animation:starBounce 0.5s ease 0.3s both;display:inline-block">⭐</span>
+          <span style="font-size:2rem;animation:starBounce 0.5s ease 0.5s both;display:inline-block">⭐</span>
+          <span style="font-size:2rem;animation:starBounce 0.5s ease 0.7s both;display:inline-block">⭐</span>
+        </div>
+        <div style="margin-top:12px;font-size:0.85rem;color:var(--success);font-weight:700">🎉 +15 星星已到账！做得好，Emma！</div>
+      </div>`,
+
+    // Section 5: Star Economy
+    'section5.label': '第五章',
+    'section5.title': '星星经济 💰',
+    'section5.subtitle': '不同类型的任务会赚取（或扣除！）不同数量的星星。点击任意格子了解更多！',
+    'matrix.title': '任务矩阵 — 类型 × 范围的星星对照表',
+    'matrix.clickHint': '👆 点击任意格子查看详情',
+    'matrix.typeBonus': '⭐ 奖励',
+    'matrix.typeDuty': '📋 日常义务',
+    'matrix.typeViolation': '⚠️ 违规',
+    'matrix.scopeSelf': '🙋 自我',
+    'matrix.scopeFamily': '👨‍👩 家庭',
+    'matrix.scopeOther': '🌍 他人',
+    'matrix.bonus.self': '奖励 · 自我提升任务可获得 5–30 颗星。例如阅读、运动、练习乐器。习惯越好，星星越多！',
+    'matrix.bonus.family': '奖励 · 家庭任务可获得 10–25 颗星。帮忙洗碗、整理房间或照顾弟弟妹妹都算在内。',
+    'matrix.bonus.other': '奖励 · 帮助他人可获得 10–25 颗星（默认 20 颗）。做志愿者、帮助邻居或在学校表现友善。',
+    'matrix.duty.self': '日常义务 · 不刷牙或不做作业扣 5–15 颗星。这些是你每天都应该做的事！',
+    'matrix.duty.family': '日常义务 · 逃避家庭责任（如不帮忙做饭）扣 5–15 颗星。',
+    'matrix.duty.other': '日常义务 · 未履行社交责任（如对客人无礼）扣 5–15 颗星。',
+    'matrix.violation.self': '违规 · 严重违规扣 10–50 颗星！打人、说谎或故意破坏东西。三思而后行！',
+    'matrix.violation.family': '违规 · 严重的家庭违规（对父母大喊大叫、大发脾气）扣 10–50 颗星。',
+    'matrix.violation.other': '违规 · 伤害朋友或在外面严重不端行为扣 10–50 颗星。',
+    'flow.title': '星星流动图',
+    'flow.earn': '⭐ 赚取星星',
+    'flow.earnSub': '完成任务 → 家长批准',
+    'flow.balance': '💰 星星余额',
+    'flow.redeem': '🎁 兑换奖励',
+    'flow.redeemSub': '扣除星星 → 家长确认',
+    'credit.title': '💳 信用系统',
+    'credit.desc': '像小猪存钱罐的贷款！孩子们可以在星星不够时<strong>借用星星</strong>。每月会自动结算一笔小额<em>利息</em>。🏦',
+    'credit.tables': '数据表：<span class="font-mono">credit_settings</span> · <span class="font-mono">credit_transactions</span> · <span class="font-mono">interest_tiers</span>',
+
+    // Section 6: Database
+    'section6.label': '第六章',
+    'section6.title': '数据库记忆 🗄️',
+    'section6.subtitle': 'StarQuest 中的一切都保存在 <strong>PostgreSQL 数据库</strong>中。表格存储数据，箭头展示它们如何关联！',
+    'db.rls': '🔒 <strong>行级安全策略 (RLS)：</strong>每张表都有魔法护盾——你<em>只能</em>读写属于<strong>自己家庭</strong>的数据。即使有人猜到了另一个家庭的 ID，数据库也会拒绝！这是 PostgreSQL 的内置功能。',
+    'db.demoTitle': '🎮 互动演示 — 自己试试吧！',
+    'db.btnInsert': '➕ Emma 完成了一项任务',
+    'db.btnApprove': '✅ 家长批准',
+    'db.colDesc': '描述',
+    'db.colStars': '星星',
+    'db.colStatus': '状态',
+    'db.colChild': '孩子',
+    'db.balanceLabel': '⭐ Emma 的余额：',
+    'db.balanceUnit': '星星',
+    'db.computed': '✨ 自动计算！',
+    'db.view': '（视图）',
+    'db.demoDesc': '帮忙洗碗 🍽️',
+    'db.demoPending': '待审批',
+    'db.demoApproved': '已批准',
+
+    // Section 7: Tech Stack
+    'section7.label': '第七章',
+    'section7.title': '代码工具箱 🧰',
+    'section7.subtitle': 'StarQuest 使用 6 个强大的工具构建。<strong>点击任意卡片</strong>翻转查看真实代码！',
+    'tech.flipHint': '💡 悬停或点击卡片即可翻转！',
+    'tech.nextjs.tagline': '"准备页面的大厨"',
+    'tech.nextjs.backTitle': '服务器组件',
+    'tech.supabase.tagline': '"超大文件柜"',
+    'tech.supabase.backTitle': '数据库查询',
+    'tech.tailwind.tagline': '"画笔和颜料"',
+    'tech.tailwind.backTitle': '工具类样式',
+    'tech.typescript.tagline': '"规则手册"',
+    'tech.typescript.backTitle': '类型安全',
+    'tech.vercel.tagline': '"快递员"',
+    'tech.vercel.backTitle': '部署命令',
+    'tech.jest.tagline': '"质检员"',
+    'tech.jest.backTitle': '2,752 个测试！',
+
+    // Closing & footer
+    'closing.title': '你看完了全部内容！',
+    'closing.body': 'StarQuest 有 <strong style="color:var(--star-gold)">2,752 个测试</strong>确保一切运行完美。它支持双语 🇬🇧🇨🇳，有信用系统 💳，自动发送周报 📧，甚至有演示模式 🎭！<br><br>所有这些都在一个神奇的 Next.js 应用中 ✨',
+    'footer.desc': '游戏化家庭行为追踪应用 — 基于 Next.js 15 + Supabase 构建',
+    'footer.stats': '生产环境：starquest-kappa.vercel.app · 2,752 个测试 · ~99% 覆盖率',
+
+    // Phone content
+    'phone.parent.header': '⭐ 夺星大闯关 — 家长中心',
+    'phone.parent.item1': 'Emma：帮忙洗碗',
+    'phone.parent.badge1': '+15 ⭐',
+    'phone.parent.item2': 'Lucas：阅读30分钟',
+    'phone.parent.badge2': '待审批',
+    'phone.parent.item3': 'Emma：电影之夜',
+    'phone.parent.badge3': '已批准',
+    'phone.parent.item4': 'Lucas：晚睡',
+    'phone.parent.badge4': '-20 ⭐',
+    'phone.child.header': '⭐ 夺星大闯关 — Emma 👧',
+    'phone.child.balance': '余额：',
+    'phone.child.balanceVal': '265 ⭐',
+    'phone.child.item1': '帮忙洗碗',
+    'phone.child.badge1': '+15 ⭐',
+    'phone.child.item2': '阅读30分钟',
+    'phone.child.badge2': '+20 ⭐',
+    'phone.child.item3': '画幅画！',
+    'phone.child.badge3': '+15 ⭐',
+    'phone.child.noViolations': '没有日常义务或违规显示 😊'
+  }
+};
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key])
+    || (TRANSLATIONS.en[key])
+    || key;
+}
+
+function detectLanguage() {
+  // Priority: ?lang= query param > localStorage > default 'en'
+  const params = new URLSearchParams(window.location.search);
+  const paramLang = params.get('lang');
+  if (paramLang === 'zh' || paramLang === 'zh-CN') return 'zh';
+  if (paramLang === 'en') return 'en';
+
+  const stored = localStorage.getItem('sq-viz-lang');
+  if (stored === 'zh' || stored === 'en') return stored;
+
+  return 'en';
+}
+
+function applyTranslations() {
+  // Update page title and html lang
+  document.title = t('page.title');
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+
+  // Walk data-i18n elements — set innerHTML
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key) {
+      // For SVG text elements, use textContent instead of innerHTML
+      if (el instanceof SVGElement) {
+        el.textContent = t(key);
+      } else {
+        el.innerHTML = t(key);
+      }
+    }
+  });
+
+  // Walk data-i18n-title elements — set title attribute
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (key) el.title = t(key);
+  });
+
+  // Re-render JS-driven sections
+  renderQuestMatrix();
+  renderTechCards();
+  renderSchema();
+
+  // Re-render journey step (uses t() internally)
+  renderJourneyStep();
+
+  // Re-render phone content
+  const screen = document.getElementById('phone-screen');
+  if (screen) screen.innerHTML = getPhoneContent(currentRole);
+}
+
+function toggleLanguage() {
+  currentLang = currentLang === 'en' ? 'zh' : 'en';
+  localStorage.setItem('sq-viz-lang', currentLang);
+
+  // Update URL param without reload
+  const url = new URL(window.location);
+  url.searchParams.set('lang', currentLang === 'zh' ? 'zh-CN' : 'en');
+  history.replaceState(null, '', url);
+
+  // Update toggle button
+  const btn = document.getElementById('lang-toggle');
+  btn.textContent = currentLang === 'en' ? '🇺🇸 EN' : '🇨🇳 中文';
+
+  applyTranslations();
+}
+
+function getPhoneContent(role) {
+  if (role === 'child') {
+    return `
+      <div class="phone-app-header">${t('phone.child.header')}</div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.82rem;color:var(--star-gold)">
+        <span>${t('phone.child.balance')}</span><span style="font-weight:700">${t('phone.child.balanceVal')}</span>
+      </div>
+      <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.0s both">
+        <span>🍽️</span><span style="flex:1;font-size:0.82rem">${t('phone.child.item1')}</span>
+        <span class="phone-badge badge-gold">${t('phone.child.badge1')}</span>
+      </div>
+      <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.15s both">
+        <span>📚</span><span style="flex:1;font-size:0.82rem">${t('phone.child.item2')}</span>
+        <span class="phone-badge badge-gold">${t('phone.child.badge2')}</span>
+      </div>
+      <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.3s both">
+        <span>🎨</span><span style="flex:1;font-size:0.82rem">${t('phone.child.item3')}</span>
+        <span class="phone-badge badge-gold">${t('phone.child.badge3')}</span>
+      </div>
+      <div style="text-align:center;padding:8px 0;font-size:0.82rem;color:var(--text-muted);font-style:italic">${t('phone.child.noViolations')}</div>
+    `;
+  }
+  return `
+    <div class="phone-app-header">${t('phone.parent.header')}</div>
+    <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.0s both">
+      <span>📋</span><span style="flex:1;font-size:0.82rem">${t('phone.parent.item1')}</span>
+      <span class="phone-badge badge-gold">${t('phone.parent.badge1')}</span>
+    </div>
+    <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.1s both">
+      <span>⭐</span><span style="flex:1;font-size:0.82rem">${t('phone.parent.item2')}</span>
+      <span class="phone-badge badge-gold">${t('phone.parent.badge2')}</span>
+    </div>
+    <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.2s both">
+      <span>🎁</span><span style="flex:1;font-size:0.82rem">${t('phone.parent.item3')}</span>
+      <span class="phone-badge badge-green">${t('phone.parent.badge3')}</span>
+    </div>
+    <div class="phone-quest-card" style="animation:starBounce 0.4s ease 0.3s both">
+      <span>⚠️</span><span style="flex:1;font-size:0.82rem">${t('phone.parent.item4')}</span>
+      <span class="phone-badge badge-red">${t('phone.parent.badge4')}</span>
+    </div>
+  `;
+}
+
+/* ============================================================
+   CONSTANTS & DATA
+   ============================================================ */
+const JOURNEY_STEPS = [
+  { labelKey: 'journey.step0.label', titleKey: 'journey.step0.title', bodyKey: 'journey.step0.body', visualKey: 'journey.step0.visual', db: null },
+  { labelKey: 'journey.step1.label', titleKey: 'journey.step1.title', bodyKey: 'journey.step1.body', visualKey: 'journey.step1.visual', db: 'quests (type = bonus)' },
+  { labelKey: 'journey.step2.label', titleKey: 'journey.step2.title', bodyKey: 'journey.step2.body', visualKey: 'journey.step2.visual', db: 'star_transactions INSERT' },
+  { labelKey: 'journey.step3.label', titleKey: 'journey.step3.title', bodyKey: 'journey.step3.body', visualKey: 'journey.step3.visual', db: 'star_transactions (status = pending)' },
+  { labelKey: 'journey.step4.label', titleKey: 'journey.step4.title', bodyKey: 'journey.step4.body', visualKey: 'journey.step4.visual', db: 'star_transactions (reviewed_by)' },
+  { labelKey: 'journey.step5.label', titleKey: 'journey.step5.title', bodyKey: 'journey.step5.body', visualKey: 'journey.step5.visual', db: 'star_transactions (status = approved)' },
+  { labelKey: 'journey.step6.label', titleKey: 'journey.step6.title', bodyKey: 'journey.step6.body', visualKey: 'journey.step6.visual', db: 'child_balances VIEW (recomputed)' }
+];
+
+const QUEST_MATRIX_DATA = {
+  bonus: {
+    self:   { stars: '+15 ⭐', range: '5–30',  color: 'bonus', descKey: 'matrix.bonus.self' },
+    family: { stars: '+15 ⭐', range: '10–25', color: 'bonus', descKey: 'matrix.bonus.family' },
+    other:  { stars: '+20 ⭐', range: '10–25', color: 'bonus', descKey: 'matrix.bonus.other' }
+  },
+  duty: {
+    self:   { stars: '-10 ⭐', range: '-5 to -15', color: 'duty', descKey: 'matrix.duty.self' },
+    family: { stars: '-10 ⭐', range: '-5 to -15', color: 'duty', descKey: 'matrix.duty.family' },
+    other:  { stars: '-10 ⭐', range: '-5 to -15', color: 'duty', descKey: 'matrix.duty.other' }
+  },
+  violation: {
+    self:   { stars: '-30 ⭐', range: '-10 to -50', color: 'violation', descKey: 'matrix.violation.self' },
+    family: { stars: '-30 ⭐', range: '-10 to -50', color: 'violation', descKey: 'matrix.violation.family' },
+    other:  { stars: '-30 ⭐', range: '-10 to -50', color: 'violation', descKey: 'matrix.violation.other' }
+  }
+};
+
+const TECH_CARDS = [
+  { emoji: '🍽️', name: 'Next.js 15', taglineKey: 'tech.nextjs.tagline', backTitleKey: 'tech.nextjs.backTitle',
+    code: `export default async function Page() {\n  const quests = await fetchQuests();\n  return <QuestList quests={quests} />;\n}` },
+  { emoji: '🗄️', name: 'Supabase', taglineKey: 'tech.supabase.tagline', backTitleKey: 'tech.supabase.backTitle',
+    code: `const { data } = await supabase\n  .from('quests')\n  .select('*')\n  .eq('family_id', id)\n  .eq('type', 'bonus');` },
+  { emoji: '🎨', name: 'Tailwind CSS', taglineKey: 'tech.tailwind.tagline', backTitleKey: 'tech.tailwind.backTitle',
+    code: `<div className=\n  "bg-primary/20\n   rounded-lg p-4\n   border border-gold\n   backdrop-blur-sm">` },
+  { emoji: '📏', name: 'TypeScript', taglineKey: 'tech.typescript.tagline', backTitleKey: 'tech.typescript.backTitle',
+    code: `type QuestType =\n  | "duty"\n  | "bonus"\n  | "violation";\n\ntype QuestScope =\n  | "self" | "family"\n  | "other";` },
+  { emoji: '📮', name: 'Vercel', taglineKey: 'tech.vercel.tagline', backTitleKey: 'tech.vercel.backTitle',
+    code: `# Deploy to production:\nvercel --prod\n\n# Preview deploy:\nvercel\n\n# Env vars managed\n# in Vercel dashboard` },
+  { emoji: '🔍', name: 'Jest', taglineKey: 'tech.jest.tagline', backTitleKey: 'tech.jest.backTitle',
+    code: `describe('getSuggestedStars', () => {\n  it('bonus self returns 15', () => {\n    const res = getSuggestedStars(\n      'bonus', 'self');\n    expect(res.default).toBe(15);\n  });\n});` }
+];
+
+const DB_TABLES = [
+  {
+    name: 'families',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'name', type: '' },
+      { label: 'created_at', type: '' }
+    ]
+  },
+  {
+    name: 'users',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'family_id', type: 'fk' },
+      { label: 'name', type: '' },
+      { label: 'role', type: '' },
+      { label: 'email', type: '' }
+    ]
+  },
+  {
+    name: 'quests',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'family_id', type: 'fk' },
+      { label: 'name_en / zh', type: '' },
+      { label: 'type', type: '' },
+      { label: 'scope', type: '' },
+      { label: 'stars', type: '' }
+    ]
+  },
+  {
+    name: 'star_transactions',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'child_id', type: 'fk' },
+      { label: 'quest_id', type: 'fk' },
+      { label: 'stars', type: '' },
+      { label: 'status', type: '' },
+      { label: 'child_note', type: '' }
+    ]
+  },
+  {
+    name: 'rewards',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'family_id', type: 'fk' },
+      { label: 'name_en / zh', type: '' },
+      { label: 'stars_cost', type: '' }
+    ]
+  },
+  {
+    name: 'redemptions',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'child_id', type: 'fk' },
+      { label: 'reward_id', type: 'fk' },
+      { label: 'status', type: '' }
+    ]
+  },
+  {
+    name: 'levels',
+    cols: [
+      { label: 'id', type: 'pk' },
+      { label: 'family_id', type: 'fk' },
+      { label: 'min_stars', type: '' },
+      { label: 'title_en', type: '' }
+    ]
+  },
+  {
+    name: 'child_balances',
+    isView: true,
+    cols: [
+      { label: 'child_id', type: 'fk' },
+      { label: 'total_stars', type: '' },
+      { label: 'spendable', type: '' },
+      { label: 'level_title', type: '' }
+    ]
+  }
+];
+
+/* ============================================================
+   STARFIELD
+   ============================================================ */
+function createStarfield(canvas) {
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], shooters = [];
+  let animId;
+
+  function resize() {
+    W = canvas.width = canvas.parentElement.offsetWidth;
+    H = canvas.height = canvas.parentElement.offsetHeight;
+    initStars();
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((W * H) / 3000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.5 + 0.3,
+        alpha: Math.random(),
+        speed: Math.random() * 0.015 + 0.003,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function spawnShooter() {
+    shooters.push({
+      x: Math.random() * W * 0.6,
+      y: Math.random() * H * 0.4,
+      len: Math.random() * 80 + 60,
+      speed: Math.random() * 8 + 6,
+      alpha: 1,
+      angle: Math.PI / 5
+    });
+  }
+
+  let frame = 0;
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    frame++;
+
+    // Spawn shooting stars occasionally
+    if (frame % 120 === 0 && Math.random() < 0.6) spawnShooter();
+
+    // Draw stars
+    const t = Date.now() / 1000;
+    stars.forEach(s => {
+      const a = 0.3 + 0.7 * (Math.sin(t * s.speed * 5 + s.phase) * 0.5 + 0.5);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(254,240,138,${a})`;
+      ctx.fill();
+    });
+
+    // Draw shooting stars
+    shooters = shooters.filter(s => s.alpha > 0.01);
+    shooters.forEach(s => {
+      const dx = Math.cos(s.angle) * s.len;
+      const dy = Math.sin(s.angle) * s.len;
+      const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx, s.y - dy);
+      grad.addColorStop(0, `rgba(255,245,200,${s.alpha})`);
+      grad.addColorStop(1, 'rgba(255,245,200,0)');
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - dx, s.y - dy);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      s.x += Math.cos(s.angle) * s.speed;
+      s.y += Math.sin(s.angle) * s.speed;
+      s.alpha *= 0.95;
+    });
+
+    animId = requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  loop();
+}
+
+/* ============================================================
+   NAV & PROGRESS
+   ============================================================ */
+function initNav() {
+  const dots = document.querySelectorAll('.nav-dot');
+  const sections = Array.from(document.querySelectorAll('section'));
+  const bar = document.getElementById('progress-bar');
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  function onScroll() {
+    const scrollTop = window.scrollY;
+    const docH = document.body.scrollHeight - window.innerHeight;
+    bar.style.width = `${Math.min(100, (scrollTop / docH) * 100)}%`;
+
+    // Active section
+    let activeIdx = 0;
+    sections.forEach((sec, i) => {
+      const rect = sec.getBoundingClientRect();
+      if (rect.top <= window.innerHeight * 0.5) activeIdx = i;
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
+
+/* ============================================================
+   INTERSECTION OBSERVER — SCROLL REVEAL
+   ============================================================ */
+function observeSections() {
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => io.observe(el));
+}
+
+/* ============================================================
+   SECTION 2: ARCHITECTURE
+   ============================================================ */
+function toggleArchLayer(el) {
+  const isActive = el.classList.contains('active');
+  // Collapse all
+  document.querySelectorAll('.arch-layer').forEach(l => l.classList.remove('active'));
+  if (!isActive) el.classList.add('active');
+}
+
+function animateArchArrows() {
+  // Animate packet dots along arrows (repeated)
+  function animatePacket(elId, startY, endY, delay, color) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    function step() {
+      anime({
+        targets: el,
+        cy: [startY, endY],
+        opacity: [{ value: 1, duration: 100 }, { value: 1, duration: 1200 }, { value: 0, duration: 200 }],
+        duration: 1500,
+        delay: delay,
+        easing: 'easeInOutQuad',
+        complete: () => setTimeout(step, 800 + Math.random() * 1000)
+      });
+    }
+    setTimeout(step, delay);
+  }
+  animatePacket('packet-down-1', 90, 285, 0, '#FFD700');
+  animatePacket('packet-up-1', 290, 95, 800, '#10B981');
+  animatePacket('packet-down-2', 305, 465, 400, '#FFD700');
+  animatePacket('packet-up-2', 470, 310, 1200, '#10B981');
+}
+
+/* ============================================================
+   SECTION 3: TWO WORLDS
+   ============================================================ */
+function selectRole(role) {
+  currentRole = role;
+  const parentEl = document.getElementById('role-parent');
+  const childEl = document.getElementById('role-child');
+  const screen = document.getElementById('phone-screen');
+
+  parentEl.classList.toggle('selected', role === 'parent');
+  childEl.classList.toggle('selected', role === 'child');
+
+  screen.style.opacity = '0';
+  setTimeout(() => {
+    screen.innerHTML = getPhoneContent(role);
+    screen.style.opacity = '1';
+  }, 250);
+}
+
+/* ============================================================
+   SECTION 4: JOURNEY
+   ============================================================ */
+let currentStep = 0;
+
+function buildJourneyProgress() {
+  const container = document.getElementById('journey-progress');
+  container.innerHTML = '';
+  JOURNEY_STEPS.forEach((_, i) => {
+    if (i > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'journey-connector' + (i <= currentStep ? ' done' : '');
+      container.appendChild(conn);
+    }
+    const dot = document.createElement('div');
+    dot.className = 'journey-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentStep = i; renderJourneyStep(); };
+    container.appendChild(dot);
+  });
+}
+
+function renderJourneyStep() {
+  const step = JOURNEY_STEPS[currentStep];
+  const card = document.getElementById('journey-step-card');
+
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(20px)';
+
+  setTimeout(() => {
+    card.innerHTML = `
+      <div class="journey-step-label">${t(step.labelKey)}</div>
+      <div class="journey-step-title">${t(step.titleKey)}</div>
+      <div class="journey-step-body">${t(step.bodyKey)}</div>
+      ${step.db ? `<div class="journey-db-tag">🗄️ ${step.db}</div>` : ''}
+      ${t(step.visualKey) || ''}
+    `;
+
+    card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+    card.style.opacity = '1';
+    card.style.transform = 'translateY(0)';
+
+    // Step 7: animate counter
+    if (currentStep === 6) {
+      setTimeout(() => {
+        const counter = document.getElementById('journey-counter');
+        if (counter) animateCounter(counter, 265, 280, 1200);
+      }, 400);
+    }
+
+    buildJourneyProgress();
+
+    // Update nav buttons
+    document.getElementById('journey-prev').disabled = currentStep === 0;
+    const nextBtn = document.getElementById('journey-next');
+    nextBtn.disabled = currentStep === JOURNEY_STEPS.length - 1;
+    nextBtn.textContent = currentStep === JOURNEY_STEPS.length - 1 ? t('journey.done') : t('journey.next');
+  }, 200);
+}
+
+function journeyNav(dir) {
+  currentStep = Math.max(0, Math.min(JOURNEY_STEPS.length - 1, currentStep + dir));
+  renderJourneyStep();
+}
+
+/* ============================================================
+   SECTION 5: QUEST MATRIX
+   ============================================================ */
+function renderQuestMatrix() {
+  const container = document.getElementById('quest-matrix');
+  const types = ['bonus', 'duty', 'violation'];
+  const scopes = ['self', 'family', 'other'];
+  const typeLabels = { bonus: t('matrix.typeBonus'), duty: t('matrix.typeDuty'), violation: t('matrix.typeViolation') };
+  const scopeLabels = { self: t('matrix.scopeSelf'), family: t('matrix.scopeFamily'), other: t('matrix.scopeOther') };
+
+  // Corner blank
+  container.innerHTML = '<div></div>';
+
+  // Column headers
+  types.forEach(tp => {
+    const h = document.createElement('div');
+    h.className = `matrix-header matrix-header-${tp}`;
+    h.textContent = typeLabels[tp];
+    container.appendChild(h);
+  });
+
+  // Rows
+  scopes.forEach(scope => {
+    // Row label
+    const label = document.createElement('div');
+    label.className = 'matrix-row-label';
+    label.textContent = scopeLabels[scope];
+    container.appendChild(label);
+
+    types.forEach(type => {
+      const data = QUEST_MATRIX_DATA[type][scope];
+      const cell = document.createElement('div');
+      cell.className = `matrix-cell matrix-cell-${data.color}`;
+      cell.innerHTML = `
+        <div class="matrix-stars">${data.stars}</div>
+        <div class="matrix-range">${data.range}</div>
+      `;
+      cell.addEventListener('click', (e) => showMatrixTooltip(e, t(data.descKey)));
+      container.appendChild(cell);
+    });
+  });
+}
+
+function showMatrixTooltip(e, text) {
+  const tip = document.getElementById('matrix-tooltip');
+  tip.textContent = text;
+  tip.classList.add('visible');
+
+  const rect = e.target.getBoundingClientRect();
+  const economyRect = document.getElementById('section-economy').getBoundingClientRect();
+  tip.style.left = (rect.left - economyRect.left + rect.width / 2 - 110) + 'px';
+  tip.style.top = (rect.bottom - economyRect.top + 8) + 'px';
+
+  setTimeout(() => tip.classList.remove('visible'), 3000);
+}
+
+/* ============================================================
+   SECTION 6: DATABASE SCHEMA
+   ============================================================ */
+function renderSchema() {
+  const container = document.getElementById('schema-tables');
+  container.innerHTML = '';
+  DB_TABLES.forEach(table => {
+    const box = document.createElement('div');
+    box.className = 'db-table' + (table.isView ? ' view-table' : '');
+
+    let header = table.isView
+      ? `<div class="db-table-header">👁️ ${table.name} <span style="font-size:0.6rem;opacity:0.7">${t('db.view')}</span></div>`
+      : `<div class="db-table-header">${table.name}</div>`;
+
+    let rows = table.cols.map(col => {
+      const icon = col.type === 'pk' ? '🔑' : col.type === 'fk' ? '🔗' : '·';
+      return `<div class="db-table-row ${col.type}"><span class="col-icon">${icon}</span>${col.label}</div>`;
+    }).join('');
+
+    box.innerHTML = header + rows;
+    container.appendChild(box);
+
+    if (table.isView) {
+      const note = document.createElement('div');
+      note.style.cssText = 'font-size:0.82rem;color:var(--star-gold);text-align:center;margin-top:4px';
+      note.textContent = t('db.computed');
+      container.appendChild(note);
+    }
+  });
+}
+
+/* ============================================================
+   SECTION 6: DB INTERACTIVE DEMO
+   ============================================================ */
+let dbRowId = 1;
+let dbDemoState = 'idle'; // idle | inserted | approved
+let currentBalance = 265;
+
+function dbDemoInsert() {
+  if (dbDemoState !== 'idle') return;
+  dbDemoState = 'inserted';
+
+  const rowsEl = document.getElementById('db-live-rows');
+  const newRow = document.createElement('div');
+  newRow.className = 'db-live-row';
+  newRow.id = `db-row-${dbRowId}`;
+  newRow.innerHTML = `
+    <div class="id-col">#${String(dbRowId).padStart(3,'0')}</div>
+    <div class="desc-col">${t('db.demoDesc')}</div>
+    <div class="stars-col">+15</div>
+    <div><span class="badge-pending">${t('db.demoPending')}</span></div>
+    <div style="color:#a5b4fc">Emma</div>
+  `;
+  rowsEl.appendChild(newRow);
+
+  // Animate row in
+  anime({
+    targets: newRow,
+    translateX: [-30, 0],
+    opacity: [0, 1],
+    duration: 600,
+    easing: 'easeOutElastic(1, 0.8)'
+  });
+
+  document.getElementById('btn-approve').disabled = false;
+}
+
+function dbDemoApprove() {
+  if (dbDemoState !== 'inserted') return;
+  dbDemoState = 'approved';
+
+  const row = document.getElementById(`db-row-${dbRowId}`);
+  if (!row) return;
+
+  // Flash gold then update badge
+  anime({
+    targets: row,
+    backgroundColor: ['rgba(255,215,0,0.3)', 'transparent'],
+    duration: 800,
+    easing: 'easeOutQuad',
+    complete: () => {
+      const badgeEl = row.querySelector('.badge-pending');
+      if (badgeEl) {
+        badgeEl.className = 'badge-approved';
+        badgeEl.textContent = t('db.demoApproved');
+      }
+    }
+  });
+
+  // Animate balance counter
+  const balanceEl = document.getElementById('db-balance-value');
+  const newBalance = currentBalance + 15;
+  animateCounter(balanceEl, currentBalance, newBalance, 1000);
+  currentBalance = newBalance;
+
+  document.getElementById('btn-approve').disabled = true;
+
+  // After a delay, allow another insert
+  setTimeout(() => {
+    dbRowId++;
+    dbDemoState = 'idle';
+  }, 1500);
+}
+
+/* ============================================================
+   SECTION 7: TECH CARDS
+   ============================================================ */
+function renderTechCards() {
+  const grid = document.getElementById('tech-grid');
+  grid.innerHTML = '';
+  TECH_CARDS.forEach((card, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tech-card-wrapper';
+    wrapper.innerHTML = `
+      <div class="tech-card-inner">
+        <div class="tech-card-face tech-card-front">
+          <div class="tech-card-emoji">${card.emoji}</div>
+          <div class="tech-card-name">${card.name}</div>
+          <div class="tech-card-tagline">${t(card.taglineKey)}</div>
+        </div>
+        <div class="tech-card-face tech-card-back">
+          <div class="back-title">${t(card.backTitleKey)}</div>
+          <pre>${card.code}</pre>
+        </div>
+      </div>
+    `;
+    wrapper.addEventListener('click', () => wrapper.classList.toggle('flipped'));
+    wrapper.addEventListener('mouseenter', () => {
+      if (!wrapper.classList.contains('flipped')) wrapper.classList.add('flipped');
+    });
+    wrapper.addEventListener('mouseleave', () => wrapper.classList.remove('flipped'));
+    grid.appendChild(wrapper);
+  });
+}
+
+/* ============================================================
+   UTILITY: ANIMATE COUNTER
+   ============================================================ */
+function animateCounter(el, from, to, duration) {
+  const start = performance.now();
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = Math.round(from + (to - from) * eased);
+    el.textContent = value;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ============================================================
+   STAR FLOW ANIMATION
+   ============================================================ */
+function animateStarFlow() {
+  const dot = document.getElementById('flow-dot');
+  if (!dot) return;
+  dot.style.display = 'block';
+
+  function cycle() {
+    anime({
+      targets: dot,
+      translateY: [0, 60],
+      opacity: [1, 0],
+      duration: 1200,
+      easing: 'easeInQuad',
+      complete: () => {
+        dot.style.transform = 'translateX(-50%)';
+        setTimeout(cycle, 600 + Math.random() * 800);
+      }
+    });
+  }
+  setTimeout(cycle, 1000);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Detect language and set toggle button text
+  currentLang = detectLanguage();
+  const langBtn = document.getElementById('lang-toggle');
+  langBtn.textContent = currentLang === 'en' ? '🇺🇸 EN' : '🇨🇳 中文';
+
+  // Section 1: Starfield
+  const canvas = document.getElementById('starfield-canvas');
+  createStarfield(canvas);
+
+  // Nav
+  initNav();
+
+  // Scroll reveals
+  observeSections();
+
+  // Section 2: Architecture
+  animateArchArrows();
+
+  // Section 3: Phone frame init
+  document.getElementById('phone-screen').innerHTML = getPhoneContent('parent');
+
+  // Section 4: Journey
+  buildJourneyProgress();
+  renderJourneyStep();
+
+  // Section 5: Matrix
+  renderQuestMatrix();
+
+  // Star flow animation (starts when section visible)
+  const flowObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateStarFlow();
+        flowObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  const economySection = document.getElementById('section-economy');
+  if (economySection) flowObserver.observe(economySection);
+
+  // Section 6: DB schema
+  renderSchema();
+
+  // Section 7: Tech cards
+  renderTechCards();
+
+  // Apply translations (updates all data-i18n elements)
+  applyTranslations();
+
+  // Keyboard arrow navigation for journey
+  document.addEventListener('keydown', (e) => {
+    const journeySection = document.getElementById('section-journey');
+    const rect = journeySection.getBoundingClientRect();
+    const inView = rect.top < window.innerHeight && rect.bottom > 0;
+    if (!inView) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') journeyNav(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') journeyNav(-1);
+  });
+});
+</script>
+</body>
+</html>
