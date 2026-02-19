@@ -4,13 +4,10 @@ import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
-  handleBatchOperation,
-  buildApprovalPayload,
-  buildRejectionPayload,
-} from "@/lib/batch-operations";
 import { useBatchSelection } from "@/lib/hooks/useBatchSelection";
 import { useActivityFilters } from "@/lib/hooks/useActivityFilters";
+import { useActivityModals } from "@/lib/hooks/useActivityModals";
+import { useActivityActions } from "@/lib/hooks/useActivityActions";
 import ActivityItem from "@/components/shared/ActivityItem";
 import ActivityFilterBar from "@/components/shared/ActivityFilterBar";
 import ActivityDateGroup from "@/components/shared/ActivityDateGroup";
@@ -24,14 +21,98 @@ import RedeemFromCalendarModal from "@/components/shared/RedeemFromCalendarModal
 import type {
   UnifiedActivityItem,
   UnifiedActivityListProps,
+  StarTransaction,
+  ActivityRole,
 } from "@/types/activity";
 import { getPermissions } from "@/types/activity";
 import {
-  getActivityDescription,
   groupActivitiesByDate,
   calculateActivityStats,
 } from "@/lib/activity-utils";
 import { getTodayString } from "@/lib/date-utils";
+
+// ── Local sub-component ───────────────────────────────────────────────────────
+
+type TranslateFn = ReturnType<typeof useTranslations>;
+
+interface ActivityActionButtonsProps {
+  canAddRecord: boolean;
+  canRedeem: boolean;
+  role: ActivityRole;
+  onAddRecord: () => void;
+  onRedeem: () => void;
+  variant: "sidebar" | "cta";
+  t: TranslateFn;
+}
+
+function ActivityActionButtons({
+  canAddRecord,
+  canRedeem,
+  role,
+  onAddRecord,
+  onRedeem,
+  variant,
+  t,
+}: ActivityActionButtonsProps) {
+  if (variant === "sidebar") {
+    return (
+      <div className="space-y-2">
+        {canAddRecord && (
+          <button
+            onClick={onAddRecord}
+            className="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-medium flex items-center justify-center space-x-2"
+            data-testid="add-record-button"
+          >
+            <span>➕</span>
+            <span>
+              {role === "parent"
+                ? t("activity.addRecord")
+                : t("activity.requestStars")}
+            </span>
+          </button>
+        )}
+        {canRedeem && (
+          <button
+            onClick={onRedeem}
+            className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center space-x-2"
+            data-testid="redeem-reward-button"
+          >
+            <span>🎁</span>
+            <span>{t("activity.redeemReward")}</span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+      {canAddRecord && (
+        <button
+          onClick={onAddRecord}
+          className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm"
+          data-testid="add-record-cta"
+        >
+          ➕{" "}
+          {role === "parent"
+            ? t("activity.addRecordCta")
+            : t("activity.requestStarsCta")}
+        </button>
+      )}
+      {canRedeem && (
+        <button
+          onClick={onRedeem}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+          data-testid="redeem-reward-cta"
+        >
+          🎁 {t("activity.redeemRewardCta")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function UnifiedActivityList({
   activities,
@@ -81,26 +162,15 @@ export default function UnifiedActivityList({
   // Pagination state (child only)
   const [showCount, setShowCount] = useState(20);
 
-  // Edit/Delete state (parent only)
-  const [editingTransaction, setEditingTransaction] = useState<any | null>(
-    null
-  );
-  const [editingRedemption, setEditingRedemption] = useState<any | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // Resubmit state (child only)
-  const [resubmitTransaction, setResubmitTransaction] = useState<any | null>(
-    null
-  );
-
-  // Add record modal state
-  const [showAddRecordModal, setShowAddRecordModal] = useState(false);
-
-  // Redeem reward modal state
-  const [showRedeemModal, setShowRedeemModal] = useState(false);
+  // Modal state (edit, resubmit, add record, redeem)
+  const modals = useActivityModals();
 
   // Batch selection state (parent only)
   const batch = useBatchSelection();
+
+  // Action handlers (delete, batch approve/reject)
+  const { deletingId, handleDelete, handleBatchApprove, handleBatchReject } =
+    useActivityActions({ batch, supabase, router, t, locale });
 
   // Calculate stats
   const stats = useMemo(
@@ -129,73 +199,6 @@ export default function UnifiedActivityList({
       ),
     [filteredActivities]
   );
-
-  // Batch approve handler (parent only)
-  const handleBatchApprove = async () => {
-    if (batch.selectedIds.size === 0) return;
-
-    if (!confirm(t("activity.confirmBatchApprove", { count: batch.selectedIds.size }))) return;
-
-    await handleBatchOperation({
-      batch,
-      supabase,
-      router,
-      table: "star_transactions",
-      data: buildApprovalPayload(),
-      onError: () => alert(t("activity.batchApproveFailed")),
-    });
-  };
-
-  // Batch reject handler (parent only)
-  const handleBatchReject = async () => {
-    if (batch.selectedIds.size === 0 || !batch.batchRejectReason.trim()) return;
-
-    await handleBatchOperation({
-      batch,
-      supabase,
-      router,
-      table: "star_transactions",
-      data: buildRejectionPayload(batch.batchRejectReason),
-      onSuccess: () => {
-        batch.setShowBatchRejectModal(false);
-        batch.setBatchRejectReason("");
-      },
-      onError: () => alert(t("activity.batchRejectFailed")),
-    });
-  };
-
-  // Delete handler (parent only)
-  const handleDelete = async (activity: UnifiedActivityItem) => {
-    /* istanbul ignore next -- defensive guard: UI only shows delete for star_transactions */
-    if (activity.type !== "star_transaction") {
-      alert(t("activity.canOnlyDeleteStars"));
-      return;
-    }
-
-    const starsStr = `${activity.stars > 0 ? "+" : ""}${activity.stars}⭐`;
-    if (!confirm(t("activity.confirmDeleteRecord", {
-      quest: getActivityDescription(activity, locale),
-      stars: starsStr,
-    }))) return;
-
-    setDeletingId(activity.id);
-
-    try {
-      const { error } = await supabase
-        .from("star_transactions")
-        .delete()
-        .eq("id", activity.id);
-
-      if (error) throw error;
-
-      router.refresh();
-    } catch (err) {
-      console.error("Error deleting transaction:", err);
-      alert(t("activity.deleteFailed"));
-    } finally {
-      setDeletingId(null);
-    }
-  };
 
   // Determine if "Add Record" button should be shown
   const canAddRecord = useMemo(() => {
@@ -272,32 +275,15 @@ export default function UnifiedActivityList({
               }}
             />
             {(canAddRecord || canRedeem) && (
-              <div className="space-y-2">
-                {canAddRecord && (
-                  <button
-                    onClick={() => setShowAddRecordModal(true)}
-                    className="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-medium flex items-center justify-center space-x-2"
-                    data-testid="add-record-button"
-                  >
-                    <span>➕</span>
-                    <span>
-                      {role === "parent"
-                        ? t("activity.addRecord")
-                        : t("activity.requestStars")}
-                    </span>
-                  </button>
-                )}
-                {canRedeem && (
-                  <button
-                    onClick={() => setShowRedeemModal(true)}
-                    className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center space-x-2"
-                    data-testid="redeem-reward-button"
-                  >
-                    <span>🎁</span>
-                    <span>{t("activity.redeemReward")}</span>
-                  </button>
-                )}
-              </div>
+              <ActivityActionButtons
+                canAddRecord={canAddRecord}
+                canRedeem={canRedeem}
+                role={role}
+                onAddRecord={modals.openAddRecordModal}
+                onRedeem={modals.openRedeemModal}
+                variant="sidebar"
+                t={t}
+              />
             )}
           </div>
         )}
@@ -322,15 +308,13 @@ export default function UnifiedActivityList({
                     selectionMode={batch.selectionMode}
                     isSelected={batch.selectedIds.has(activity.id)}
                     onToggleSelection={() => batch.toggleSelection(activity.id)}
-                    onEdit={() => {
-                      if (activity.type === "redemption") {
-                        setEditingRedemption(activity.originalData);
-                      } else {
-                        setEditingTransaction(activity.originalData);
-                      }
-                    }}
+                    onEdit={() => modals.openEditModal(activity)}
                     onDelete={() => handleDelete(activity)}
-                    onResubmit={() => setResubmitTransaction(activity.originalData)}
+                    onResubmit={() =>
+                      modals.openResubmitModal(
+                        activity.originalData as StarTransaction
+                      )
+                    }
                     deletingId={deletingId}
                     showChildName={permissions.canSeeAllChildren}
                     variant="list"
@@ -349,28 +333,15 @@ export default function UnifiedActivityList({
                     {t("activity.noRecordsFound")}
                   </p>
                   {(canAddRecord || canRedeem) && (
-                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
-                      {canAddRecord && (
-                        <button
-                          onClick={() => setShowAddRecordModal(true)}
-                          className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm"
-                          data-testid="add-record-cta"
-                        >
-                          ➕ {role === "parent"
-                            ? t("activity.addRecordCta")
-                            : t("activity.requestStarsCta")}
-                        </button>
-                      )}
-                      {canRedeem && (
-                        <button
-                          onClick={() => setShowRedeemModal(true)}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
-                          data-testid="redeem-reward-cta"
-                        >
-                          🎁 {t("activity.redeemRewardCta")}
-                        </button>
-                      )}
-                    </div>
+                    <ActivityActionButtons
+                      canAddRecord={canAddRecord}
+                      canRedeem={canRedeem}
+                      role={role}
+                      onAddRecord={modals.openAddRecordModal}
+                      onRedeem={modals.openRedeemModal}
+                      variant="cta"
+                      t={t}
+                    />
                   )}
                 </div>
               ) : (
@@ -384,15 +355,13 @@ export default function UnifiedActivityList({
                     selectionMode={batch.selectionMode}
                     selectedIds={batch.selectedIds}
                     onToggleSelection={(id) => batch.toggleSelection(id)}
-                    onEdit={(activity) => {
-                      if (activity.type === "redemption") {
-                        setEditingRedemption(activity.originalData);
-                      } else {
-                        setEditingTransaction(activity.originalData);
-                      }
-                    }}
+                    onEdit={(activity) => modals.openEditModal(activity)}
                     onDelete={(activity) => handleDelete(activity)}
-                    onResubmit={(activity) => setResubmitTransaction(activity.originalData)}
+                    onResubmit={(activity) =>
+                      modals.openResubmitModal(
+                        activity.originalData as StarTransaction
+                      )
+                    }
                     deletingId={deletingId}
                   />
                 ))
@@ -417,34 +386,34 @@ export default function UnifiedActivityList({
       </div>
 
       {/* Edit Modal (parent only - star transactions) */}
-      {editingTransaction && permissions.canEdit && (
+      {modals.editingTransaction && permissions.canEdit && (
         <EditTransactionModal
-          transaction={editingTransaction}
+          transaction={modals.editingTransaction}
           locale={locale}
-          onClose={() => setEditingTransaction(null)}
+          onClose={modals.closeEditTransaction}
         />
       )}
 
       {/* Edit Redemption Modal (parent only) */}
-      {editingRedemption && permissions.canEdit && (
+      {modals.editingRedemption && permissions.canEdit && (
         <EditRedemptionModal
-          redemption={editingRedemption}
+          redemption={modals.editingRedemption}
           locale={locale}
-          onClose={() => setEditingRedemption(null)}
+          onClose={modals.closeEditRedemption}
         />
       )}
 
       {/* Resubmit Modal (child only) */}
-      {resubmitTransaction && permissions.canResubmit && (
+      {modals.resubmitTransaction && permissions.canResubmit && (
         <ResubmitRequestModal
-          transaction={resubmitTransaction}
+          transaction={modals.resubmitTransaction}
           locale={locale}
-          onClose={() => setResubmitTransaction(null)}
+          onClose={modals.closeResubmit}
         />
       )}
 
       {/* Add Record Modal */}
-      {showAddRecordModal && filterDate && currentUserId && familyId && quests && (
+      {modals.showAddRecordModal && filterDate && currentUserId && familyId && quests && (
         <AddRecordModal
           date={filterDate}
           role={role}
@@ -453,13 +422,13 @@ export default function UnifiedActivityList({
           familyChildren={childrenProp}
           currentUserId={currentUserId}
           familyId={familyId}
-          onClose={() => setShowAddRecordModal(false)}
-          onSuccess={() => setShowAddRecordModal(false)}
+          onClose={modals.closeAddRecord}
+          onSuccess={modals.closeAddRecord}
         />
       )}
 
       {/* Redeem Reward Modal */}
-      {showRedeemModal && currentUserId && familyId && rewards && childrenProp && childBalances && (
+      {modals.showRedeemModal && currentUserId && familyId && rewards && childrenProp && childBalances && (
         <RedeemFromCalendarModal
           locale={locale}
           rewards={rewards}
@@ -467,8 +436,8 @@ export default function UnifiedActivityList({
           childBalances={childBalances}
           currentUserId={currentUserId}
           familyId={familyId}
-          onClose={() => setShowRedeemModal(false)}
-          onSuccess={() => setShowRedeemModal(false)}
+          onClose={modals.closeRedeem}
+          onSuccess={modals.closeRedeem}
         />
       )}
 
@@ -493,4 +462,3 @@ export default function UnifiedActivityList({
     </div>
   );
 }
-

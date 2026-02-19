@@ -100,4 +100,40 @@ describe("LoginPage", () => {
       "/zh-CN/register"
     );
   });
+
+  it("renders introduction link to visualization page", async () => {
+    const jsx = await LoginPage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    const introLink = screen.getByText("auth.introduction");
+    expect(introLink.closest("a")).toHaveAttribute(
+      "href",
+      "/starquest-visualization.html"
+    );
+    expect(introLink.closest("a")).toHaveAttribute("target", "_blank");
+  });
+
+  it("renders try demo link with correct locale", async () => {
+    const jsx = await LoginPage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    const demoLink = screen.getByText("auth.tryDemo");
+    expect(demoLink.closest("a")).toHaveAttribute(
+      "href",
+      "/en/login?demo=true"
+    );
+  });
+
+  it("renders explore text", async () => {
+    const jsx = await LoginPage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    expect(screen.getByText("auth.orExplore")).toBeInTheDocument();
+  });
 });

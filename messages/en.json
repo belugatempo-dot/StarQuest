@@ -56,7 +56,11 @@
     "familyName": "Family Name",
     "role": "Role",
     "parent": "Parent",
-    "child": "Child"
+    "child": "Child",
+    "tryDemo": "Try Demo",
+    "introduction": "Introduction",
+    "demoHint": "Email: demo@starquest.app",
+    "orExplore": "Or explore first"
   },
   "verification": {
     "checkEmailTitle": "Check Your Email",

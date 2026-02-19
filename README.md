@@ -50,7 +50,7 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Report preferences settings page
 - [x] Database backup system (manual + automated weekly)
 - [x] Architecture refactoring (UnifiedActivityList → shared components)
-- [x] Comprehensive test coverage (2752 tests, ~99% coverage)
+- [x] Comprehensive test coverage (2778 tests, ~99% coverage)
 - [x] Demo seed API (fully-populated demo family with 30 days of activity)
 - [x] Generate markdown summary reports (on-demand report download from activity page)
 - [x] Unified admin dashboard (consolidated parent pages)
@@ -58,6 +58,7 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Child notes and parent responses in activity views
 - [x] Redeem reward directly from calendar view
 - [x] Collapsible filter panels in activity lists
+- [x] UnifiedActivityList hook refactor (useActivityModals, useActivityActions, ActivityActionButtons)
 
 ---
 
@@ -132,7 +133,7 @@ StarQuest/
 │   ├── supabase/          # Supabase client configs
 │   ├── email/             # Email sending (Resend) and templates
 │   ├── reports/           # Report data generation
-│   ├── hooks/             # Custom React hooks (useBatchSelection, useActivityFilters)
+│   ├── hooks/             # Custom React hooks (useBatchSelection, useActivityFilters, useActivityModals, useActivityActions)
 │   ├── api/               # API utilities (cron auth)
 │   ├── demo/              # Demo seed system
 │   ├── auth.ts            # Auth utilities
@@ -148,7 +149,7 @@ StarQuest/
 │   └── zh-CN.json
 ├── supabase/
 │   └── migrations/        # Database migration files
-└── __tests__/             # Test files (2752 tests, 123 suites)
+└── __tests__/             # Test files (2778 tests, 125 suites)
 ```
 
 ---
@@ -178,13 +179,13 @@ Background:            #F9FAFB
 ## 🧪 Testing
 
 ```bash
-# Run all tests (2752 tests, 123 suites)
+# Run all tests (2778 tests, 125 suites)
 npm test
 
 # Watch mode
 npm run test:watch
 
-# Coverage report (~99% statements, 98% branches)
+# Coverage report (~99% statements, branches)
 npm run test:coverage
 ```
 
@@ -262,17 +263,19 @@ Language can be switched via the UI. User language preference is saved in their 
 6. ✅ Email reports (weekly/monthly), settlement notices, settings page
 7. ✅ Database backup system (manual + weekly GitHub Actions)
 8. ✅ Architecture refactoring (UnifiedActivityList → shared components)
-9. ✅ Comprehensive test coverage (2752 tests, ~99% coverage)
+9. ✅ Comprehensive test coverage (2778 tests, ~99% coverage)
 10. ✅ Demo seed API (realistic demo family with 30 days of activity)
 11. ✅ Generate markdown summary reports (on-demand from activity page)
 12. ✅ Unified admin dashboard, dark starry night theme
 13. ✅ Redeem from calendar, child notes, collapsible filters
-14. PWA support
-15. Data export
+14. ✅ UnifiedActivityList hook refactor (useActivityModals, useActivityActions, ActivityActionButtons)
+15. PWA support
+16. Data export
 
 ### Phase 5: Polish & Launch
-12. Performance optimization
-13. Production hardening
+
+1. Performance optimization
+2. Production hardening
 
 ---
 
