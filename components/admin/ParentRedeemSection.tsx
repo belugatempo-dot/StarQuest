@@ -155,8 +155,8 @@ export default function ParentRedeemSection({
           </div>
         )
       ) : (
-        <div className="p-8 text-center bg-white/5 rounded-lg border-2 border-dashed border-white/20">
-          <div className="text-4xl mb-2">👆</div>
+        <div className="p-4 text-center bg-white/5 rounded-lg border border-dashed border-white/20">
+          <div className="text-2xl mb-1">👆</div>
           <p className="text-slate-400">
             {locale === "zh-CN"
               ? "请先选择一个孩子"

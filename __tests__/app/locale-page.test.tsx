@@ -95,7 +95,7 @@ describe("HomePage (Locale Root Page)", () => {
     });
     render(jsx);
 
-    const introLink = screen.getByText("auth.introduction");
+    const introLink = screen.getByText(/auth\.introduction/);
     expect(introLink.closest("a")).toHaveAttribute(
       "href",
       "/starquest-visualization.html"
@@ -109,7 +109,7 @@ describe("HomePage (Locale Root Page)", () => {
     });
     render(jsx);
 
-    const demoLink = screen.getByText("auth.tryDemo");
+    const demoLink = screen.getByText(/auth\.tryDemo/);
     expect(demoLink.closest("a")).toHaveAttribute(
       "href",
       "/en/login?demo=true"

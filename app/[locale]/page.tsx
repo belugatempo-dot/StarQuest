@@ -46,37 +46,39 @@ export default async function HomePage({
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-wrap gap-4 justify-center mt-12">
-          <Link
-            href={`/${locale}/login`}
-            className="px-8 py-3 bg-secondary text-white rounded-lg font-semibold hover:bg-secondary/90 transition"
-          >
-            {t("common.login")}
-          </Link>
-          <Link
-            href={`/${locale}/register`}
-            className="px-8 py-3 bg-primary text-gray-900 rounded-lg font-semibold hover:bg-primary/90 transition"
-          >
-            {t("common.register")}
-          </Link>
-        </div>
-
-        {/* Demo & Introduction */}
-        <div className="flex flex-wrap gap-4 justify-center mt-4">
-          <a
-            href="/starquest-visualization.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-8 py-3 text-lg bg-slate-700 text-white border border-slate-500 rounded-lg font-semibold hover:bg-slate-600 transition"
-          >
-            {t("auth.introduction")}
-          </a>
-          <Link
-            href={`/${locale}/login?demo=true`}
-            className="px-8 py-3 text-lg bg-primary/20 text-primary border border-primary/60 rounded-lg font-semibold hover:bg-primary/30 transition"
-          >
-            {t("auth.tryDemo")}
-          </Link>
+        <div className="flex flex-col items-center gap-4 mt-12">
+          {/* Primary actions */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link
+              href={`/${locale}/login?demo=true`}
+              className="px-10 py-3.5 text-lg bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+            >
+              ✨ {t("auth.tryDemo")}
+            </Link>
+            <Link
+              href={`/${locale}/login`}
+              className="px-10 py-3.5 text-lg bg-white/10 text-white rounded-full font-semibold border border-white/20 hover:bg-white/20 transition-all"
+            >
+              {t("common.login")}
+            </Link>
+          </div>
+          {/* Secondary actions */}
+          <div className="flex flex-wrap gap-6 justify-center mt-1">
+            <Link
+              href={`/${locale}/register`}
+              className="text-sm text-slate-300 hover:text-white underline underline-offset-4 decoration-slate-500 hover:decoration-white transition-all"
+            >
+              {t("common.register")}
+            </Link>
+            <a
+              href="/starquest-visualization.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-slate-300 hover:text-white underline underline-offset-4 decoration-slate-500 hover:decoration-white transition-all"
+            >
+              {t("auth.introduction")} →
+            </a>
+          </div>
         </div>
 
         {/* Footer */}
