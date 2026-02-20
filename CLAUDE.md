@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2836 tests, ~99% coverage)
+# Testing (2849 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -315,7 +315,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 ### Structure
 ```
 __tests__/
-├── api/{admin,cron,invite-parent,reports,seed-demo}/
+├── api/{admin,cron,demo-login,invite-parent,reports,seed-demo}/
 ├── app/{admin,auth,child}/
 ├── components/{admin,analytics,auth,child,shared,ui}/
 ├── hooks/
@@ -441,22 +441,32 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 | Role | Email | Password |
 |------|-------|----------|
 | Parent | `demo@starquest.app` | `$DEMO_PARENT_PASSWORD` |
-| Emma (child) | `emma.demo@starquest.app` | `EmmaDemo123!` |
-| Lucas (child) | `lucas.demo@starquest.app` | `LucasDemo123!` |
+| Alisa (child) | `alisa.demo@starquest.app` | `AlisaDemo123!` |
+| Alexander (child) | `alexander.demo@starquest.app` | `AlexanderDemo123!` |
 
 ### What Gets Seeded
 - Family with 45 quests, 11 rewards, 7 levels, 14 categories (via `create_family_with_templates` RPC)
-- 2 children: Emma (Level 3, compliant) and Lucas (Level 2, credit enabled)
+- 2 children: Alisa (Level 3, compliant) and Alexander (Level 2, credit enabled)
 - ~30 days of star transactions (duty misses, bonus completions, violations)
 - 7 redemptions (mix of approved/pending, one using credit)
-- Credit system for Lucas (interest tiers, credit settings, credit transaction)
+- Credit system for Alexander (interest tiers, credit settings, credit transaction)
 - Report preferences (weekly + monthly enabled)
 
 ### Source Files
-- `lib/demo/demo-config.ts` — Constants and child profiles
+- `lib/demo/demo-config.ts` — Constants and child profiles (server-only, contains passwords)
+- `lib/demo/demo-users.ts` — Client-safe role metadata (NO passwords, importable by client components)
 - `lib/demo/demo-cleanup.ts` — FK-ordered cleanup logic
 - `lib/demo/demo-seed.ts` — Core seed with deterministic RNG
 - `app/api/seed-demo/route.ts` — Protected API route
+- `app/api/demo-login/route.ts` — Passwordless demo login endpoint
+
+### Passwordless Demo Login (`app/api/demo-login/route.ts`)
+One-click demo access without exposing passwords to client bundle.
+- **Flow:** "Try Demo" → `/login?demo=true` → Role picker (Parent/Alisa/Alexander) → `POST /api/demo-login` → `verifyOtp()` → session
+- **Server:** `createAdminClient().auth.admin.generateLink({ type: 'magiclink', email })` → returns `hashed_token`
+- **Client:** `supabase.auth.verifyOtp({ token_hash, type: 'magiclink' })` → sets cookies via `@supabase/ssr`
+- **UI:** `DemoRolePicker` sub-component in `LoginForm.tsx` (unexported, replaces form when `?demo=true`)
+- **Client-safe metadata:** `lib/demo/demo-users.ts` (NO passwords) vs `lib/demo/demo-config.ts` (server-only, HAS passwords)
 
 ---
 
@@ -468,4 +478,4 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 
 ---
 
-**Last Updated:** 2026-02-20 | **Tests:** 2836 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-20 | **Tests:** 2849 passing | **Coverage:** ~99%
