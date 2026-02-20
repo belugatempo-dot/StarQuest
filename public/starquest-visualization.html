@@ -492,7 +492,7 @@ h2.section-title {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 68px;
+  padding-top: 0;
   gap: 0;
 }
 
@@ -1516,25 +1516,25 @@ h2.section-title {
   <div style="display:flex;gap:16px;width:100%;max-width:800px;" class="reveal reveal-delay-1">
     <!-- SVG arrows panel -->
     <div id="arch-svg-panel">
-      <svg id="arch-svg" width="50" height="560" viewBox="0 0 50 560">
+      <svg id="arch-svg" width="50" height="240" viewBox="0 0 50 240">
         <!-- Arrow: Browser ↔ Server -->
-        <line id="arrow-bs" x1="25" y1="90" x2="25" y2="290" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="6 4"/>
-        <circle id="packet-down-1" cx="25" cy="90" r="5" fill="#FFD700" opacity="0"/>
-        <circle id="packet-up-1" cx="25" cy="290" r="5" fill="#10B981" opacity="0"/>
+        <line id="arrow-bs" x1="25" y1="36" x2="25" y2="116" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle id="packet-down-1" cx="25" cy="36" r="5" fill="#FFD700" opacity="0"/>
+        <circle id="packet-up-1" cx="25" cy="116" r="5" fill="#10B981" opacity="0"/>
         <!-- Arrowhead -->
-        <polygon points="19,280 25,296 31,280" fill="rgba(255,255,255,0.3)"/>
-        <polygon points="19,104 25,88 31,104" fill="rgba(255,255,255,0.3)"/>
+        <polygon points="19,106 25,120 31,106" fill="rgba(255,255,255,0.3)"/>
+        <polygon points="19,48 25,34 31,48" fill="rgba(255,255,255,0.3)"/>
 
         <!-- Arrow: Server ↔ DB -->
-        <line id="arrow-sd" x1="25" y1="305" x2="25" y2="470" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="6 4"/>
-        <circle id="packet-down-2" cx="25" cy="305" r="5" fill="#FFD700" opacity="0"/>
-        <circle id="packet-up-2" cx="25" cy="470" r="5" fill="#10B981" opacity="0"/>
-        <polygon points="19,460 25,476 31,460" fill="rgba(255,255,255,0.3)"/>
-        <polygon points="19,315 25,299 31,315" fill="rgba(255,255,255,0.3)"/>
+        <line id="arrow-sd" x1="25" y1="124" x2="25" y2="200" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle id="packet-down-2" cx="25" cy="124" r="5" fill="#FFD700" opacity="0"/>
+        <circle id="packet-up-2" cx="25" cy="200" r="5" fill="#10B981" opacity="0"/>
+        <polygon points="19,190 25,204 31,190" fill="rgba(255,255,255,0.3)"/>
+        <polygon points="19,136 25,122 31,136" fill="rgba(255,255,255,0.3)"/>
 
         <!-- Labels -->
-        <text x="25" y="200" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" transform="rotate(-90,25,200)" data-i18n="arch.arrow.reqRes">Request / Response</text>
-        <text x="25" y="395" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" transform="rotate(-90,25,395)" data-i18n="arch.arrow.sqlData">SQL / Data</text>
+        <text x="25" y="76" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" transform="rotate(-90,25,76)" data-i18n="arch.arrow.reqRes">Request / Response</text>
+        <text x="25" y="162" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" transform="rotate(-90,25,162)" data-i18n="arch.arrow.sqlData">SQL / Data</text>
       </svg>
     </div>
 
@@ -2965,10 +2965,10 @@ function animateArchArrows() {
     }
     setTimeout(step, delay);
   }
-  animatePacket('packet-down-1', 90, 285, 0, '#FFD700');
-  animatePacket('packet-up-1', 290, 95, 800, '#10B981');
-  animatePacket('packet-down-2', 305, 465, 400, '#FFD700');
-  animatePacket('packet-up-2', 470, 310, 1200, '#10B981');
+  animatePacket('packet-down-1', 36, 112, 0, '#FFD700');
+  animatePacket('packet-up-1', 116, 40, 800, '#10B981');
+  animatePacket('packet-down-2', 124, 196, 400, '#FFD700');
+  animatePacket('packet-up-2', 200, 128, 1200, '#10B981');
 }
 
 /* ============================================================
