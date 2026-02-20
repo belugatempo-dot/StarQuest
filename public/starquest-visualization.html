@@ -282,10 +282,10 @@ h2.section-title {
 }
 
 #hero-title {
-  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-size: clamp(2.8rem, 8vw, 5rem);
   font-weight: 900;
   line-height: 1.15;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   text-shadow: 0 0 30px rgba(255,215,0,0.3);
   background: linear-gradient(135deg, #FEF08A, var(--star-gold), var(--star-warm));
   -webkit-background-clip: text;
@@ -1454,7 +1454,7 @@ h2.section-title {
     <div class="nav-dot" data-target="section-db" title="Database" data-i18n-title="nav.db"></div>
     <div class="nav-dot" data-target="section-tech" title="Tech Stack" data-i18n-title="nav.tech"></div>
   </div>
-  <button id="lang-toggle" onclick="toggleLanguage()">🇺🇸 EN</button>
+  <button id="lang-toggle" onclick="toggleLanguage()">🇨🇳 中文</button>
 </nav>
 
 <!-- ============================================================
@@ -2625,7 +2625,7 @@ function toggleLanguage() {
 
   // Update toggle button
   const btn = document.getElementById('lang-toggle');
-  btn.textContent = currentLang === 'en' ? '🇺🇸 EN' : '🇨🇳 中文';
+  btn.textContent = currentLang === 'en' ? '🇨🇳 中文' : '🇺🇸 EN';
 
   applyTranslations();
 }
@@ -3288,7 +3288,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Detect language and set toggle button text
   currentLang = detectLanguage();
   const langBtn = document.getElementById('lang-toggle');
-  langBtn.textContent = currentLang === 'en' ? '🇺🇸 EN' : '🇨🇳 中文';
+  langBtn.textContent = currentLang === 'en' ? '🇨🇳 中文' : '🇺🇸 EN';
 
   // Section 1: Starfield
   const canvas = document.getElementById('starfield-canvas');
