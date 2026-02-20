@@ -7,6 +7,7 @@ import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import { getTodayString, combineDateWithCurrentTime } from "@/lib/date-utils";
 import { getQuestName } from "@/lib/localization";
+import { trackQuestStarRequested } from "@/lib/analytics/events";
 import type { Database } from "@/types/database";
 
 type Quest = Database["public"]["Tables"]["quests"]["Row"];
@@ -141,6 +142,13 @@ export default function RequestStarsModal({
         });
 
       if (insertError) throw insertError;
+
+      trackQuestStarRequested({
+        questId: quest.id,
+        questType: quest.type,
+        questScope: quest.scope ?? undefined,
+        stars: quest.stars,
+      });
 
       // Success!
       onSuccess();

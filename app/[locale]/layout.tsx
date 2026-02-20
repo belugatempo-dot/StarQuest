@@ -4,6 +4,8 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales } from "@/i18n/config";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PostHogProvider } from "@/components/analytics/PostHogProvider";
+import { PostHogPageView } from "@/components/analytics/PostHogPageView";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -36,11 +38,14 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className="dark" style={{ colorScheme: 'dark' }}>
       <body>
-        <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </ThemeProvider>
+        <PostHogProvider>
+          <PostHogPageView />
+          <ThemeProvider>
+            <NextIntlClientProvider messages={messages}>
+              {children}
+            </NextIntlClientProvider>
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

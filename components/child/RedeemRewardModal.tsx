@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import ModalFrame from "@/components/ui/ModalFrame";
 import { getRewardName } from "@/lib/localization";
+import { trackRewardRedemption } from "@/lib/analytics/events";
 import type { Database } from "@/types/database";
 import CreditUsageWarning from "./CreditUsageWarning";
 
@@ -403,6 +404,12 @@ export default function RedeemRewardModal({
           p_credit_amount: creditToUse,
         });
       }
+
+      trackRewardRedemption({
+        rewardId: reward.id,
+        starsCost: reward.stars_cost,
+        usesCredit: willUseCredit && creditToUse > 0,
+      });
 
       onSuccess();
     } catch (err) {
