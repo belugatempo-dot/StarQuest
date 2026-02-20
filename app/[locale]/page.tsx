@@ -29,19 +29,19 @@ export default async function HomePage({
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6 mt-12">
           <div className="p-6 dark-card rounded-lg shadow-md">
-            <div className="text-4xl mb-2">📋</div>
-            <h3 className="text-xl font-semibold mb-2">{t("common.quests")}</h3>
-            <p className="text-slate-400">Complete daily tasks and positive behaviors</p>
+            <div className="text-5xl mb-3">📋</div>
+            <h3 className="text-2xl font-semibold mb-2">{t("common.quests")}</h3>
+            <p className="text-base text-slate-400">Complete daily tasks and positive behaviors</p>
           </div>
           <div className="p-6 dark-card rounded-lg shadow-md">
-            <div className="text-4xl mb-2">⭐</div>
-            <h3 className="text-xl font-semibold mb-2">{t("common.stars")}</h3>
-            <p className="text-slate-400">Earn stars for every achievement</p>
+            <div className="text-5xl mb-3">⭐</div>
+            <h3 className="text-2xl font-semibold mb-2">{t("common.stars")}</h3>
+            <p className="text-base text-slate-400">Earn stars for every achievement</p>
           </div>
           <div className="p-6 dark-card rounded-lg shadow-md">
-            <div className="text-4xl mb-2">🎁</div>
-            <h3 className="text-xl font-semibold mb-2">{t("common.rewards")}</h3>
-            <p className="text-slate-400">Redeem exciting rewards with your stars</p>
+            <div className="text-5xl mb-3">🎁</div>
+            <h3 className="text-2xl font-semibold mb-2">{t("common.rewards")}</h3>
+            <p className="text-base text-slate-400">Redeem exciting rewards with your stars</p>
           </div>
         </div>
 
@@ -67,13 +67,13 @@ export default async function HomePage({
             href="/starquest-visualization.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-3 border border-slate-600 text-slate-300 rounded-lg font-semibold hover:bg-slate-800 transition"
+            className="px-8 py-3 text-lg bg-slate-700 text-white border border-slate-500 rounded-lg font-semibold hover:bg-slate-600 transition"
           >
             {t("auth.introduction")}
           </a>
           <Link
             href={`/${locale}/login?demo=true`}
-            className="px-8 py-3 border border-primary/50 text-primary rounded-lg font-semibold hover:bg-primary/10 transition"
+            className="px-8 py-3 text-lg bg-primary/20 text-primary border border-primary/60 rounded-lg font-semibold hover:bg-primary/30 transition"
           >
             {t("auth.tryDemo")}
           </Link>

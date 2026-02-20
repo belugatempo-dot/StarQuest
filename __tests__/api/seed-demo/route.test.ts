@@ -122,15 +122,15 @@ describe("POST /api/seed-demo", () => {
         parentId: "parent-1",
         children: [
           {
-            name: "Emma",
-            email: "emma.demo@starquest.app",
-            password: "EmmaDemo123!",
+            name: "Alisa",
+            email: "alisa.demo@starquest.app",
+            password: "AlisaDemo123!",
             userId: "child-1",
           },
           {
-            name: "Lucas",
-            email: "lucas.demo@starquest.app",
-            password: "LucasDemo123!",
+            name: "Alexander",
+            email: "alexander.demo@starquest.app",
+            password: "AlexanderDemo123!",
             userId: "child-2",
           },
         ],
@@ -148,7 +148,7 @@ describe("POST /api/seed-demo", () => {
       expect(result.body.family.id).toBe("fam-1");
       expect(result.body.credentials.parent.email).toBe("demo@starquest.app");
       expect(result.body.credentials.children).toHaveLength(2);
-      expect(result.body.credentials.children[0].name).toBe("Emma");
+      expect(result.body.credentials.children[0].name).toBe("Alisa");
       expect(result.body.stats.transactions).toBe(200);
 
       // Verify cleanup was called with admin client

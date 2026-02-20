@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2778 tests, ~99% coverage)
+# Testing (2836 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -115,6 +115,10 @@ components/
 ├── admin/     # Parent UI (all quest types)
 │   ├── ActivityPageHeader.tsx        # Activity page header with Generate Report button
 │   └── GenerateReportModal.tsx       # Modal for on-demand markdown report generation
+├── analytics/ # PostHog analytics (privacy-first)
+│   ├── PostHogProvider.tsx           # Client provider — wraps app, initializes posthog-js
+│   ├── PostHogPageView.tsx           # Automatic pageview tracking on client-side navigation
+│   └── PostHogUserIdentify.tsx       # User identification + session recording control
 └── shared/    # Cross-role components
     ├── UnifiedActivityList.tsx  # Main list orchestrator
     ├── ActivityItem.tsx         # Single activity row
@@ -138,6 +142,9 @@ lib/
 ├── hooks/useActivityModals.ts   # Modal open/close state for UnifiedActivityList (typed, no any)
 ├── hooks/useActivityActions.ts  # handleDelete/handleBatchApprove/handleBatchReject + deletingId
 ├── api/cron-auth.ts             # verifyCronAuth() for cron route authorization
+├── analytics/posthog-config.ts  # Client-safe PostHog config constants (no Node.js deps)
+├── analytics/posthog.ts         # Server-side PostHog client (posthog-node) — DO NOT import from "use client"
+├── analytics/events.ts          # Typed event capture helpers (ANALYTICS_EVENTS + trackXxx functions)
 ├── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
 ├── reports/date-ranges.ts       # getAvailablePeriods(), getReportFilename(), getPreviousPeriodBounds()
 ├── reports/markdown-formatter.ts # generateMarkdownReport() — Markdown report with inline i18n
@@ -224,6 +231,24 @@ Transactional email infrastructure using Resend.
 - Cron endpoint: `GET /api/cron/daily-jobs` — handles settlements, weekly/monthly reports
 - Settings page: `/admin/settings` — report preferences (email, timezone, enabled reports)
 
+### Analytics — PostHog (`components/analytics/`, `lib/analytics/`)
+Full product analytics suite: event tracking, session recordings, feature flags, A/B testing.
+- **Packages:** `posthog-js` + `posthog-node` (NOT `@posthog/nextjs` — supply chain compromised Nov 2025)
+- **Provider:** `PostHogProvider` wraps root layout → `PostHogPageView` tracks client-side navigations
+- **User Identification:** `PostHogUserIdentify` in parent/child layouts
+- **Privacy-first:** Children identified by UUID only (no email/name); session recordings disabled for children
+- **Config split:** `posthog-config.ts` (client-safe) vs `posthog.ts` (server-only with posthog-node) — prevents webpack `node:readline` bundling error
+- **Events tracked:** `login_success`, `login_failed`, `registration_completed`, `quest_star_requested`, `star_recorded_by_parent`, `reward_redemption_requested`, `star_request_approved/rejected`, `redemption_approved/rejected`
+- **Typed helpers:** `lib/analytics/events.ts` — `trackLogin()`, `trackQuestStarRequested()`, `trackStarRecordedByParent()`, etc.
+- **Critical:** Fire `posthog.capture()` BEFORE `window.location.href` in login/register flows (hard navigation destroys JS context)
+
+| Aspect | Parent | Child |
+|--------|--------|-------|
+| `posthog.identify()` | Full PII (email, name) | UUID only (no PII) |
+| Session recordings | Enabled | Disabled |
+| Autocapture | Yes | Yes |
+| Family grouping | Yes | Yes |
+
 ### Generate Markdown Reports (`components/admin/GenerateReportModal.tsx`)
 Parents can generate and download a markdown-formatted summary report on demand from the Activity page.
 - Period types: Daily, Weekly, Monthly, Quarterly, Yearly
@@ -292,16 +317,16 @@ export default getRequestConfig(async ({ requestLocale }) => {
 __tests__/
 ├── api/{admin,cron,invite-parent,reports,seed-demo}/
 ├── app/{admin,auth,child}/
-├── components/{admin,auth,child,shared,ui}/
+├── components/{admin,analytics,auth,child,shared,ui}/
 ├── hooks/
 ├── integration/
-├── lib/{api,demo,email,hooks,reports,supabase}/
+├── lib/{analytics,api,demo,email,hooks,reports,supabase}/
 ├── middleware.test.ts
 └── types/
 ```
 
 ### Global Mocks (jest.setup.js)
-Pre-mocked: `next-intl`, `next/navigation`, `@/lib/supabase/client`
+Pre-mocked: `next-intl`, `next/navigation`, `posthog-js`, `posthog-js/react`, `@/lib/supabase/client`
 
 ### Key Patterns
 ```typescript
@@ -335,6 +360,8 @@ RESEND_API_KEY=your_resend_key              # For invitation & report emails
 RESEND_FROM_EMAIL="StarQuest <noreply@beluga-tempo.com>"  # Optional sender override
 DEMO_SEED_SECRET=<min-32-char-random-token>    # Protects the demo seed endpoint
 DEMO_PARENT_PASSWORD=<strong-password>          # Demo parent login password
+NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_api_key  # PostHog analytics (write-only, client-safe)
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com  # PostHog Cloud US (or https://eu.i.posthog.com for EU)
 ```
 
 ---
@@ -378,6 +405,7 @@ DEMO_PARENT_PASSWORD=<strong-password>          # Demo parent login password
 | Locale warning | Missing `locale` in i18n config | Return `{ locale, messages }` |
 | Duplicate key on register | INSERT without existence check | Migration adds checks |
 | TypeScript `never` type | Complex Supabase query | Add type assertion |
+| Webpack `node:readline` error | `posthog-node` imported in client component | Import `posthog-config.ts` (not `posthog.ts`) from `"use client"` components |
 
 ---
 
@@ -390,6 +418,7 @@ DEMO_PARENT_PASSWORD=<strong-password>          # Demo parent login password
 - [ ] Family-scoped queries (RLS)
 - [ ] Hard navigation for post-auth
 - [ ] Error handling and loading states
+- [ ] Analytics events for key user actions (use `lib/analytics/events.ts` helpers)
 - [ ] Test coverage maintained (currently ~99%)
 
 ---
@@ -439,4 +468,4 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 
 ---
 
-**Last Updated:** 2026-02-18 | **Tests:** 2778 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-20 | **Tests:** 2836 passing | **Coverage:** ~99%

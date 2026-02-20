@@ -62,6 +62,11 @@
     "demoHint": "Email: demo@starquest.app",
     "orExplore": "Or explore first"
   },
+  "demo": {
+    "pickRole": "Choose a demo account",
+    "pickRoleHint": "Select a role to explore StarQuest instantly",
+    "loginFailed": "Demo login failed. Please try again."
+  },
   "verification": {
     "checkEmailTitle": "Check Your Email",
     "checkEmailMessage": "We've sent a verification link to:",

@@ -5,15 +5,21 @@ import LoginForm from '@/components/auth/LoginForm'
 // Mock the Supabase client
 const mockSignIn = jest.fn()
 const mockFrom = jest.fn()
+const mockVerifyOtp = jest.fn()
 
 jest.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
       signInWithPassword: mockSignIn,
+      verifyOtp: mockVerifyOtp,
     },
     from: mockFrom,
   }),
 }))
+
+// Mock global fetch for demo-login API calls
+const mockFetch = jest.fn()
+global.fetch = mockFetch
 
 // Mock next/navigation
 let mockPathname = '/en/login'
@@ -494,33 +500,147 @@ describe('LoginForm', () => {
     })
   })
 
-  describe('Demo Mode', () => {
-    it('pre-fills email with demo account when demo=true', () => {
+  describe('Demo Mode — Role Picker', () => {
+    beforeEach(() => {
       mockSearchParams = new URLSearchParams('demo=true')
-      render(<LoginForm />)
-
-      const emailInput = screen.getByLabelText(/auth.email/i) as HTMLInputElement
-      expect(emailInput.value).toBe('demo@starquest.app')
+      mockFetch.mockReset()
+      mockVerifyOtp.mockReset()
+      delete (window as any).location
+      ;(window as any).location = { href: '' }
     })
 
-    it('shows demo hint banner when demo=true', () => {
-      mockSearchParams = new URLSearchParams('demo=true')
+    it('renders role picker instead of email/password form when demo=true', () => {
       render(<LoginForm />)
 
-      expect(screen.getByText('auth.demoHint')).toBeInTheDocument()
+      // Role picker should be visible
+      expect(screen.getByText('demo.pickRole')).toBeInTheDocument()
+      expect(screen.getByText('demo.pickRoleHint')).toBeInTheDocument()
+
+      // 3 role cards: Parent, Alisa, Alexander
+      expect(screen.getByText('Parent')).toBeInTheDocument()
+      expect(screen.getByText('Alisa')).toBeInTheDocument()
+      expect(screen.getByText('Alexander')).toBeInTheDocument()
+
+      // Email and password fields should NOT be visible
+      expect(screen.queryByLabelText(/auth.email/i)).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/auth.password/i)).not.toBeInTheDocument()
     })
 
-    it('does not show demo hint when demo param is absent', () => {
+    it('does not show role picker when demo param is absent', () => {
+      mockSearchParams = new URLSearchParams()
       render(<LoginForm />)
 
-      expect(screen.queryByText('auth.demoHint')).not.toBeInTheDocument()
+      expect(screen.queryByText('demo.pickRole')).not.toBeInTheDocument()
+      expect(screen.getByLabelText(/auth.email/i)).toBeInTheDocument()
     })
 
-    it('does not pre-fill email when demo param is absent', () => {
+    it('calls /api/demo-login and verifyOtp for parent role, redirects to /admin', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ token_hash: 'tok_abc', email: 'demo@starquest.app' }),
+      })
+      mockVerifyOtp.mockResolvedValue({ error: null })
+
       render(<LoginForm />)
 
-      const emailInput = screen.getByLabelText(/auth.email/i) as HTMLInputElement
-      expect(emailInput.value).toBe('')
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/demo-login', expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ role: 'parent' }),
+        }))
+      })
+
+      await waitFor(() => {
+        expect(mockVerifyOtp).toHaveBeenCalledWith({
+          token_hash: 'tok_abc',
+          type: 'magiclink',
+        })
+      })
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/en/admin')
+      })
+    })
+
+    it('redirects child role (alisa) to /app', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ token_hash: 'tok_alisa', email: 'alisa.demo@starquest.app' }),
+      })
+      mockVerifyOtp.mockResolvedValue({ error: null })
+
+      render(<LoginForm />)
+
+      const alisaButton = screen.getByRole('button', { name: /Alisa/i })
+      fireEvent.click(alisaButton)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/en/app')
+      })
+    })
+
+    it('shows error when API returns error', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'Demo login not available' }),
+      })
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Demo login not available')).toBeInTheDocument()
+      })
+    })
+
+    it('shows error when verifyOtp fails', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ token_hash: 'tok_abc', email: 'demo@starquest.app' }),
+      })
+      mockVerifyOtp.mockResolvedValue({ error: { message: 'Token expired' } })
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Token expired')).toBeInTheDocument()
+      })
+    })
+
+    it('disables all role cards while loading', async () => {
+      mockFetch.mockImplementation(() => new Promise(() => {})) // Never resolves
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        // All buttons should be disabled
+        const buttons = screen.getAllByRole('button')
+        buttons.forEach(btn => expect(btn).toBeDisabled())
+      })
+    })
+
+    it('shows loading indicator on the clicked role card', async () => {
+      mockFetch.mockImplementation(() => new Promise(() => {})) // Never resolves
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('common.loading')).toBeInTheDocument()
+      })
     })
   })
 })

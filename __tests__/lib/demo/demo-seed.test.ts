@@ -175,7 +175,7 @@ describe("seedDemoFamily", () => {
     });
 
     await expect(seedDemoFamily(client)).rejects.toThrow(
-      "Failed to create child auth user Emma: Child email in use"
+      "Failed to create child auth user Alisa: Child email in use"
     );
   });
 
@@ -198,7 +198,7 @@ describe("seedDemoFamily", () => {
     mockFrom.mockReturnValue(insertChain);
 
     await expect(seedDemoFamily(client)).rejects.toThrow(
-      "Failed to insert child user Emma: Insert failed"
+      "Failed to insert child user Alisa: Insert failed"
     );
   });
 
@@ -287,9 +287,9 @@ describe("seedDemoFamily", () => {
     expect(result.familyId).toBe("fam-1");
     expect(result.parentId).toBe("parent-1");
     expect(result.children).toHaveLength(2);
-    expect(result.children[0].name).toBe("Emma");
+    expect(result.children[0].name).toBe("Alisa");
     expect(result.children[0].userId).toBe("child-1");
-    expect(result.children[1].name).toBe("Lucas");
+    expect(result.children[1].name).toBe("Alexander");
     expect(result.children[1].userId).toBe("child-2");
     expect(result.stats.days).toBe(30);
     expect(result.stats.transactions).toBeGreaterThan(0);
@@ -367,7 +367,7 @@ describe("seedDemoFamily", () => {
     });
 
     await expect(seedDemoFamily(client)).rejects.toThrow(
-      "Failed to insert transactions for Emma: Batch insert failed"
+      "Failed to insert transactions for Alisa: Batch insert failed"
     );
   });
 
@@ -409,11 +409,11 @@ describe("seedDemoFamily", () => {
     });
 
     await expect(seedDemoFamily(client)).rejects.toThrow(
-      "Failed to insert redemptions for Emma: Redemption insert failed"
+      "Failed to insert redemptions for Alisa: Redemption insert failed"
     );
   });
 
-  it("throws when credit settings insert fails for Lucas", async () => {
+  it("throws when credit settings insert fails for Alexander", async () => {
     const { client, mockCreateUser, mockRpc, mockFrom } = createMockSupabase();
 
     mockCreateUser.mockResolvedValueOnce({
@@ -451,7 +451,7 @@ describe("seedDemoFamily", () => {
     });
 
     await expect(seedDemoFamily(client)).rejects.toThrow(
-      "Failed to set up credit for Lucas: Credit setup failed"
+      "Failed to set up credit for Alexander: Credit setup failed"
     );
   });
 });
