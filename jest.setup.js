@@ -29,6 +29,24 @@ jest.mock('next/navigation', () => ({
   redirect: jest.fn(),
 }))
 
+// Mock PostHog
+jest.mock('posthog-js', () => ({
+  init: jest.fn(),
+  capture: jest.fn(),
+  identify: jest.fn(),
+  group: jest.fn(),
+  reset: jest.fn(),
+  startSessionRecording: jest.fn(),
+  stopSessionRecording: jest.fn(),
+  debug: jest.fn(),
+}))
+
+jest.mock('posthog-js/react', () => ({
+  PostHogProvider: ({ children }) => children,
+  usePostHog: () => require('posthog-js'),
+  useFeatureFlagEnabled: jest.fn(() => false),
+}))
+
 // Mock Supabase client
 jest.mock('@/lib/supabase/client', () => ({
   createClient: () => ({

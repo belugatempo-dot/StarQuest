@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/auth";
 import ChildNav from "@/components/child/ChildNav";
+import { PostHogUserIdentify } from "@/components/analytics/PostHogUserIdentify";
 
 export default async function ChildLayout({
   children,
@@ -13,6 +14,7 @@ export default async function ChildLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <PostHogUserIdentify user={{ ...user, locale }} />
       <ChildNav user={user} locale={locale} />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {children}

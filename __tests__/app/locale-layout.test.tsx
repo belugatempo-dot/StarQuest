@@ -13,6 +13,8 @@ jest.mock("next-intl/server", () => ({
 
 jest.mock("next/navigation", () => ({
   notFound: jest.fn(),
+  usePathname: jest.fn(() => "/en"),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
 
 jest.mock("@/i18n/config", () => ({
@@ -23,6 +25,16 @@ jest.mock("@/components/ThemeProvider", () => ({
   ThemeProvider: ({ children }: any) => (
     <div data-testid="theme-provider">{children}</div>
   ),
+}));
+
+jest.mock("@/components/analytics/PostHogProvider", () => ({
+  PostHogProvider: ({ children }: any) => (
+    <div data-testid="posthog-provider">{children}</div>
+  ),
+}));
+
+jest.mock("@/components/analytics/PostHogPageView", () => ({
+  PostHogPageView: () => null,
 }));
 
 import LocaleLayout, {

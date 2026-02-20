@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { typedInsert } from "@/lib/supabase/helpers";
 import { getTodayString, combineDateWithCurrentTime } from "@/lib/date-utils";
 import { getQuestName } from "@/lib/localization";
+import { trackStarRecordedByParent } from "@/lib/analytics/events";
 import type { Database } from "@/types/database";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
@@ -260,6 +261,13 @@ export default function QuickRecordForm({
       const { error: insertError } = await typedInsert(supabase, "star_transactions", payload);
 
       if (insertError) throw insertError;
+
+      trackStarRecordedByParent({
+        childId: selectedChild,
+        questId: selectedQuest || null,
+        stars: starsToRecord,
+        multiplier,
+      });
 
       setSuccess(true);
       resetForm();

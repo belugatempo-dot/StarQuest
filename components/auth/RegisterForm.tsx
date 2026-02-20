@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
+import { trackRegistration } from "@/lib/analytics/events";
 
 export default function RegisterForm() {
   const supabase = createClient();
@@ -154,6 +155,9 @@ export default function RegisterForm() {
           throw familyError;
         }
       }
+
+      // Track successful registration before hard navigation
+      trackRegistration(locale, isJoiningFamily);
 
       // Success! Redirect to verify-email page
       window.location.href = `/${locale}/auth/verify-email?email=${encodeURIComponent(email)}`;
