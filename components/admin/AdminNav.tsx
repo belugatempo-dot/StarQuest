@@ -39,7 +39,7 @@ export default function AdminNav({ user, locale }: { user: User; locale: string 
           <Link href={`/${locale}/admin/activity`} className="flex items-center space-x-2">
             <span className="text-2xl">⭐</span>
             <div>
-              <span className="text-xl font-bold text-primary">{t("brand.name")}</span>
+              <span className="text-2xl font-bold text-primary">{t("brand.name")}</span>
               <span className="ml-2 text-xs bg-secondary text-white px-2 py-1 rounded">
                 {t("admin.parentLabel")}
               </span>
