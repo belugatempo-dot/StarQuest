@@ -62,6 +62,11 @@
     "demoHint": "邮箱: demo@starquest.app",
     "orExplore": "或先了解一下"
   },
+  "demo": {
+    "pickRole": "选择演示账号",
+    "pickRoleHint": "选择一个角色，立即体验 StarQuest",
+    "loginFailed": "演示登录失败，请重试。"
+  },
   "verification": {
     "checkEmailTitle": "请查收邮件",
     "checkEmailMessage": "我们已向以下地址发送验证链接：",

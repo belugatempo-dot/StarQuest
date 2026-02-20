@@ -31,9 +31,9 @@ export interface DemoChildProfile {
 
 export const DEMO_CHILDREN: DemoChildProfile[] = [
   {
-    name: "Emma",
-    email: "emma.demo@starquest.app",
-    password: "EmmaDemo123!",
+    name: "Alisa",
+    email: "alisa.demo@starquest.app",
+    password: "AlisaDemo123!",
     locale: "en",
     target: {
       lifetimeStars: 280,
@@ -50,9 +50,9 @@ export const DEMO_CHILDREN: DemoChildProfile[] = [
     },
   },
   {
-    name: "Lucas",
-    email: "lucas.demo@starquest.app",
-    password: "LucasDemo123!",
+    name: "Alexander",
+    email: "alexander.demo@starquest.app",
+    password: "AlexanderDemo123!",
     locale: "zh-CN",
     target: {
       lifetimeStars: 120,

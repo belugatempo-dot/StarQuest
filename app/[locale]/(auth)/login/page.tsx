@@ -55,13 +55,13 @@ export default async function LoginPage({
                 href="/starquest-visualization.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 px-4 py-2 border border-slate-600 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-800 transition text-center"
+                className="flex-1 px-4 py-2 bg-slate-700 text-white border border-slate-500 rounded-lg text-sm font-medium hover:bg-slate-600 transition text-center"
               >
                 {t("auth.introduction")}
               </a>
               <Link
                 href={`/${locale}/login?demo=true`}
-                className="flex-1 px-4 py-2 border border-primary/50 text-primary rounded-lg text-sm font-medium hover:bg-primary/10 transition text-center"
+                className="flex-1 px-4 py-2 bg-primary/20 text-primary border border-primary/60 rounded-lg text-sm font-medium hover:bg-primary/30 transition text-center"
               >
                 {t("auth.tryDemo")}
               </Link>

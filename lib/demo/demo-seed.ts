@@ -325,7 +325,7 @@ export async function seedDemoFamily(
     totalTransactions += transactions.length;
 
     // 6. Generate redemptions
-    const redemptionCount = childProfile.name === "Emma" ? 4 : 3;
+    const redemptionCount = childProfile.name === "Alisa" ? 4 : 3;
     const selectedRewards = pickRandom(rewards, redemptionCount, rng);
     const redemptions: Record<string, unknown>[] = [];
 
@@ -369,7 +369,7 @@ export async function seedDemoFamily(
     }
     totalRedemptions += redemptions.length;
 
-    // 7. Set up credit for Lucas
+    // 7. Set up credit for Alexander
     if (childProfile.target.creditEnabled && childProfile.target.creditLimit) {
       await supabase.rpc("initialize_default_interest_tiers", {
         p_family_id: familyId,
