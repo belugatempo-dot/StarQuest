@@ -46,39 +46,33 @@ export default async function HomePage({
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col items-center gap-3 mt-12">
-          {/* Primary row */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link
-              href={`/${locale}/login?demo=true`}
-              className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
-            >
-              ✨ {t("auth.tryDemo")}
-            </Link>
-            <Link
-              href={`/${locale}/login`}
-              className="px-8 py-3 text-base bg-white/10 text-white rounded-full font-semibold border border-white/20 hover:bg-white/20 transition-all"
-            >
-              {t("common.login")}
-            </Link>
-          </div>
-          {/* Secondary row */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link
-              href={`/${locale}/register`}
-              className="px-8 py-3 text-base bg-white/5 text-slate-200 rounded-full font-medium border border-white/10 hover:bg-white/10 hover:text-white transition-all"
-            >
-              {t("common.register")}
-            </Link>
-            <a
-              href="/starquest-visualization.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 text-base bg-white/5 text-slate-200 rounded-full font-medium border border-white/10 hover:bg-white/10 hover:text-white transition-all"
-            >
-              {t("auth.introduction")} →
-            </a>
-          </div>
+        <div className="flex flex-wrap gap-3 justify-center mt-12">
+          <Link
+            href={`/${locale}/login?demo=true`}
+            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+          >
+            ✨ {t("auth.tryDemo")}
+          </Link>
+          <Link
+            href={`/${locale}/login`}
+            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+          >
+            {t("common.login")}
+          </Link>
+          <Link
+            href={`/${locale}/register`}
+            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+          >
+            {t("common.register")}
+          </Link>
+          <a
+            href="/starquest-visualization.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+          >
+            {t("auth.introduction")} →
+          </a>
         </div>
 
         {/* Footer */}
