@@ -48,12 +48,6 @@ export default async function HomePage({
         {/* CTA Buttons */}
         <div className="flex flex-wrap gap-3 justify-center mt-12">
           <Link
-            href={`/${locale}/login`}
-            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
-          >
-            {t("common.login")}
-          </Link>
-          <Link
             href={`/${locale}/register`}
             className="px-8 py-3 text-base border-2 border-primary text-primary rounded-full font-bold hover:bg-primary/10 transition-all"
           >
@@ -71,8 +65,14 @@ export default async function HomePage({
             rel="noopener noreferrer"
             className="px-8 py-3 text-base border-2 border-primary text-primary rounded-full font-bold hover:bg-primary/10 transition-all"
           >
-            {t("auth.introduction")} →
+            {t("auth.introduction")}
           </a>
+          <Link
+            href={`/${locale}/login`}
+            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+          >
+            {t("common.login")}
+          </Link>
         </div>
 
         {/* Footer */}
