@@ -48,12 +48,6 @@ export default async function HomePage({
         {/* CTA Buttons */}
         <div className="flex flex-wrap gap-3 justify-center mt-12">
           <Link
-            href={`/${locale}/login?demo=true`}
-            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
-          >
-            ✨ {t("auth.tryDemo")}
-          </Link>
-          <Link
             href={`/${locale}/login`}
             className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
           >
@@ -61,15 +55,21 @@ export default async function HomePage({
           </Link>
           <Link
             href={`/${locale}/register`}
-            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+            className="px-8 py-3 text-base border-2 border-primary text-primary rounded-full font-bold hover:bg-primary/10 transition-all"
           >
             {t("common.register")}
+          </Link>
+          <Link
+            href={`/${locale}/login?demo=true`}
+            className="px-8 py-3 text-base border-2 border-primary text-primary rounded-full font-bold hover:bg-primary/10 transition-all"
+          >
+            ✨ {t("auth.tryDemo")}
           </Link>
           <a
             href="/starquest-visualization.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-3 text-base bg-primary text-gray-900 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition-all"
+            className="px-8 py-3 text-base border-2 border-primary text-primary rounded-full font-bold hover:bg-primary/10 transition-all"
           >
             {t("auth.introduction")} →
           </a>
