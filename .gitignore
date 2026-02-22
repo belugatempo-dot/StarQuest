@@ -40,6 +40,9 @@ backups/
 # worktrees
 .worktrees/
 
+# local planning docs
+.github/refactor_plan/
+
 # vercel
 .vercel
 
