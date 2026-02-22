@@ -1,5 +1,6 @@
 /**
  * Tests for POST /api/demo-login — passwordless demo login via Admin generateLink.
+ * Includes auto-reset: cleanup + seed demo data before each login.
  */
 
 // ---- Mock next/server ----
@@ -28,14 +29,22 @@ jest.mock("next/server", () => {
 
 // ---- Mock @/lib/supabase/server ----
 const mockGenerateLink = jest.fn();
+const mockAdminClient = {
+  auth: { admin: { generateLink: mockGenerateLink } },
+};
 jest.mock("@/lib/supabase/server", () => ({
-  createAdminClient: () => ({
-    auth: {
-      admin: {
-        generateLink: mockGenerateLink,
-      },
-    },
-  }),
+  createAdminClient: () => mockAdminClient,
+}));
+
+// ---- Mock demo modules ----
+const mockCleanupDemoFamily = jest.fn();
+jest.mock("@/lib/demo/demo-cleanup", () => ({
+  cleanupDemoFamily: (...args: unknown[]) => mockCleanupDemoFamily(...args),
+}));
+
+const mockSeedDemoFamily = jest.fn();
+jest.mock("@/lib/demo/demo-seed", () => ({
+  seedDemoFamily: (...args: unknown[]) => mockSeedDemoFamily(...args),
 }));
 
 // ---- Import route (after mocks) ----
@@ -53,23 +62,43 @@ function createRequest(body?: Record<string, unknown>) {
 describe("POST /api/demo-login", () => {
   const originalEnv = process.env;
   let consoleErrorSpy: jest.SpyInstance;
+  let consoleWarnSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
     process.env = {
       ...originalEnv,
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
       NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
     };
+
+    // Default successful cleanup + seed
+    mockCleanupDemoFamily.mockResolvedValue({
+      found: true,
+      familyId: "old-fam",
+      deletedAuthUsers: 3,
+    });
+    mockSeedDemoFamily.mockResolvedValue({
+      familyId: "fam-1",
+      parentId: "parent-1",
+      children: [],
+      stats: { transactions: 100, redemptions: 5, days: 30 },
+    });
   });
 
   afterAll(() => {
     process.env = originalEnv;
     consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
+  // -- Validation tests (unchanged behavior) --
   it("returns 503 when SUPABASE_SERVICE_ROLE_KEY is not set", async () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -102,6 +131,7 @@ describe("POST /api/demo-login", () => {
     expect(res.body.error).toMatch(/invalid role/i);
   });
 
+  // -- Successful login with auto-reset --
   it("returns 200 with token_hash for parent role", async () => {
     mockGenerateLink.mockResolvedValue({
       data: { properties: { hashed_token: "tok_parent_abc" } },
@@ -169,5 +199,108 @@ describe("POST /api/demo-login", () => {
     const res = await POST(createRequest({ role: "parent" }));
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: "Failed to generate demo login token" });
+  });
+
+  // -- Auto-reset behavior --
+  describe("auto-reset demo data", () => {
+    it("calls cleanup then seed before generateLink", async () => {
+      mockGenerateLink.mockResolvedValue({
+        data: { properties: { hashed_token: "tok_abc" } },
+        error: null,
+      });
+
+      const callOrder: string[] = [];
+      mockCleanupDemoFamily.mockImplementation(async () => {
+        callOrder.push("cleanup");
+        return { found: true, familyId: "old", deletedAuthUsers: 3 };
+      });
+      mockSeedDemoFamily.mockImplementation(async () => {
+        callOrder.push("seed");
+        return { familyId: "new", parentId: "p", children: [], stats: {} };
+      });
+      mockGenerateLink.mockImplementation(async () => {
+        callOrder.push("generateLink");
+        return { data: { properties: { hashed_token: "tok_abc" } }, error: null };
+      });
+
+      await POST(createRequest({ role: "parent" }));
+
+      expect(callOrder).toEqual(["cleanup", "seed", "generateLink"]);
+    });
+
+    it("passes adminClient to cleanup and seed", async () => {
+      mockGenerateLink.mockResolvedValue({
+        data: { properties: { hashed_token: "tok_abc" } },
+        error: null,
+      });
+
+      await POST(createRequest({ role: "parent" }));
+
+      expect(mockCleanupDemoFamily).toHaveBeenCalledWith(mockAdminClient);
+      expect(mockSeedDemoFamily).toHaveBeenCalledWith(mockAdminClient);
+    });
+
+    it("logs success when cleanup and seed succeed", async () => {
+      mockGenerateLink.mockResolvedValue({
+        data: { properties: { hashed_token: "tok_abc" } },
+        error: null,
+      });
+
+      await POST(createRequest({ role: "parent" }));
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Demo data reset")
+      );
+    });
+
+    it("still returns 200 when cleanup throws (race condition)", async () => {
+      mockCleanupDemoFamily.mockRejectedValue(new Error("Concurrent cleanup"));
+      mockGenerateLink.mockResolvedValue({
+        data: { properties: { hashed_token: "tok_abc" } },
+        error: null,
+      });
+
+      const res = await POST(createRequest({ role: "parent" }));
+
+      expect(res.status).toBe(200);
+      expect(res.body.token_hash).toBe("tok_abc");
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Demo data reset failed"),
+        expect.any(String)
+      );
+    });
+
+    it("still returns 200 when seed throws (race condition)", async () => {
+      mockSeedDemoFamily.mockRejectedValue(new Error("Duplicate key"));
+      mockGenerateLink.mockResolvedValue({
+        data: { properties: { hashed_token: "tok_abc" } },
+        error: null,
+      });
+
+      const res = await POST(createRequest({ role: "parent" }));
+
+      expect(res.status).toBe(200);
+      expect(res.body.token_hash).toBe("tok_abc");
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Demo data reset failed"),
+        expect.any(String)
+      );
+    });
+
+    it("does not call cleanup/seed when role is invalid", async () => {
+      await POST(createRequest({ role: "hacker" }));
+
+      expect(mockCleanupDemoFamily).not.toHaveBeenCalled();
+      expect(mockSeedDemoFamily).not.toHaveBeenCalled();
+    });
+
+    it("does not call cleanup/seed when service key is missing", async () => {
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      await POST(createRequest({ role: "parent" }));
+
+      expect(mockCleanupDemoFamily).not.toHaveBeenCalled();
+      expect(mockSeedDemoFamily).not.toHaveBeenCalled();
+    });
   });
 });

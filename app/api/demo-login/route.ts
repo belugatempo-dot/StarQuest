@@ -1,13 +1,15 @@
 /**
  * POST /api/demo-login — Passwordless demo login via Supabase Admin generateLink.
  *
- * Generates a one-time magic link token server-side (no email sent),
- * which the client uses with verifyOtp() to establish a browser session.
+ * Auto-resets demo data (cleanup + seed) before each login so every
+ * demo session starts with fresh, unmodified data.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getDemoUser } from "@/lib/demo/demo-users";
+import { cleanupDemoFamily } from "@/lib/demo/demo-cleanup";
+import { seedDemoFamily } from "@/lib/demo/demo-seed";
 
 export async function POST(request: NextRequest) {
   // 1. Validate service role key is available
@@ -36,8 +38,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 3. Generate magic link token via Admin API (no email sent)
+  // 3. Auto-reset demo data (non-fatal — race conditions are tolerated)
   const adminClient = createAdminClient();
+  try {
+    // AdminClient type is looser than SupabaseClient<Database> to avoid `never` inference
+    await cleanupDemoFamily(adminClient as any);
+    await seedDemoFamily(adminClient as any);
+    console.log("Demo data reset successfully before login");
+  } catch (err) {
+    console.warn(
+      "Demo data reset failed (concurrent request may have already reset):",
+      err instanceof Error ? err.message : String(err)
+    );
+  }
+
+  // 4. Generate magic link token via Admin API (no email sent)
   const { data, error } = await adminClient.auth.admin.generateLink({
     type: "magiclink",
     email: demoUser.email,
@@ -51,7 +66,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4. Return token to client for verifyOtp()
+  // 5. Return token to client for verifyOtp()
   return NextResponse.json({
     token_hash: data.properties.hashed_token,
     email: demoUser.email,
