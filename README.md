@@ -50,7 +50,7 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Report preferences settings page
 - [x] Database backup system (manual + automated weekly)
 - [x] Architecture refactoring (UnifiedActivityList → shared components)
-- [x] Comprehensive test coverage (2778 tests, ~99% coverage)
+- [x] Comprehensive test coverage (2918 tests, ~99% coverage)
 - [x] Demo seed API (fully-populated demo family with 30 days of activity)
 - [x] Generate markdown summary reports (on-demand report download from activity page)
 - [x] Unified admin dashboard (consolidated parent pages)
@@ -59,6 +59,11 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Redeem reward directly from calendar view
 - [x] Collapsible filter panels in activity lists
 - [x] UnifiedActivityList hook refactor (useActivityModals, useActivityActions, ActivityActionButtons)
+- [x] PostHog analytics integration (event tracking, session recordings, privacy-first)
+- [x] Passwordless demo login (magic link, role picker, auto-reset)
+- [x] Demo data snapshot (fast restore via SQL, ~40 RPCs → 1-2)
+- [x] Starry night landing page with interactive visualization link
+- [x] RedemptionRequestList hook extraction (useRedemptionActions)
 
 ---
 
@@ -110,6 +115,7 @@ A gamified family behavior tracking system that helps children build positive ha
 - **Testing**: Jest + React Testing Library
 - **Type Safety**: TypeScript
 - **Email**: Resend (transactional emails)
+- **Analytics**: PostHog (posthog-js + posthog-node)
 - **Deployment**: Vercel
 
 ---
@@ -128,14 +134,16 @@ StarQuest/
 │   ├── auth/              # Authentication components
 │   ├── child/             # Child-specific components
 │   ├── admin/             # Admin-specific components
+│   ├── analytics/         # PostHog analytics (provider, pageview, user identify)
 │   └── shared/            # Cross-role shared components
 ├── lib/
 │   ├── supabase/          # Supabase client configs
 │   ├── email/             # Email sending (Resend) and templates
 │   ├── reports/           # Report data generation
-│   ├── hooks/             # Custom React hooks (useBatchSelection, useActivityFilters, useActivityModals, useActivityActions)
+│   ├── hooks/             # Custom React hooks (useBatchSelection, useActivityFilters, useActivityModals, useActivityActions, useRedemptionActions)
 │   ├── api/               # API utilities (cron auth)
-│   ├── demo/              # Demo seed system
+│   ├── analytics/         # PostHog config + typed event helpers
+│   ├── demo/              # Demo seed system (config, cleanup, seed, snapshot)
 │   ├── auth.ts            # Auth utilities
 │   ├── localization.ts    # Bilingual name helpers
 │   ├── date-utils.ts      # Date formatting utilities
@@ -149,7 +157,7 @@ StarQuest/
 │   └── zh-CN.json
 ├── supabase/
 │   └── migrations/        # Database migration files
-└── __tests__/             # Test files (2778 tests, 125 suites)
+└── __tests__/             # Test files (2918 tests, 133 suites)
 ```
 
 ---
@@ -179,7 +187,7 @@ Background:            #F9FAFB
 ## 🧪 Testing
 
 ```bash
-# Run all tests (2778 tests, 125 suites)
+# Run all tests (2918 tests, 133 suites)
 npm test
 
 # Watch mode
@@ -223,7 +231,7 @@ A GitHub Actions workflow runs every Sunday at midnight UTC, creating a backup a
 
 A demo seed API creates a fully-populated demo family with 30 days of realistic activity history, including two children with different behavioral profiles, star transactions, redemptions, and credit system usage.
 
-See `demo.md` for full details including credentials and seed command.
+Demo login is passwordless — click "Try Demo" on the landing page, pick a role (Parent/Alisa/Alexander), and you're in. Data auto-resets on each login via a snapshot restore system.
 
 ---
 
@@ -263,14 +271,19 @@ Language can be switched via the UI. User language preference is saved in their 
 6. ✅ Email reports (weekly/monthly), settlement notices, settings page
 7. ✅ Database backup system (manual + weekly GitHub Actions)
 8. ✅ Architecture refactoring (UnifiedActivityList → shared components)
-9. ✅ Comprehensive test coverage (2778 tests, ~99% coverage)
+9. ✅ Comprehensive test coverage (2918 tests, ~99% coverage)
 10. ✅ Demo seed API (realistic demo family with 30 days of activity)
 11. ✅ Generate markdown summary reports (on-demand from activity page)
 12. ✅ Unified admin dashboard, dark starry night theme
 13. ✅ Redeem from calendar, child notes, collapsible filters
 14. ✅ UnifiedActivityList hook refactor (useActivityModals, useActivityActions, ActivityActionButtons)
-15. PWA support
-16. Data export
+15. ✅ PostHog analytics (event tracking, session recordings, privacy-first children)
+16. ✅ Passwordless demo login (magic link, role picker, auto-reset)
+17. ✅ Demo data snapshot (fast restore via SQL functions)
+18. ✅ Starry night landing page + interactive visualization
+19. ✅ useRedemptionActions hook extraction
+20. PWA support
+21. Data export
 
 ### Phase 5: Polish & Launch
 

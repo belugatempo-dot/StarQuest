@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2849 tests, ~99% coverage)
+# Testing (2918 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -141,6 +141,7 @@ lib/
 ├── hooks/useActivityFilters.ts  # Activity filter/search state hook
 ├── hooks/useActivityModals.ts   # Modal open/close state for UnifiedActivityList (typed, no any)
 ├── hooks/useActivityActions.ts  # handleDelete/handleBatchApprove/handleBatchReject + deletingId
+├── hooks/useRedemptionActions.ts # All redemption state & handlers (approve/reject, batch, date pickers)
 ├── api/cron-auth.ts             # verifyCronAuth() for cron route authorization
 ├── analytics/posthog-config.ts  # Client-safe PostHog config constants (no Node.js deps)
 ├── analytics/posthog.ts         # Server-side PostHog client (posthog-node) — DO NOT import from "use client"
@@ -150,8 +151,10 @@ lib/
 ├── reports/markdown-formatter.ts # generateMarkdownReport() — Markdown report with inline i18n
 └── demo/                        # Demo seed system
     ├── demo-config.ts           # Constants, child profiles, behavioral params
+    ├── demo-users.ts            # Client-safe role metadata (NO passwords, importable by client)
     ├── demo-cleanup.ts          # FK-ordered cleanup of demo family data
-    └── demo-seed.ts             # Deterministic seed with 30 days of activity
+    ├── demo-seed.ts             # Deterministic seed with 30 days of activity
+    └── demo-snapshot.ts         # Save/restore demo data via SQL (fast reset: 40 RPCs → 1-2)
 ```
 
 **Key Types** (`types/`):
@@ -452,13 +455,21 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 - Credit system for Alexander (interest tiers, credit settings, credit transaction)
 - Report preferences (weekly + monthly enabled)
 
+### Demo Data Snapshot (Fast Restore)
+On every demo login, demo data is restored from a pre-computed JSONB snapshot instead of re-running the full seed.
+- `lib/demo/demo-snapshot.ts` — `saveDemoSnapshot()`, `restoreDemoData()`, `getSnapshotLatestDate()`
+- SQL functions: `save_demo_snapshot(p_family_id)`, `restore_demo_data()` (in `supabase/migrations/20260222000000_demo_snapshot.sql`)
+- `seed-demo` API supports `?mode=extend` to add new activity days on top of existing data
+- Fallback: if no snapshot exists, falls back to full cleanup + seed
+
 ### Source Files
 - `lib/demo/demo-config.ts` — Constants and child profiles (server-only, contains passwords)
 - `lib/demo/demo-users.ts` — Client-safe role metadata (NO passwords, importable by client components)
 - `lib/demo/demo-cleanup.ts` — FK-ordered cleanup logic
 - `lib/demo/demo-seed.ts` — Core seed with deterministic RNG
-- `app/api/seed-demo/route.ts` — Protected API route
-- `app/api/demo-login/route.ts` — Passwordless demo login endpoint
+- `lib/demo/demo-snapshot.ts` — Snapshot save/restore (reduces demo login from ~40 RPCs to 1-2)
+- `app/api/seed-demo/route.ts` — Protected API route (supports `?mode=extend`)
+- `app/api/demo-login/route.ts` — Passwordless demo login with auto-reset via snapshot restore
 
 ### Passwordless Demo Login (`app/api/demo-login/route.ts`)
 One-click demo access without exposing passwords to client bundle.
@@ -478,4 +489,4 @@ One-click demo access without exposing passwords to client bundle.
 
 ---
 
-**Last Updated:** 2026-02-20 | **Tests:** 2849 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-21 | **Tests:** 2918 passing | **Coverage:** ~99%
