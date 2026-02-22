@@ -1,8 +1,9 @@
 /**
  * POST /api/demo-login — Passwordless demo login via Supabase Admin generateLink.
  *
- * Auto-resets demo data (cleanup + seed) before each login so every
- * demo session starts with fresh, unmodified data.
+ * Resets demo data before each login so every demo session starts fresh.
+ * Fast path: restore from snapshot (~1 RPC call, ~1s).
+ * Fallback: full cleanup + seed + save snapshot (~40 calls, ~10s).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,6 +11,10 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { getDemoUser } from "@/lib/demo/demo-users";
 import { cleanupDemoFamily } from "@/lib/demo/demo-cleanup";
 import { seedDemoFamily } from "@/lib/demo/demo-seed";
+import {
+  restoreDemoData,
+  saveDemoSnapshot,
+} from "@/lib/demo/demo-snapshot";
 
 export async function POST(request: NextRequest) {
   // 1. Validate service role key is available
@@ -38,18 +43,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 3. Auto-reset demo data (non-fatal — race conditions are tolerated)
+  // 3. Reset demo data (non-fatal — race conditions are tolerated)
   const adminClient = createAdminClient();
   try {
-    // AdminClient type is looser than SupabaseClient<Database> to avoid `never` inference
-    await cleanupDemoFamily(adminClient as any);
-    await seedDemoFamily(adminClient as any);
-    console.log("Demo data reset successfully before login");
-  } catch (err) {
-    console.warn(
-      "Demo data reset failed (concurrent request may have already reset):",
-      err instanceof Error ? err.message : String(err)
-    );
+    // Fast path: restore from pre-computed snapshot (1 RPC call)
+    await restoreDemoData(adminClient as any);
+    console.log("Demo data restored from snapshot");
+  } catch {
+    // Fallback: no snapshot yet → full cleanup + seed + save snapshot for next time
+    try {
+      await cleanupDemoFamily(adminClient as any);
+      const result = await seedDemoFamily(adminClient as any);
+      await saveDemoSnapshot(adminClient as any, result.familyId);
+      console.log("Demo data reset via fallback (cleanup + seed + snapshot saved)");
+    } catch (err) {
+      console.warn(
+        "Demo data reset failed (concurrent request may have already reset):",
+        err instanceof Error ? err.message : String(err)
+      );
+    }
   }
 
   // 4. Generate magic link token via Admin API (no email sent)

@@ -20,6 +20,7 @@ import {
   DEMO_FAMILY_NAME,
   DEMO_PARENT_NAME,
   DEMO_CHILDREN,
+  DEMO_START_DATE,
 } from "@/lib/demo/demo-config";
 
 // ---- Chain mock helper ----
@@ -291,7 +292,10 @@ describe("seedDemoFamily", () => {
     expect(result.children[0].userId).toBe("child-1");
     expect(result.children[1].name).toBe("Alexander");
     expect(result.children[1].userId).toBe("child-2");
-    expect(result.stats.days).toBe(30);
+    const expectedDays = Math.floor(
+      (Date.now() - DEMO_START_DATE.getTime()) / (24 * 60 * 60 * 1000)
+    );
+    expect(result.stats.days).toBe(expectedDays);
     expect(result.stats.transactions).toBeGreaterThan(0);
     expect(result.stats.redemptions).toBeGreaterThan(0);
 

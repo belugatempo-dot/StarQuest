@@ -37,15 +37,29 @@ jest.mock("@/lib/demo/demo-seed", () => ({
   seedDemoFamily: (...args: unknown[]) => mockSeedDemoFamily(...args),
 }));
 
+const mockSaveDemoSnapshot = jest.fn();
+const mockRestoreDemoData = jest.fn();
+const mockGetSnapshotLatestDate = jest.fn();
+jest.mock("@/lib/demo/demo-snapshot", () => ({
+  saveDemoSnapshot: (...args: unknown[]) => mockSaveDemoSnapshot(...args),
+  restoreDemoData: (...args: unknown[]) => mockRestoreDemoData(...args),
+  getSnapshotLatestDate: (...args: unknown[]) => mockGetSnapshotLatestDate(...args),
+}));
+
 // ---- Import route (after mocks) ----
 import { POST } from "@/app/api/seed-demo/route";
 
-function createRequest(headers: Record<string, string> = {}) {
+function createRequest(
+  headers: Record<string, string> = {},
+  url = "https://example.com/api/seed-demo"
+) {
   return {
-    url: "https://example.com/api/seed-demo",
+    url,
     headers: new Map(Object.entries(headers)),
   } as any;
 }
+
+const AUTH_HEADER = { authorization: "Bearer test-secret-that-is-long-enough-32" };
 
 // ---- Test suite ----
 describe("POST /api/seed-demo", () => {
@@ -98,50 +112,32 @@ describe("POST /api/seed-demo", () => {
 
     it("returns 500 when SUPABASE_SERVICE_ROLE_KEY is missing", async () => {
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-      const result = await POST(
-        createRequest({
-          authorization: "Bearer test-secret-that-is-long-enough-32",
-        })
-      );
+      const result = await POST(createRequest(AUTH_HEADER));
       expect(result.status).toBe(500);
       expect(result.body.error).toBe("Service role key required");
     });
   });
 
-  // -- Successful seed --
-  describe("successful seed", () => {
-    it("cleans up and seeds demo family, returns credentials", async () => {
+  // -- Default mode: full seed + snapshot --
+  describe("default mode (full seed)", () => {
+    it("cleans up, seeds, saves snapshot, returns credentials", async () => {
       mockCleanupDemoFamily.mockResolvedValue({
         found: true,
         familyId: "old-fam",
         deletedAuthUsers: 3,
       });
-
       mockSeedDemoFamily.mockResolvedValue({
         familyId: "fam-1",
         parentId: "parent-1",
         children: [
-          {
-            name: "Alisa",
-            email: "alisa.demo@starquest.app",
-            password: "AlisaDemo123!",
-            userId: "child-1",
-          },
-          {
-            name: "Alexander",
-            email: "alexander.demo@starquest.app",
-            password: "AlexanderDemo123!",
-            userId: "child-2",
-          },
+          { name: "Alisa", email: "alisa.demo@starquest.app", password: "AlisaDemo123!", userId: "child-1" },
+          { name: "Alexander", email: "alexander.demo@starquest.app", password: "AlexanderDemo123!", userId: "child-2" },
         ],
         stats: { transactions: 200, redemptions: 7, days: 30 },
       });
+      mockSaveDemoSnapshot.mockResolvedValue(undefined);
 
-      const result = await POST(
-        createRequest({
-          authorization: "Bearer test-secret-that-is-long-enough-32",
-        })
-      );
+      const result = await POST(createRequest(AUTH_HEADER));
 
       expect(result.status).toBe(200);
       expect(result.body.success).toBe(true);
@@ -151,10 +147,10 @@ describe("POST /api/seed-demo", () => {
       expect(result.body.credentials.children[0].name).toBe("Alisa");
       expect(result.body.stats.transactions).toBe(200);
 
-      // Verify cleanup was called with admin client
+      // Verify call order: cleanup → seed → save snapshot
       expect(mockCleanupDemoFamily).toHaveBeenCalledWith(mockAdminClient);
-      // Verify seed was called with admin client
       expect(mockSeedDemoFamily).toHaveBeenCalledWith(mockAdminClient);
+      expect(mockSaveDemoSnapshot).toHaveBeenCalledWith(mockAdminClient, "fam-1");
     });
 
     it("works when no existing demo family (first run)", async () => {
@@ -163,22 +159,99 @@ describe("POST /api/seed-demo", () => {
         familyId: null,
         deletedAuthUsers: 0,
       });
-
       mockSeedDemoFamily.mockResolvedValue({
         familyId: "fam-new",
         parentId: "parent-new",
         children: [],
         stats: { transactions: 100, redemptions: 5, days: 30 },
       });
+      mockSaveDemoSnapshot.mockResolvedValue(undefined);
 
-      const result = await POST(
-        createRequest({
-          authorization: "Bearer test-secret-that-is-long-enough-32",
-        })
-      );
+      const result = await POST(createRequest(AUTH_HEADER));
 
       expect(result.status).toBe(200);
       expect(result.body.success).toBe(true);
+      expect(mockSaveDemoSnapshot).toHaveBeenCalledWith(mockAdminClient, "fam-new");
+    });
+  });
+
+  // -- Extend mode --
+  describe("extend mode", () => {
+    const extendUrl = "https://example.com/api/seed-demo?mode=extend";
+
+    it("restores snapshot, seeds gap, saves new snapshot", async () => {
+      mockRestoreDemoData.mockResolvedValue(undefined);
+      mockGetSnapshotLatestDate.mockResolvedValue(
+        new Date("2026-01-20T14:00:00Z")
+      );
+      mockSeedDemoFamily.mockResolvedValue({
+        familyId: "fam-1",
+        parentId: "parent-1",
+        children: [],
+        stats: { transactions: 50, redemptions: 2, days: 10 },
+      });
+      mockSaveDemoSnapshot.mockResolvedValue(undefined);
+
+      const result = await POST(createRequest(AUTH_HEADER, extendUrl));
+
+      expect(result.status).toBe(200);
+      expect(result.body.success).toBe(true);
+      expect(result.body.mode).toBe("extend");
+      expect(result.body.stats.transactions).toBe(50);
+
+      expect(mockRestoreDemoData).toHaveBeenCalledWith(mockAdminClient);
+      expect(mockGetSnapshotLatestDate).toHaveBeenCalledWith(mockAdminClient);
+
+      // Verify seed was called with startDate = latestDate + 1 day
+      const seedCall = mockSeedDemoFamily.mock.calls[0];
+      expect(seedCall[0]).toBe(mockAdminClient);
+      expect(seedCall[1].startDate).toEqual(
+        new Date("2026-01-21T14:00:00Z")
+      );
+      expect(seedCall[1].endDate).toBeInstanceOf(Date);
+
+      expect(mockSaveDemoSnapshot).toHaveBeenCalledWith(mockAdminClient, "fam-1");
+    });
+
+    it("returns 400 when no snapshot exists", async () => {
+      mockRestoreDemoData.mockResolvedValue(undefined);
+      mockGetSnapshotLatestDate.mockResolvedValue(null);
+
+      const result = await POST(createRequest(AUTH_HEADER, extendUrl));
+
+      expect(result.status).toBe(400);
+      expect(result.body.error).toMatch(/no snapshot/i);
+    });
+
+    it("returns success when snapshot is already up to date", async () => {
+      mockRestoreDemoData.mockResolvedValue(undefined);
+      // Latest date is now (no gap to fill)
+      mockGetSnapshotLatestDate.mockResolvedValue(new Date());
+
+      const result = await POST(createRequest(AUTH_HEADER, extendUrl));
+
+      expect(result.status).toBe(200);
+      expect(result.body.success).toBe(true);
+      expect(result.body.message).toMatch(/up to date/i);
+      expect(mockSeedDemoFamily).not.toHaveBeenCalled();
+    });
+
+    it("does not call cleanup in extend mode", async () => {
+      mockRestoreDemoData.mockResolvedValue(undefined);
+      mockGetSnapshotLatestDate.mockResolvedValue(
+        new Date("2026-01-15T00:00:00Z")
+      );
+      mockSeedDemoFamily.mockResolvedValue({
+        familyId: "fam-1",
+        parentId: "p",
+        children: [],
+        stats: { transactions: 10, redemptions: 0, days: 5 },
+      });
+      mockSaveDemoSnapshot.mockResolvedValue(undefined);
+
+      await POST(createRequest(AUTH_HEADER, extendUrl));
+
+      expect(mockCleanupDemoFamily).not.toHaveBeenCalled();
     });
   });
 
@@ -187,11 +260,7 @@ describe("POST /api/seed-demo", () => {
     it("returns 500 when cleanup throws", async () => {
       mockCleanupDemoFamily.mockRejectedValue(new Error("DB connection lost"));
 
-      const result = await POST(
-        createRequest({
-          authorization: "Bearer test-secret-that-is-long-enough-32",
-        })
-      );
+      const result = await POST(createRequest(AUTH_HEADER));
 
       expect(result.status).toBe(500);
       expect(result.body.error).toBe("Seed failed");
@@ -206,24 +275,43 @@ describe("POST /api/seed-demo", () => {
       });
       mockSeedDemoFamily.mockRejectedValue(new Error("RPC timeout"));
 
-      const result = await POST(
-        createRequest({
-          authorization: "Bearer test-secret-that-is-long-enough-32",
-        })
-      );
+      const result = await POST(createRequest(AUTH_HEADER));
 
       expect(result.status).toBe(500);
       expect(result.body.details).toBe("RPC timeout");
     });
 
+    it("returns 500 when snapshot save throws in default mode", async () => {
+      mockCleanupDemoFamily.mockResolvedValue({ found: false, familyId: null, deletedAuthUsers: 0 });
+      mockSeedDemoFamily.mockResolvedValue({
+        familyId: "fam-1",
+        parentId: "p",
+        children: [],
+        stats: { transactions: 10, redemptions: 0, days: 5 },
+      });
+      mockSaveDemoSnapshot.mockRejectedValue(new Error("Snapshot save failed"));
+
+      const result = await POST(createRequest(AUTH_HEADER));
+
+      expect(result.status).toBe(500);
+      expect(result.body.details).toBe("Snapshot save failed");
+    });
+
+    it("returns 500 when restore throws in extend mode", async () => {
+      mockRestoreDemoData.mockRejectedValue(new Error("Restore failed"));
+
+      const result = await POST(
+        createRequest(AUTH_HEADER, "https://example.com/api/seed-demo?mode=extend")
+      );
+
+      expect(result.status).toBe(500);
+      expect(result.body.details).toBe("Restore failed");
+    });
+
     it("handles non-Error throws", async () => {
       mockCleanupDemoFamily.mockRejectedValue("string error");
 
-      const result = await POST(
-        createRequest({
-          authorization: "Bearer test-secret-that-is-long-enough-32",
-        })
-      );
+      const result = await POST(createRequest(AUTH_HEADER));
 
       expect(result.status).toBe(500);
       expect(result.body.details).toBe("string error");

@@ -71,5 +71,8 @@ export const DEMO_CHILDREN: DemoChildProfile[] = [
   },
 ];
 
-/** Number of days of activity history to generate */
+/** Fixed start date for demo activity history */
+export const DEMO_START_DATE = new Date("2026-01-01T00:00:00Z");
+
+/** @deprecated Use DEMO_START_DATE instead. Kept for reference only. */
 export const DEMO_HISTORY_DAYS = 30;
