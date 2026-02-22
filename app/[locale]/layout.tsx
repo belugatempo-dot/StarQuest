@@ -6,6 +6,7 @@ import { locales } from "@/i18n/config";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 import { PostHogPageView } from "@/components/analytics/PostHogPageView";
+import { Toaster } from "sonner";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function LocaleLayout({
           <ThemeProvider>
             <NextIntlClientProvider messages={messages}>
               {children}
+              <Toaster theme="dark" position="bottom-center" />
             </NextIntlClientProvider>
           </ThemeProvider>
         </PostHogProvider>

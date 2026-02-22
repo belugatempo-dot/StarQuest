@@ -65,7 +65,10 @@
   "demo": {
     "pickRole": "选择演示账号",
     "pickRoleHint": "选择一个角色，立即体验 StarQuest",
-    "loginFailed": "演示登录失败，请重试。"
+    "loginFailed": "演示登录失败，请重试。",
+    "banner": "您正在演示模式中体验 StarQuest，所有更改不会被保存。",
+    "signUp": "注册 →",
+    "writeBlocked": "演示模式 — 更改不会被保存"
   },
   "verification": {
     "checkEmailTitle": "请查收邮件",

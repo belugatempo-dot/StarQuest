@@ -419,7 +419,22 @@ export async function seedDemoFamily(
     }
   }
 
-  // 8. Set up report preferences
+  // 8. Mark all demo users as read-only (is_demo = true)
+  const allUserIds = [parentId, ...childResults.map((c) => c.userId)];
+  for (const userId of allUserIds) {
+    const { error: demoFlagError } = await supabase
+      .from("users")
+      .update({ is_demo: true })
+      .eq("id", userId);
+
+    if (demoFlagError) {
+      throw new Error(
+        `Failed to set is_demo flag for user ${userId}: ${demoFlagError.message}`
+      );
+    }
+  }
+
+  // 9. Set up report preferences
   await supabase.from("family_report_preferences").insert({
     family_id: familyId,
     report_email: DEMO_PARENT_EMAIL,

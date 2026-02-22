@@ -12,6 +12,14 @@ jest.mock("@/lib/auth", () => ({
   }),
 }));
 
+jest.mock("@/lib/demo/demo-context", () => ({
+  DemoProvider: ({ children }: any) => children,
+}));
+
+jest.mock("@/components/ui/DemoBanner", () => ({
+  DemoBanner: () => null,
+}));
+
 jest.mock("@/components/child/ChildNav", () => {
   return function MockChildNav({ user, locale }: any) {
     return (
