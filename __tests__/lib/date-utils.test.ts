@@ -5,6 +5,7 @@ import {
   formatDateTime,
   formatDateOnly,
   combineDateWithCurrentTime,
+  toApprovalTimestamp,
 } from "@/lib/date-utils";
 
 describe("date-utils", () => {
@@ -148,6 +149,34 @@ describe("date-utils", () => {
       expect(result.getMinutes()).toBe(0);
       expect(result.getSeconds()).toBe(0);
       jest.useRealTimers();
+    });
+  });
+
+  describe("toApprovalTimestamp", () => {
+    it("converts YYYY-MM-DD to noon-UTC ISO string", () => {
+      const result = toApprovalTimestamp("2026-02-15");
+      expect(result).toBe("2026-02-15T12:00:00.000Z");
+    });
+
+    it("falls back to current time when dateStr is undefined", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-03-01T08:30:00Z"));
+      const result = toApprovalTimestamp(undefined);
+      expect(result).toBe("2026-03-01T08:30:00.000Z");
+      jest.useRealTimers();
+    });
+
+    it("falls back to current time when dateStr is empty string", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-01-10T14:00:00Z"));
+      const result = toApprovalTimestamp("");
+      expect(result).toBe("2026-01-10T14:00:00.000Z");
+      jest.useRealTimers();
+    });
+
+    it("handles different date strings", () => {
+      expect(toApprovalTimestamp("2025-12-31")).toBe("2025-12-31T12:00:00.000Z");
+      expect(toApprovalTimestamp("2026-01-01")).toBe("2026-01-01T12:00:00.000Z");
     });
   });
 

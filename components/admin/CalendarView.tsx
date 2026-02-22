@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 
-interface Transaction {
+export interface CalendarTransaction {
   id: string;
   stars: number;
   created_at: string;
@@ -10,7 +10,7 @@ interface Transaction {
 }
 
 interface CalendarViewProps {
-  transactions: Transaction[];
+  transactions: CalendarTransaction[];
   locale: string;
   onDateSelect: (date: string) => void;
   selectedDate?: string;
@@ -38,7 +38,7 @@ export default function CalendarView({
     const days: Array<{
       date: Date | null;
       dateString: string;
-      transactions: Transaction[];
+      transactions: CalendarTransaction[];
       totalStars: number;
       isCurrentMonth: boolean;
       isToday: boolean;

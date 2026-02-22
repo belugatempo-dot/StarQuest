@@ -205,7 +205,15 @@
     "multiplierExample": "例如：超过10分钟 = 1×，超过20分钟 = 2×，以此类推",
     "actualStars": "实际星星:",
     "selectChildFirst": "请先选择一个孩子",
-    "selectQuestOrCustom": "请选择一个任务或输入自定义描述"
+    "selectQuestOrCustom": "请选择一个任务或输入自定义描述",
+    "approvingPendingCount": "将批准 {count} 条待审批请求",
+    "rejectingPendingCount": "将拒绝 {count} 条待审批请求",
+    "rejectPlaceholder": "（可选）说明拒绝原因...",
+    "batchRejectPlaceholder": "（可选）输入拒绝原因...",
+    "optionalLabel": "可选",
+    "batchApproveFailed": "批量批准失败",
+    "batchRejectFailed": "批量拒绝失败",
+    "itemsSelectedCount": "已选择 {count} 项"
   },
   "editRedemption": {
     "title": "编辑兑换日期",

@@ -53,6 +53,18 @@ export type RawCreditTransaction = Database["public"]["Tables"]["credit_transact
   } | null;
 };
 
+/** Redemption request from Supabase query with joined user and reward */
+export type RedemptionRequest = Database["public"]["Tables"]["redemptions"]["Row"] & {
+  users?: { id: string; name: string; avatar_url: string | null } | null;
+  rewards?: {
+    name_en: string;
+    name_zh: string | null;
+    icon: string | null;
+    category: string | null;
+    description: string | null;
+  } | null;
+};
+
 // Unified activity item that works for all activity types
 export interface UnifiedActivityItem {
   id: string;
@@ -138,7 +150,6 @@ export interface UnifiedActivityListProps {
   activities: UnifiedActivityItem[];
   locale: string;
   role: ActivityRole;
-  currentChildId?: string;
   permissions?: ActivityPermissions;
   quests?: Quest[];
   familyChildren?: User[];

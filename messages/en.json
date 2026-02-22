@@ -205,7 +205,15 @@
     "multiplierExample": "Example: 10 mins over = 1\u00d7, 20 mins over = 2\u00d7, etc.",
     "actualStars": "Actual Stars:",
     "selectChildFirst": "Please select a child first",
-    "selectQuestOrCustom": "Please select a quest or enter custom description"
+    "selectQuestOrCustom": "Please select a quest or enter custom description",
+    "approvingPendingCount": "Approving {count} pending requests",
+    "rejectingPendingCount": "Rejecting {count} pending requests",
+    "rejectPlaceholder": "(Optional) Explain why you're rejecting...",
+    "batchRejectPlaceholder": "(Optional) Enter rejection reason...",
+    "optionalLabel": "optional",
+    "batchApproveFailed": "Batch approve failed",
+    "batchRejectFailed": "Batch reject failed",
+    "itemsSelectedCount": "{count} items selected"
   },
   "editRedemption": {
     "title": "Edit Redemption Date",

@@ -44,34 +44,32 @@ export function useActivityFilters({
       filtered = filtered.filter((a) => a.status === statusFilter);
     }
 
+    // Pre-compute date strings once per activity (avoids redundant Date + toLocalDateString calls)
+    const dateMap = new Map<string, string>();
+    const getDateStr = (createdAt: string) => {
+      let d = dateMap.get(createdAt);
+      if (!d) {
+        d = toLocalDateString(new Date(createdAt));
+        dateMap.set(createdAt, d);
+      }
+      return d;
+    };
+
     // Filter by single date
     if (filterDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate === filterDate;
-      });
+      filtered = filtered.filter((a) => getDateStr(a.createdAt) === filterDate);
     }
 
     // Filter by date range (parent only in list view)
     if (startDate && endDate) {
       filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate >= startDate && activityDate <= endDate;
+        const d = getDateStr(a.createdAt);
+        return d >= startDate && d <= endDate;
       });
     } else if (startDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate >= startDate;
-      });
+      filtered = filtered.filter((a) => getDateStr(a.createdAt) >= startDate);
     } else if (endDate) {
-      filtered = filtered.filter((a) => {
-        const date = new Date(a.createdAt);
-        const activityDate = toLocalDateString(date);
-        return activityDate <= endDate;
-      });
+      filtered = filtered.filter((a) => getDateStr(a.createdAt) <= endDate);
     }
 
     return filtered;

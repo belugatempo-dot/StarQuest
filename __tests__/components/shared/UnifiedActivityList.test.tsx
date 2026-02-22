@@ -254,7 +254,6 @@ describe("UnifiedActivityList", () => {
     activities: allActivities,
     locale: "en",
     role: "child" as const,
-    currentChildId: "child-1",
   };
 
   beforeEach(() => {
@@ -1250,7 +1249,6 @@ describe("UnifiedActivityList", () => {
           activities={[rejectedActivity]}
           locale="en"
           role="child"
-          currentChildId="child-1"
         />
       );
 
@@ -1278,7 +1276,6 @@ describe("UnifiedActivityList", () => {
           activities={[rejectedChildReq]}
           locale="en"
           role="child"
-          currentChildId="child-1"
         />
       );
 
