@@ -37,6 +37,9 @@ yarn-error.log*
 # database backups (contain user data)
 backups/
 
+# worktrees
+.worktrees/
+
 # vercel
 .vercel
 
