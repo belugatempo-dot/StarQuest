@@ -52,6 +52,8 @@ export async function executeBatchUpdate(options: {
   data: Record<string, unknown>;
 }): Promise<{ success: boolean; error?: any }> {
   const { supabase, table, ids, data } = options;
+  // Supabase's typed helpers require a table name literal, but we pass a runtime string.
+  // The casts are necessary because the generic type can't be inferred from a dynamic table name.
   const { error } = await typedUpdate(supabase, table as any, data as any).in(
     "id",
     ids

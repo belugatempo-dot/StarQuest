@@ -624,7 +624,7 @@ describe('RedemptionRequestList', () => {
       await user.click(rejectButtons[0])
 
       expect(screen.getByText('admin.rejectReason')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText(/optional/i)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('admin.rejectPlaceholder')).toBeInTheDocument()
     })
 
     it('closes modal when clicking cancel', async () => {
@@ -663,7 +663,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/optional/i)
+      const textarea = screen.getByPlaceholderText('admin.rejectPlaceholder')
       await user.type(textarea, 'Test reason')
 
       const cancelButton = screen.getByRole('button', { name: /common\.cancel/i })
@@ -672,7 +672,7 @@ describe('RedemptionRequestList', () => {
       // Open modal again
       await user.click(rejectButtons[0])
 
-      const newTextarea = screen.getByPlaceholderText(/optional/i)
+      const newTextarea = screen.getByPlaceholderText('admin.rejectPlaceholder')
       expect(newTextarea).toHaveValue('')
     })
 
@@ -714,7 +714,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/optional/i)
+      const textarea = screen.getByPlaceholderText('admin.rejectPlaceholder')
       await user.type(textarea, 'Not earned enough stars')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -739,7 +739,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/optional/i)
+      const textarea = screen.getByPlaceholderText('admin.rejectPlaceholder')
       await user.type(textarea, 'Not appropriate')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -772,7 +772,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/optional/i)
+      const textarea = screen.getByPlaceholderText('admin.rejectPlaceholder')
       await user.type(textarea, 'Reason here')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -815,7 +815,7 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      const textarea = screen.getByPlaceholderText(/optional/i)
+      const textarea = screen.getByPlaceholderText('admin.rejectPlaceholder')
       await user.type(textarea, 'Test reason')
 
       const modal = screen.getByRole('heading', { name: /admin\.rejectReason/i }).closest('div')
@@ -943,7 +943,7 @@ describe('RedemptionRequestList', () => {
       await user.click(checkboxes[0])
 
       expect(checkboxes[0]).toBeChecked()
-      expect(screen.getByText(/1 selected/i)).toBeInTheDocument()
+      expect(screen.getByText('admin.selectedCount')).toBeInTheDocument()
     })
 
     it('selects all requests when clicking select all', async () => {
@@ -966,7 +966,7 @@ describe('RedemptionRequestList', () => {
       checkboxes.forEach((checkbox) => {
         expect(checkbox).toBeChecked()
       })
-      expect(screen.getByText(/3 selected/i)).toBeInTheDocument()
+      expect(screen.getByText('admin.selectedCount')).toBeInTheDocument()
     })
 
     it('shows clear button when items are selected', async () => {
@@ -1293,7 +1293,7 @@ describe('RedemptionRequestList', () => {
       await user.click(batchApproveButton)
 
       // Verify count is shown
-      expect(screen.getByText(/2 pending requests/i)).toBeInTheDocument()
+      expect(screen.getByText('admin.approvingPendingCount')).toBeInTheDocument()
     })
   })
 
@@ -1348,7 +1348,7 @@ describe('RedemptionRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      expect(screen.getByText(/2 pending requests/i)).toBeInTheDocument()
+      expect(screen.getByText('admin.rejectingPendingCount')).toBeInTheDocument()
     })
 
     it('allows batch reject without reason (optional)', async () => {
@@ -1395,7 +1395,7 @@ describe('RedemptionRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      const textarea = screen.getByPlaceholderText(/optional.*enter rejection reason/i)
+      const textarea = screen.getByPlaceholderText('admin.batchRejectPlaceholder')
       await user.type(textarea, 'Not enough stars earned')
 
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
@@ -1422,7 +1422,7 @@ describe('RedemptionRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      const textarea = screen.getByPlaceholderText(/optional.*enter rejection reason/i)
+      const textarea = screen.getByPlaceholderText('admin.batchRejectPlaceholder')
       await user.type(textarea, 'Not appropriate')
 
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
@@ -1458,7 +1458,7 @@ describe('RedemptionRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      const textarea = screen.getByPlaceholderText(/optional.*enter rejection reason/i)
+      const textarea = screen.getByPlaceholderText('admin.batchRejectPlaceholder')
       await user.type(textarea, 'Reason for rejection')
 
       const modalButtons = screen.getAllByRole('button', { name: /admin\.reject/i })
@@ -1684,13 +1684,11 @@ describe('RedemptionRequestList', () => {
       await user.click(confirmButton)
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith(
-          expect.stringContaining('Batch approve failed')
-        )
+        expect(mockAlert).toHaveBeenCalledWith('admin.batchApproveFailed')
       })
     })
 
-    it('shows Chinese alert on batch approve error for zh-CN locale', async () => {
+    it('shows localized alert on batch approve error for zh-CN locale', async () => {
       const user = userEvent.setup()
       const mockAlert = jest.fn()
       global.alert = mockAlert
@@ -1723,7 +1721,7 @@ describe('RedemptionRequestList', () => {
       await user.click(confirmButton)
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith('批量批准失败')
+        expect(mockAlert).toHaveBeenCalledWith('admin.batchApproveFailed')
       })
     })
 
@@ -1760,13 +1758,11 @@ describe('RedemptionRequestList', () => {
       await user.click(confirmRejectButton!)
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith(
-          expect.stringContaining('Batch reject failed')
-        )
+        expect(mockAlert).toHaveBeenCalledWith('admin.batchRejectFailed')
       })
     })
 
-    it('shows Chinese alert on batch reject error for zh-CN locale', async () => {
+    it('shows localized alert on batch reject error for zh-CN locale', async () => {
       const user = userEvent.setup()
       const mockAlert = jest.fn()
       global.alert = mockAlert
@@ -1799,13 +1795,13 @@ describe('RedemptionRequestList', () => {
       await user.click(confirmRejectButton!)
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith('批量拒绝失败')
+        expect(mockAlert).toHaveBeenCalledWith('admin.batchRejectFailed')
       })
     })
   })
 
   describe('Reject modal zh-CN locale', () => {
-    it('shows Chinese placeholder text in reject modal for zh-CN locale', async () => {
+    it('shows i18n placeholder in reject modal for zh-CN locale', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -1820,11 +1816,11 @@ describe('RedemptionRequestList', () => {
       })
       await user.click(rejectButtons[0])
 
-      // zh-CN placeholder
-      expect(screen.getByPlaceholderText(/（可选）说明拒绝原因/)).toBeInTheDocument()
+      // i18n placeholder (mock t returns key)
+      expect(screen.getByPlaceholderText('admin.rejectPlaceholder')).toBeInTheDocument()
     })
 
-    it('shows Chinese placeholder text in batch reject modal for zh-CN locale', async () => {
+    it('shows i18n placeholder in batch reject modal for zh-CN locale', async () => {
       const user = userEvent.setup()
       mockFrom.mockReturnValue({
         update: mockUpdate.mockReturnThis(),
@@ -1849,11 +1845,11 @@ describe('RedemptionRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      // zh-CN placeholder for batch reject modal
-      expect(screen.getByPlaceholderText(/（可选）输入拒绝原因/)).toBeInTheDocument()
+      // i18n placeholder for batch reject modal (mock t returns key)
+      expect(screen.getByPlaceholderText('admin.batchRejectPlaceholder')).toBeInTheDocument()
     })
 
-    it('shows Chinese text in batch approve modal for zh-CN locale', async () => {
+    it('shows i18n text in batch approve modal for zh-CN locale', async () => {
       const user = userEvent.setup()
       mockFrom.mockReturnValue({
         update: mockUpdate.mockReturnThis(),
@@ -1878,11 +1874,11 @@ describe('RedemptionRequestList', () => {
       const batchApproveButton = screen.getByRole('button', { name: /admin\.batchApprove/i })
       await user.click(batchApproveButton)
 
-      // zh-CN text in batch approve modal
-      expect(screen.getByText(/将批准 1 条待审批请求/)).toBeInTheDocument()
+      // i18n text in batch approve modal (mock t returns key)
+      expect(screen.getByText('admin.approvingPendingCount')).toBeInTheDocument()
     })
 
-    it('shows Chinese text in batch reject modal for zh-CN locale', async () => {
+    it('shows i18n text in batch reject modal for zh-CN locale', async () => {
       const user = userEvent.setup()
       mockFrom.mockReturnValue({
         update: mockUpdate.mockReturnThis(),
@@ -1907,13 +1903,13 @@ describe('RedemptionRequestList', () => {
       const batchRejectButton = screen.getByRole('button', { name: /admin\.batchReject/i })
       await user.click(batchRejectButton)
 
-      // zh-CN text in batch reject modal
-      expect(screen.getByText(/将拒绝 1 条待审批请求/)).toBeInTheDocument()
-      // zh-CN optional label
-      expect(screen.getByText(/可选/)).toBeInTheDocument()
+      // i18n text in batch reject modal (mock t returns key)
+      expect(screen.getByText('admin.rejectingPendingCount')).toBeInTheDocument()
+      // i18n optional label (inside combined label text)
+      expect(screen.getByText(/admin\.optionalLabel/)).toBeInTheDocument()
     })
 
-    it('shows Chinese text in floating batch action bar for zh-CN locale', async () => {
+    it('shows i18n text in floating batch action bar for zh-CN locale', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -1929,14 +1925,13 @@ describe('RedemptionRequestList', () => {
       const checkboxes = screen.getAllByRole('checkbox')
       await user.click(checkboxes[0])
 
-      // Floating bar should show Chinese items selected text
-      const floatingBarTexts = screen.getAllByText(/已选择 1 项/)
-      expect(floatingBarTexts.length).toBeGreaterThanOrEqual(1)
+      // Floating bar should show i18n items selected text (mock t returns key)
+      expect(screen.getByText('admin.itemsSelectedCount')).toBeInTheDocument()
     })
   })
 
   describe('Bilingual Batch Support', () => {
-    it('displays Chinese text in selection mode for zh-CN locale', async () => {
+    it('displays i18n text in selection mode for zh-CN locale', async () => {
       const user = userEvent.setup()
       render(
         <RedemptionRequestList
@@ -1952,9 +1947,9 @@ describe('RedemptionRequestList', () => {
       const checkboxes = screen.getAllByRole('checkbox')
       await user.click(checkboxes[0])
 
-      // Should display Chinese text for selected count (appears in header and floating bar)
-      const chineseTexts = screen.getAllByText(/已选择 1 项/i)
-      expect(chineseTexts.length).toBeGreaterThanOrEqual(1)
+      // Should display i18n key for selected count (appears in header and floating bar)
+      expect(screen.getByText('admin.selectedCount')).toBeInTheDocument()
+      expect(screen.getByText('admin.itemsSelectedCount')).toBeInTheDocument()
     })
   })
 

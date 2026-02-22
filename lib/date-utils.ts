@@ -59,6 +59,17 @@ export function combineDateWithCurrentTime(dateString: string): Date {
 }
 
 /**
+ * Convert a YYYY-MM-DD date string to an ISO timestamp at noon UTC.
+ * Falls back to current time if the date string is empty/undefined.
+ * Used when approving redemptions to avoid timezone day-shifting.
+ */
+export function toApprovalTimestamp(dateStr?: string): string {
+  return dateStr
+    ? new Date(dateStr + "T12:00:00Z").toISOString()
+    : new Date().toISOString();
+}
+
+/**
  * Format a date string for display (date only, no time).
  */
 export function formatDateOnly(

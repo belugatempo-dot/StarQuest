@@ -12,7 +12,7 @@ import ActivityItem from "@/components/shared/ActivityItem";
 import ActivityFilterBar from "@/components/shared/ActivityFilterBar";
 import ActivityDateGroup from "@/components/shared/ActivityDateGroup";
 import BatchActionBar from "@/components/shared/BatchActionBar";
-import CalendarView from "@/components/admin/CalendarView";
+import CalendarView, { type CalendarTransaction } from "@/components/admin/CalendarView";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
@@ -30,6 +30,8 @@ import {
   calculateActivityStats,
 } from "@/lib/activity-utils";
 import { getTodayString } from "@/lib/date-utils";
+
+const PAGINATION_STEP = 20;
 
 // ── Local sub-component ───────────────────────────────────────────────────────
 
@@ -118,7 +120,6 @@ export default function UnifiedActivityList({
   activities,
   locale,
   role,
-  currentChildId,
   permissions: customPermissions,
   quests,
   familyChildren: childrenProp,
@@ -160,7 +161,7 @@ export default function UnifiedActivityList({
   });
 
   // Pagination state (child only)
-  const [showCount, setShowCount] = useState(20);
+  const [showCount, setShowCount] = useState(PAGINATION_STEP);
 
   // Modal state (edit, resubmit, add record, redeem)
   const modals = useActivityModals();
@@ -216,7 +217,7 @@ export default function UnifiedActivityList({
   }, [role, rewards, filterDate, currentUserId, familyId]);
 
   // Convert activities to transaction format for CalendarView
-  const transactionsForCalendar = useMemo(() => {
+  const transactionsForCalendar: CalendarTransaction[] = useMemo(() => {
     return activities.map((a) => ({
       id: a.id,
       stars: a.stars,
@@ -224,6 +225,17 @@ export default function UnifiedActivityList({
       created_at: a.createdAt,
     }));
   }, [activities]);
+
+  // Modal readiness checks — consolidate long boolean chains
+  const canShowAddRecordModal = useMemo(
+    () => modals.showAddRecordModal && !!filterDate && !!currentUserId && !!familyId && !!quests,
+    [modals.showAddRecordModal, filterDate, currentUserId, familyId, quests]
+  );
+
+  const canShowRedeemModal = useMemo(
+    () => modals.showRedeemModal && !!currentUserId && !!familyId && !!rewards && !!childrenProp && !!childBalances,
+    [modals.showRedeemModal, currentUserId, familyId, rewards, childrenProp, childBalances]
+  );
 
   const filterBarProps = {
     filterType,
@@ -265,7 +277,7 @@ export default function UnifiedActivityList({
           <div className="lg:sticky lg:top-4 lg:self-start space-y-3">
             <ActivityFilterBar {...filterBarProps} />
             <CalendarView
-              transactions={transactionsForCalendar as any}
+              transactions={transactionsForCalendar}
               locale={locale}
               selectedDate={filterDate}
               onDateSelect={(date) => {
@@ -373,7 +385,7 @@ export default function UnifiedActivityList({
           {hasMore && (
             <div className="mt-6 text-center">
               <button
-                onClick={() => setShowCount(showCount + 20)}
+                onClick={() => setShowCount(showCount + PAGINATION_STEP)}
                 className="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition"
               >
                 {t("history.showMore")} (
@@ -413,29 +425,29 @@ export default function UnifiedActivityList({
       )}
 
       {/* Add Record Modal */}
-      {modals.showAddRecordModal && filterDate && currentUserId && familyId && quests && (
+      {canShowAddRecordModal && (
         <AddRecordModal
-          date={filterDate}
+          date={filterDate!}
           role={role}
           locale={locale}
-          quests={quests}
+          quests={quests!}
           familyChildren={childrenProp}
-          currentUserId={currentUserId}
-          familyId={familyId}
+          currentUserId={currentUserId!}
+          familyId={familyId!}
           onClose={modals.closeAddRecord}
           onSuccess={modals.closeAddRecord}
         />
       )}
 
       {/* Redeem Reward Modal */}
-      {modals.showRedeemModal && currentUserId && familyId && rewards && childrenProp && childBalances && (
+      {canShowRedeemModal && (
         <RedeemFromCalendarModal
           locale={locale}
-          rewards={rewards}
-          familyChildren={childrenProp}
-          childBalances={childBalances}
-          currentUserId={currentUserId}
-          familyId={familyId}
+          rewards={rewards!}
+          familyChildren={childrenProp!}
+          childBalances={childBalances!}
+          currentUserId={currentUserId!}
+          familyId={familyId!}
           onClose={modals.closeRedeem}
           onSuccess={modals.closeRedeem}
         />

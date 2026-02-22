@@ -78,7 +78,6 @@ export function useActivityActions({
   };
 
   const handleDelete = async (activity: UnifiedActivityItem) => {
-    /* istanbul ignore next -- defensive guard: UI only shows delete for star_transactions */
     if (activity.type !== "star_transaction") {
       alert(t("activity.canOnlyDeleteStars"));
       return;

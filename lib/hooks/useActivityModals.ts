@@ -41,8 +41,11 @@ export function useActivityModals(): ActivityModalsState {
   const openEditModal = (activity: UnifiedActivityItem) => {
     if (activity.type === "redemption") {
       setEditingRedemption(activity.originalData as RawRedemption);
-    } else {
+    } else if (activity.type === "star_transaction" || activity.type === "credit_transaction") {
       setEditingTransaction(activity.originalData as StarTransaction);
+    } else {
+      const _exhaustive: never = activity.type;
+      throw new Error(`Unhandled activity type: ${_exhaustive}`);
     }
   };
 

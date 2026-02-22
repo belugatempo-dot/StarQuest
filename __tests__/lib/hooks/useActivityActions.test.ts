@@ -369,5 +369,22 @@ describe("useActivityActions", () => {
         expect.stringContaining("-3⭐")
       );
     });
+
+    it("shows alert when trying to delete a non-star_transaction", async () => {
+      const supabase = makeSupabase();
+      const router = makeRouter();
+      const batch = makeBatch();
+      const { result } = renderHook(() =>
+        useActivityActions({ batch, supabase: supabase as any, router: router as any, t, locale: "en" })
+      );
+
+      await act(async () => {
+        await result.current.handleDelete(makeActivity({ type: "redemption" }));
+      });
+
+      expect(alertSpy).toHaveBeenCalledWith("activity.canOnlyDeleteStars");
+      expect(supabase.from).not.toHaveBeenCalled();
+      expect(confirmSpy).not.toHaveBeenCalled();
+    });
   });
 });

@@ -59,7 +59,7 @@ describe("useActivityModals", () => {
       expect(result.current.editingTransaction).toBeNull();
     });
 
-    it("sets editingTransaction for credit_transaction type", () => {
+    it("explicitly handles credit_transaction by setting editingTransaction", () => {
       const { result } = renderHook(() => useActivityModals());
       const txData = { id: "ct-1" } as unknown as StarTransaction;
       act(() => {

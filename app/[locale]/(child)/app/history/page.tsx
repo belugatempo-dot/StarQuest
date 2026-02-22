@@ -65,7 +65,6 @@ export default async function HistoryPage({
         activities={sortedActivities}
         locale={locale}
         role="child"
-        currentChildId={user.id}
         quests={bonusQuests || []}
         currentUserId={user.id}
         familyId={user.family_id!}
