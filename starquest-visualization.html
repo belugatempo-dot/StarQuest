@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarQuest - Interactive Codebase Guide</title>
+<style>
+  /* === DARK THEME (starry night) === */
+  :root, [data-theme="dark"] {
+    --bg: #0f172a;
+    --bg-gradient: linear-gradient(170deg, #1e3a5f 0%, #0f172a 35%, #312e81 65%, #0f172a 100%);
+    --card: rgba(75, 85, 160, 0.45);
+    --accent: #FFD700;
+    --accent2: #FBBF24;
+    --accent3: #4F46E5;
+    --accent4: #10B981;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --border: rgba(255, 255, 255, 0.15);
+    --glow: rgba(255, 215, 0, 0.12);
+    --nav-bg: rgba(15, 23, 42, 0.88);
+    --node-fill: rgba(75, 85, 160, 0.5);
+    --node-label: #ffffff;
+    --node-sublabel: #94a3b8;
+    --panel-shadow: rgba(0, 0, 0, 0.5);
+    --conn-bg: rgba(255, 255, 255, 0.03);
+    --danger: #EF4444;
+  }
+  /* === LIGHT THEME === */
+  [data-theme="light"] {
+    --bg: #f5f5fa;
+    --bg-gradient: none;
+    --card: #ffffff;
+    --accent: #b8860b;
+    --accent2: #d4a017;
+    --accent3: #4338ca;
+    --accent4: #16a34a;
+    --text: #1a1a2e;
+    --text-dim: #64748b;
+    --border: #e2e8f0;
+    --glow: rgba(184, 134, 11, 0.08);
+    --nav-bg: rgba(245, 245, 250, 0.95);
+    --node-fill: #ffffff;
+    --node-label: #1a1a2e;
+    --node-sublabel: #64748b;
+    --panel-shadow: rgba(0, 0, 0, 0.1);
+    --conn-bg: rgba(0, 0, 0, 0.03);
+    --danger: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === NAV === */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--nav-bg);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 56px;
+  }
+  nav .logo {
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 12px rgba(255,215,0,0.3);
+    white-space: nowrap;
+  }
+  nav .tabs { display: flex; gap: 0.4rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  nav .tabs button {
+    background: none; border: none; color: var(--text-dim);
+    padding: 0.45rem 0.9rem; cursor: pointer; border-radius: 8px;
+    font-size: 0.88rem; transition: all 0.3s; white-space: nowrap;
+  }
+  nav .tabs button:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  nav .tabs button.active {
+    color: var(--accent); background: var(--glow);
+    box-shadow: 0 0 12px rgba(255,215,0,0.08);
+  }
+  nav .nav-controls { display: flex; gap: 0.4rem; align-items: center; }
+  nav .ctrl-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--text); padding: 0.35rem 0.7rem; border-radius: 6px;
+    cursor: pointer; font-size: 0.82rem; transition: all 0.3s;
+  }
+  nav .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* === MAIN === */
+  main { margin-top: 56px; padding: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
+  section { display: none; animation: fadeIn 0.4s ease; }
+  section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* === HERO (Story Mode) === */
+  .hero {
+    text-align: center; padding: 3rem 1rem 2rem;
+    background: radial-gradient(ellipse at center, var(--glow) 0%, transparent 70%);
+    border-radius: 20px; margin-bottom: 2.5rem;
+  }
+  .hero .mascot { font-size: 4rem; margin-bottom: 0.8rem; }
+  .hero h1 { font-size: 2.4rem; margin-bottom: 0.8rem; color: var(--accent); }
+  .hero .subtitle { color: var(--text-dim); font-size: 1.15rem; line-height: 1.8; max-width: 700px; margin: 0 auto; }
+
+  /* === STORY TIMELINE === */
+  .story-timeline { position: relative; padding-left: 3rem; max-width: 900px; margin: 0 auto; }
+  .story-timeline::before {
+    content: ''; position: absolute; left: 1rem; top: 0; bottom: 0;
+    width: 3px; background: linear-gradient(to bottom, var(--accent), var(--accent3), var(--accent4));
+    border-radius: 3px;
+  }
+  .story-step {
+    position: relative; margin-bottom: 1.5rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.4rem 1.8rem;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .story-step:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(255,215,0,0.08);
+    transform: translateX(4px);
+  }
+  .story-step::before {
+    content: attr(data-icon); position: absolute; left: -2.5rem; top: 1.4rem;
+    font-size: 1.4rem; width: 2rem; text-align: center;
+  }
+  .story-step .step-num {
+    display: inline-block; background: var(--glow); color: var(--accent);
+    padding: 0.15rem 0.55rem; border-radius: 4px; font-size: 0.72rem;
+    font-weight: 600; margin-bottom: 0.4rem; letter-spacing: 0.5px;
+  }
+  .story-step h3 { margin-bottom: 0.4rem; font-size: 1.05rem; }
+  .story-step p { color: var(--text-dim); line-height: 1.7; font-size: 0.92rem; }
+  .story-step .detail {
+    display: none; margin-top: 0.8rem; padding-top: 0.8rem;
+    border-top: 1px solid var(--border); color: var(--text); line-height: 1.8; font-size: 0.92rem;
+    white-space: pre-line;
+  }
+  .story-step.expanded .detail { display: block; animation: fadeIn 0.3s; }
+
+  /* === ARCHITECTURE === */
+  .arch-container { display: flex; flex-direction: column; gap: 1.5rem; }
+  .arch-diagram {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.5rem; min-height: 380px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .arch-diagram svg { width: 100%; height: auto; }
+  .arch-legend {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    padding: 0.8rem 1rem; background: var(--card); border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .arch-legend .legend-item {
+    display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text);
+  }
+  .arch-legend .legend-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+
+  /* === COMPONENT NODES === */
+  .node-group { cursor: pointer; transition: transform 0.2s; }
+  .node-group:hover { transform: scale(1.05); }
+  .node-group:hover .node-rect { stroke-width: 2.5; filter: brightness(1.2); }
+  .node-rect { rx: 12; ry: 12; stroke-width: 2; transition: all 0.3s; }
+  .node-label { fill: var(--node-label); font-size: 17px; font-weight: 600; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .node-sublabel { fill: var(--node-sublabel); font-size: 12px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+
+  /* === FLOW ARROWS === */
+  .flow-path { fill: none; stroke-width: 2; stroke-dasharray: 8 4; animation: flowDash 1.5s linear infinite; }
+  @keyframes flowDash { to { stroke-dashoffset: -24; } }
+  .flow-label { font-size: 11px; fill: var(--text-dim); text-anchor: middle; dominant-baseline: central; }
+  .flow-particle { opacity: 0.8; }
+
+  /* === INLINE DETAIL CARD === */
+  .inline-detail {
+    display: none; margin-top: 1rem;
+    background: var(--card); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 1.5rem; position: relative;
+    animation: slideDown 0.3s ease;
+    box-shadow: 0 4px 24px rgba(255,215,0,0.08);
+  }
+  .inline-detail.open { display: block; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .inline-detail .close-btn {
+    position: absolute; top: 0.6rem; right: 0.8rem;
+    background: none; border: none; color: var(--text-dim);
+    font-size: 1.4rem; cursor: pointer; line-height: 1;
+  }
+  .inline-detail .close-btn:hover { color: var(--text); }
+  .inline-detail h2 { margin-bottom: 0.4rem; color: var(--accent); font-size: 1.2rem; }
+  .inline-detail .tag {
+    display: inline-block; background: var(--glow); color: var(--accent);
+    padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
+    margin-right: 0.25rem; margin-bottom: 0.25rem;
+  }
+  .inline-detail .desc { color: var(--text-dim); line-height: 1.8; margin: 0.8rem 0; font-size: 0.92rem; }
+  .inline-detail .connections { margin-top: 0.8rem; }
+  .inline-detail .connections h4 { color: var(--accent3); margin-bottom: 0.4rem; font-size: 0.92rem; }
+  .inline-detail .conn-item {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.4rem 0.6rem; border-radius: 6px; margin-bottom: 0.25rem;
+    background: var(--conn-bg); font-size: 0.88rem;
+  }
+
+  /* === HOW-TO === */
+  .howto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+  .howto-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.4rem; transition: all 0.3s;
+  }
+  .howto-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 4px 16px rgba(255,215,0,0.06); }
+  .howto-card .card-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+  .howto-card h3 { margin-bottom: 0.4rem; font-size: 1rem; }
+  .howto-card p { color: var(--text-dim); line-height: 1.7; font-size: 0.88rem; }
+  .howto-card .steps {
+    margin-top: 0.8rem; padding-left: 1.2rem;
+    list-style: none; counter-reset: step;
+  }
+  .howto-card .steps li {
+    counter-increment: step; position: relative;
+    padding: 0.25rem 0; color: var(--text-dim); font-size: 0.88rem;
+  }
+  .howto-card .steps li::before {
+    content: counter(step); position: absolute; left: -1.4rem;
+    color: var(--accent); font-weight: 700; font-size: 0.78rem;
+  }
+
+  /* === SEARCH === */
+  .search-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.5rem 0.8rem; margin-bottom: 1.2rem;
+  }
+  .search-bar input {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-size: 0.9rem; outline: none;
+  }
+  .search-bar input::placeholder { color: var(--text-dim); }
+
+  /* === STARRY BG === */
+  .starry-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .starry-bg .star {
+    position: absolute; width: 2px; height: 2px;
+    background: #ffd43b; border-radius: 50%;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite alternate;
+  }
+  .starry-bg .star.dim { background: rgba(255,255,255,0.5); width: 1px; height: 1px; }
+  @keyframes twinkle { from { opacity: 0.2; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
+  .starry-bg .nebula { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; }
+  [data-theme="light"] .starry-bg { display: none; }
+  [data-theme="light"] body { background-image: none; }
+
+  /* === TOOLTIP === */
+  .tooltip {
+    position: fixed; background: var(--nav-bg); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.82rem;
+    pointer-events: none; z-index: 200; opacity: 0; transition: opacity 0.2s;
+    max-width: 240px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    backdrop-filter: blur(12px);
+  }
+  .tooltip.visible { opacity: 1; }
+
+  /* === FOOTER === */
+  footer {
+    padding: 2rem; text-align: center; margin-top: 3rem;
+    border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.88rem;
+    position: relative; z-index: 1;
+  }
+  footer .brand { color: var(--accent); font-weight: 700; font-size: 1.05rem; margin-bottom: 0.3rem; }
+  footer a { color: var(--accent); text-decoration: none; font-weight: 600; border-bottom: 1px dashed var(--accent); }
+  footer a:hover { opacity: 0.8; }
+
+  /* === TRANSITIONS === */
+  body, nav, .story-step, .arch-diagram, .howto-card, .inline-detail,
+  .search-bar, .arch-legend, .tooltip, footer {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  [data-theme="light"] .arch-diagram { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+
+  /* === QUALITY TAB === */
+  .quality-section { margin-bottom: 2rem; }
+  .quality-section h3 {
+    color: var(--accent); font-size: 1.1rem; margin-bottom: 1rem;
+    padding-bottom: 0.4rem; border-bottom: 1px solid var(--border);
+  }
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem; text-align: center;
+    transition: all 0.3s;
+  }
+  .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255,215,0,0.06); }
+  .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); }
+  .stat-card .stat-label { color: var(--text-dim); font-size: 0.88rem; margin-top: 0.3rem; }
+  .security-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .security-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem; transition: all 0.3s;
+  }
+  .security-card:hover { border-color: var(--accent4); transform: translateY(-2px); }
+  .security-card .sec-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+  .security-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .security-card p { color: var(--text-dim); font-size: 0.85rem; line-height: 1.6; }
+  .badge-row {
+    display: flex; flex-wrap: wrap; gap: 0.6rem;
+  }
+  .quality-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    background: var(--glow); color: var(--accent); border: 1px solid rgba(255,215,0,0.2);
+    padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+  }
+
+  /* === STAR ECONOMY TAB === */
+  #economy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  #quest-matrix {
+    display: grid;
+    grid-template-columns: 80px repeat(3, 1fr);
+    grid-template-rows: 44px repeat(3, 1fr);
+    gap: 4px;
+  }
+  .matrix-header {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; text-align: center;
+    padding: 6px; border-radius: 12px;
+  }
+  .matrix-header-bonus    { background: rgba(255,215,0,0.15); color: var(--accent); }
+  .matrix-header-duty     { background: rgba(239,68,68,0.12); color: var(--danger); }
+  .matrix-header-violation { background: rgba(245,158,11,0.12); color: #F59E0B; }
+  .matrix-row-label {
+    display: flex; align-items: center;
+    font-size: 0.85rem; color: var(--text-dim); padding-right: 4px;
+  }
+  .matrix-cell {
+    border-radius: 12px; padding: 10px 8px; text-align: center;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; border: 1px solid transparent; font-size: 0.85rem;
+  }
+  .matrix-cell:hover { transform: scale(1.06); border-color: var(--accent); }
+  .matrix-cell-bonus     { background: rgba(255,215,0,0.1); color: var(--accent); }
+  .matrix-cell-duty      { background: rgba(239,68,68,0.1); color: var(--danger); }
+  .matrix-cell-violation  { background: rgba(245,158,11,0.1); color: #F59E0B; }
+  .matrix-stars { font-weight: 800; font-size: 1rem; }
+  .matrix-range { font-size: 0.78rem; opacity: 0.7; }
+  #matrix-tooltip {
+    position: absolute; background: var(--nav-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px; font-size: 0.85rem;
+    max-width: 220px; z-index: 100; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
+  }
+  #matrix-tooltip.visible { opacity: 1; }
+  #star-flow {
+    display: flex; flex-direction: column; gap: 16px; align-items: center;
+  }
+  .econ-flow-node {
+    padding: 14px 24px; border-radius: 14px; font-weight: 700;
+    text-align: center; width: 180px;
+  }
+  .econ-flow-node-earn {
+    background: rgba(255,215,0,0.15); border: 2px solid rgba(255,215,0,0.4); color: var(--accent);
+  }
+  .econ-flow-node-balance {
+    background: rgba(79,70,229,0.25); border: 2px solid rgba(79,70,229,0.5); color: #a5b4fc;
+  }
+  .econ-flow-node-reward {
+    background: rgba(16,185,129,0.15); border: 2px solid rgba(16,185,129,0.4); color: var(--accent4);
+  }
+  .econ-flow-arrow { font-size: 1.5rem; color: var(--text-dim); line-height: 1; }
+  #credit-mini {
+    margin-top: 20px; padding: 16px 20px;
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 14px; font-size: 0.85rem; text-align: center;
+  }
+  #credit-mini h4 { color: #F59E0B; margin-bottom: 6px; font-size: 0.9rem; }
+  #credit-mini p { color: var(--text-dim); line-height: 1.5; }
+
+  /* === DATABASE TAB === */
+  #schema-tables {
+    display: flex; gap: 12px; align-items: flex-start;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .db-table {
+    background: rgba(13,17,23,0.8); border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 12px; min-width: 140px; overflow: hidden;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem;
+    transition: all 0.2s;
+  }
+  .db-table:hover { border-color: rgba(255,215,0,0.4); box-shadow: 0 0 16px rgba(255,215,0,0.1); }
+  .db-table.view-table { border: 2px solid rgba(255,215,0,0.5); box-shadow: 0 0 20px rgba(255,215,0,0.1); }
+  .db-table-header {
+    padding: 8px 12px; background: rgba(16,185,129,0.12);
+    border-bottom: 1px solid rgba(16,185,129,0.2);
+    font-weight: 700; color: var(--accent4); font-size: 0.85rem;
+  }
+  .db-table.view-table .db-table-header { background: rgba(255,215,0,0.1); color: var(--accent); }
+  .db-table-row {
+    padding: 5px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-dim); display: flex; align-items: center; gap: 6px;
+    transition: all 0.3s;
+  }
+  .db-table-row:last-child { border-bottom: none; }
+  .db-table-row.pk { color: var(--accent2); }
+  .db-table-row.fk { color: #a5b4fc; }
+  .col-icon { font-size: 0.78rem; opacity: 0.7; }
+  .db-rls-banner {
+    padding: 12px 20px; background: rgba(79,70,229,0.15);
+    border: 1px solid rgba(79,70,229,0.3); border-radius: 12px;
+    font-size: 0.85rem; color: #a5b4fc; text-align: center; margin-top: 1rem;
+  }
+  #db-demo { display: flex; flex-direction: column; gap: 16px; margin-top: 1.5rem; }
+  #db-demo-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .db-demo-btn {
+    padding: 10px 22px; border-radius: 12px; font-size: 0.9rem;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .db-demo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .db-demo-btn-insert {
+    background: linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2));
+    border: 1px solid rgba(16,185,129,0.5); color: var(--accent4);
+  }
+  .db-demo-btn-approve {
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(251,191,36,0.1));
+    border: 1px solid rgba(255,215,0,0.4); color: var(--accent);
+  }
+  .db-demo-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .db-demo-btn:active:not(:disabled) { transform: translateY(0); }
+  #db-live-table {
+    background: rgba(13,17,23,0.8); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; overflow: hidden;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem;
+  }
+  #db-live-table-header {
+    display: grid; grid-template-columns: 80px 160px 80px 80px 100px;
+    padding: 8px 12px; background: rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-dim); font-weight: 700; font-size: 0.82rem;
+  }
+  .db-live-row {
+    display: grid; grid-template-columns: 80px 160px 80px 80px 100px;
+    padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-dim); transition: all 0.3s;
+  }
+  .db-live-row:last-child { border-bottom: none; }
+  .db-live-row .id-col { color: #a5b4fc; }
+  .db-live-row .desc-col { color: var(--text); }
+  .db-live-row .stars-col { color: var(--accent); }
+  .badge-pending {
+    background: rgba(251,191,36,0.15); color: #FBBF24;
+    padding: 2px 8px; border-radius: 8px; font-size: 0.78rem; font-weight: 600;
+  }
+  .badge-approved {
+    background: rgba(16,185,129,0.15); color: var(--accent4);
+    padding: 2px 8px; border-radius: 8px; font-size: 0.78rem; font-weight: 600;
+  }
+  #db-balance-display {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.2); border-radius: 12px;
+  }
+  #db-balance-label { color: var(--text-dim); font-size: 0.85rem; }
+  #db-balance-value { font-size: 1.6rem; font-weight: 900; color: var(--accent); font-family: monospace; }
+  @keyframes rowInsert { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes goldFlash { 0% { background: transparent; } 50% { background: rgba(255,215,0,0.3); } 100% { background: transparent; } }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    nav { padding: 0 0.8rem; }
+    nav .tabs button { padding: 0.35rem 0.5rem; font-size: 0.78rem; }
+    nav .logo { font-size: 1rem; }
+    main { padding: 1rem; }
+    .hero h1 { font-size: 1.7rem; }
+    .howto-grid { grid-template-columns: 1fr; }
+    .security-grid { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    #economy-grid { grid-template-columns: 1fr; }
+    #db-live-table-header, .db-live-row { grid-template-columns: 60px 120px 60px 70px 80px; font-size: 0.78rem; }
+    #schema-tables { overflow-x: auto; }
+  }
+  @media (max-width: 480px) {
+    nav .logo { display: none; }
+    nav .tabs button { padding: 0.3rem 0.4rem; font-size: 0.72rem; }
+    .hero h1 { font-size: 1.3rem; }
+    .hero .subtitle { font-size: 0.95rem; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .badge-row { gap: 0.4rem; }
+    .quality-badge { font-size: 0.72rem; padding: 0.25rem 0.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="starry-bg" id="starry-bg"></div>
+
+<nav>
+  <div class="logo">⭐ StarQuest</div>
+  <div class="tabs">
+    <button class="active" data-tab="story" onclick="switchTab('story')">
+      <span data-en="Story" data-zh="故事">Story</span>
+    </button>
+    <button data-tab="architecture" onclick="switchTab('architecture')">
+      <span data-en="Architecture" data-zh="架构">Architecture</span>
+    </button>
+    <button data-tab="howto" onclick="switchTab('howto')">
+      <span data-en="How to Use" data-zh="使用指南">How to Use</span>
+    </button>
+    <button data-tab="dataflow" onclick="switchTab('dataflow')">
+      <span data-en="Data Flow" data-zh="数据流">Data Flow</span>
+    </button>
+    <button data-tab="quality" onclick="switchTab('quality')">
+      <span data-en="Quality" data-zh="质量">Quality</span>
+    </button>
+    <button data-tab="economy" onclick="switchTab('economy')">
+      <span data-en="Featured Functions" data-zh="特色功能">Featured Functions</span>
+    </button>
+    <button data-tab="database" onclick="switchTab('database')">
+      <span data-en="Database" data-zh="数据库">Database</span>
+    </button>
+  </div>
+  <div class="nav-controls">
+    <button class="ctrl-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">🌙</button>
+    <button class="ctrl-btn" onclick="toggleLang()">EN / 中文</button>
+  </div>
+</nav>
+
+<main>
+<!-- ========== TAB 1: STORY MODE ========== -->
+<section id="tab-story" class="active">
+  <div class="hero">
+    <div class="mascot">🐋</div>
+    <h1><span data-en="The Quest for Stars" data-zh="星辰探索之旅">The Quest for Stars</span></h1>
+    <p class="subtitle"><span data-en="StarQuest turns everyday tasks into epic family adventures! Parents create quests, children earn shining stars, and everyone grows together. Built with Next.js 15 + Supabase — bilingual, secure, and fun." data-zh="StarQuest 把日常任务变成家庭冒险！父母创建任务，孩子赚取闪亮的星星，一家人共同成长。基于 Next.js 15 + Supabase 构建 — 双语、安全、有趣。">StarQuest turns everyday tasks into epic family adventures! Parents create quests, children earn shining stars, and everyone grows together. Built with Next.js 15 + Supabase — bilingual, secure, and fun.</span></p>
+  </div>
+
+  <div class="story-timeline" id="story-timeline">
+    <div class="story-step" data-icon="🐋">
+      <span class="step-num">ACT 1 — WHAT</span>
+      <h3><span data-en="Once upon a time, in a family far away..." data-zh="很久很久以前，在一个遥远的家庭里……">Once upon a time, in a family far away...</span></h3>
+      <p><span data-en="Parents wished they could turn chores and good habits into a game. StarQuest was born — a magical star chart where kids complete quests, earn stars, and trade them for awesome rewards!" data-zh="父母们希望能把家务和好习惯变成游戏。StarQuest 诞生了 — 一个神奇的星图系统，孩子们完成任务、赚取星星，用星星换取超棒的奖励！">Parents wished they could turn chores and good habits into a game. StarQuest was born — a magical star chart where kids complete quests, earn stars, and trade them for awesome rewards!</span></p>
+      <div class="detail"><span data-en="StarQuest classifies every quest along two dimensions: Type (bonus, duty, violation) and Scope (self, family, others). This creates a rich 3x3 matrix of behaviors. Children only see bonus quests — keeping their experience positive. Parents see all types to track the full picture. The app speaks both English and Chinese." data-zh="StarQuest 用两个维度分类每个任务：类型（奖励、义务、违规）和范围（自我、家庭、他人）。这形成了 3x3 行为矩阵。孩子只看到奖励任务 — 保持积极体验。父母看到所有类型掌握全局。应用支持中英双语。">StarQuest classifies every quest along two dimensions: Type (bonus, duty, violation) and Scope (self, family, others). This creates a rich 3x3 matrix of behaviors. Children only see bonus quests — keeping their experience positive. Parents see all types to track the full picture. The app speaks both English and Chinese.</span></div>
+    </div>
+
+    <div class="story-step" data-icon="🎭">
+      <span class="step-num">ACT 2 — WHO</span>
+      <h3><span data-en="Meet the heroes behind the curtain" data-zh="认识幕后的英雄们">Meet the heroes behind the curtain</span></h3>
+      <p><span data-en="Six characters work together: the Frontend (storefront window), the Server (the brain), the Database (a vault that never forgets), Auth (the security guard), Email (the messenger owl), and Analytics (the wise oracle)." data-zh="六个角色协力合作：前端（漂亮橱窗）、服务端（大脑）、数据库（永不遗忘的保险库）、认证（安保人员）、邮件（信使猫头鹰）、数据分析（智慧先知）。">Six characters work together: the Frontend (storefront window), the Server (the brain), the Database (a vault that never forgets), Auth (the security guard), Email (the messenger owl), and Analytics (the wise oracle).</span></p>
+      <div class="detail"><span data-en="🌐 Frontend (React + Tailwind) — Colorful LEGO bricks for every screen. Uses next-intl for bilingual magic.
+🧠 Server (Next.js 15) — Pre-cooks pages for speed. Runs API routes and cron jobs.
+🗄️ Database (Supabase + PostgreSQL) — Stores families, quests, stars, rewards. Row-Level Security: each family only sees their own data.
+🔒 Auth (Middleware) — Checks every visitor's badge before letting them in.
+📧 Email (Resend) — Sends weekly reports, monthly summaries, and invitation emails.
+📊 Analytics (PostHog) — Privacy-first tracking. Children are anonymous!" data-zh="🌐 前端 (React + Tailwind) — 拼搭界面的彩色积木。用 next-intl 实现双语切换。
+🧠 服务端 (Next.js 15) — 预渲染页面速度飞快。运行 API 路由和定时任务。
+🗄️ 数据库 (Supabase + PostgreSQL) — 存储家庭、任务、星星、奖励。行级安全：每家只看自己的数据。
+🔒 认证 (中间件) — 进入前检查每个访客的身份。
+📧 邮件 (Resend) — 自动发送周报、月报和邀请邮件。
+📊 数据分析 (PostHog) — 隐私优先追踪。儿童完全匿名！">🌐 Frontend (React + Tailwind) — Colorful LEGO bricks for every screen. Uses next-intl for bilingual magic.
+🧠 Server (Next.js 15) — Pre-cooks pages for speed. Runs API routes and cron jobs.
+🗄️ Database (Supabase + PostgreSQL) — Stores families, quests, stars, rewards. Row-Level Security: each family only sees their own data.
+🔒 Auth (Middleware) — Checks every visitor's badge before letting them in.
+📧 Email (Resend) — Sends weekly reports, monthly summaries, and invitation emails.
+📊 Analytics (PostHog) — Privacy-first tracking. Children are anonymous!</span></div>
+    </div>
+
+    <div class="story-step" data-icon="📋">
+      <span class="step-num">ACT 3 — CREATE</span>
+      <h3><span data-en="The adventure begins: Parent creates a quest" data-zh="冒险开始：家长创建任务">The adventure begins: Parent creates a quest</span></h3>
+      <p><span data-en="Mom opens StarQuest and creates 'Help with Dishes' as a Bonus quest worth 15 stars. She picks Family scope and Chores category. The quest is saved — ready for Alisa to discover!" data-zh="妈妈打开 StarQuest，创建了"帮忙洗碗"奖励任务，价值 15 星。选择"家庭"范围和"家务"类别。任务已保存 — 等 Alisa 来发现！">Mom opens StarQuest and creates 'Help with Dishes' as a Bonus quest worth 15 stars. She picks Family scope and Chores category. The quest is saved — ready for Alisa to discover!</span></p>
+      <div class="detail"><span data-en="Quest classification: Bonus (earn stars), Duty (lose stars if missed), Violation (lose stars when broken). Scope: Self, Family, Others. Parents can set a star multiplier (1x-10x) for exceptional effort!" data-zh="任务分类：奖励（完成得星）、义务（未完成扣星）、违规（犯规扣星）。范围：自我、家庭、他人。家长可设星星倍率（1x-10x）奖励特别努力！">Quest classification: Bonus (earn stars), Duty (lose stars if missed), Violation (lose stars when broken). Scope: Self, Family, Others. Parents can set a star multiplier (1x-10x) for exceptional effort!</span></div>
+    </div>
+
+    <div class="story-step" data-icon="👧">
+      <span class="step-num">ACT 4 — DISCOVER</span>
+      <h3><span data-en="Alisa discovers the quest" data-zh="Alisa 发现了任务">Alisa discovers the quest</span></h3>
+      <p><span data-en="Alisa opens her phone and sees 'Help with Dishes' bouncing in. She only sees bonus quests — duty and violation quests are hidden, keeping her experience positive and fun!" data-zh="Alisa 打开手机，看到"帮忙洗碗"弹出来。她只能看到奖励任务 — 义务和违规任务是隐藏的，保持体验积极有趣！">Alisa opens her phone and sees 'Help with Dishes' bouncing in. She only sees bonus quests — duty and violation quests are hidden, keeping her experience positive and fun!</span></p>
+      <div class="detail"><span data-en="The child view uses getChildVisibleQuests() to filter. This is a core design principle: children see encouraging bonus adventures, parents see the full picture. Filtering runs server-side — filtered data never reaches the child's browser." data-zh="儿童视图用 getChildVisibleQuests() 过滤。核心设计理念：孩子看到正面的奖励冒险，家长看到完整画面。过滤在服务端完成 — 被过滤的数据不会到达孩子的浏览器。">The child view uses getChildVisibleQuests() to filter. This is a core design principle: children see encouraging bonus adventures, parents see the full picture. Filtering runs server-side — filtered data never reaches the child's browser.</span></div>
+    </div>
+
+    <div class="story-step" data-icon="⭐">
+      <span class="step-num">ACT 5 — EARN</span>
+      <h3><span data-en="Stars requested, stars approved!" data-zh="申请星星，获批通过！">Stars requested, stars approved!</span></h3>
+      <p><span data-en="Alisa washes all the dishes and taps 'Request Stars' with a note. The request goes pending. Mom reviews, clicks Approve, and Alisa's balance jumps from 265 to 280 stars!" data-zh="Alisa 洗完所有碗，点击"申请星星"并附言。请求进入待审批。妈妈审核后点击批准，Alisa 余额从 265 跳到 280 星！">Alisa washes all the dishes and taps 'Request Stars' with a note. The request goes pending. Mom reviews, clicks Approve, and Alisa's balance jumps from 265 to 280 stars!</span></p>
+      <div class="detail"><span data-en="Flow: INSERT star_transactions (pending) -> parent reviews -> UPDATE (approved) -> child_balances VIEW auto-recalculates. Parents can batch-approve or set custom dates for backdating." data-zh="流程：INSERT star_transactions (待审批) -> 家长审核 -> UPDATE (已批准) -> child_balances 视图自动重算。家长可批量审批或设自定义日期补录。">Flow: INSERT star_transactions (pending) -> parent reviews -> UPDATE (approved) -> child_balances VIEW auto-recalculates. Parents can batch-approve or set custom dates for backdating.</span></div>
+    </div>
+
+    <div class="story-step" data-icon="🤝">
+      <span class="step-num">ACT 6 — COLLABORATE</span>
+      <h3><span data-en="How the characters work together" data-zh="角色们如何协作">How the characters work together</span></h3>
+      <p><span data-en="Frontend: 'Alisa wants stars!' -> Server: 'Let me check with Auth.' -> Auth: 'She's legit!' -> Database: 'Saved! Pending.' -> Email: 'Hey Mom, new request!' -> Analytics: 'Tracked it.'" data-zh="前端："Alisa 要星星！"-> 服务端："让我问问认证。"-> 认证："没问题！"-> 数据库："已保存！待审批。"-> 邮件："妈妈，新请求！"-> 分析："已记录。"">Frontend: 'Alisa wants stars!' -> Server: 'Let me check with Auth.' -> Auth: 'She's legit!' -> Database: 'Saved! Pending.' -> Email: 'Hey Mom, new request!' -> Analytics: 'Tracked it.'</span></p>
+      <div class="detail"><span data-en="Maps to real code: React fetch('/api/...') -> Next.js API route -> middleware.ts checks session -> Supabase INSERT -> PostHog captures event -> Cron job emails weekly summary. All tables use family_id + RLS — PostgreSQL itself refuses cross-family queries." data-zh="映射真实代码：React fetch('/api/...') -> Next.js API 路由 -> middleware.ts 检查会话 -> Supabase INSERT -> PostHog 捕获事件 -> 定时任务发送周报。所有表用 family_id + RLS — PostgreSQL 本身拒绝跨家庭查询。">Maps to real code: React fetch('/api/...') -> Next.js API route -> middleware.ts checks session -> Supabase INSERT -> PostHog captures event -> Cron job emails weekly summary. All tables use family_id + RLS — PostgreSQL itself refuses cross-family queries.</span></div>
+    </div>
+
+    <div class="story-step" data-icon="🚀">
+      <span class="step-num">ACT 7 — SUPERPOWERS</span>
+      <h3><span data-en="Secret superpowers of StarQuest" data-zh="StarQuest 的秘密超能力">Secret superpowers of StarQuest</span></h3>
+      <p><span data-en="💳 Credit System — borrow stars with real interest! 📧 Auto-Reports — weekly/monthly emails. 🎭 Demo Mode — one-click, 30 days of data. 🧪 2,849 tests, ~99% coverage!" data-zh="💳 信用系统 — 借星星有利息！📧 自动报告 — 周报/月报邮件。🎭 演示模式 — 一键体验 30 天数据。🧪 2,849 测试，约 99% 覆盖率！">💳 Credit System — borrow stars with real interest! 📧 Auto-Reports — weekly/monthly emails. 🎭 Demo Mode — one-click, 30 days of data. 🧪 2,849 tests, ~99% coverage!</span></p>
+      <div class="detail"><span data-en="Credit: credit_settings, credit_transactions, interest_tiers. Kids borrow now, repay with interest — teaching financial literacy!
+Reports: Cron at /api/cron/daily-jobs generates Markdown via fetchReportBaseData() + buildChildrenStats(), sends via Resend.
+Demo: POST /api/seed-demo creates family with 45 quests, 11 rewards, 2 children, 30 days of activity. Passwordless magic link login.
+Testing: Jest + React Testing Library. Every component, hook, API route tested." data-zh="信用：credit_settings, credit_transactions, interest_tiers。孩子现在借，以后还利息 — 教理财素养！
+报告：/api/cron/daily-jobs 定时任务通过 fetchReportBaseData() + buildChildrenStats() 生成 Markdown，通过 Resend 发送。
+演示：POST /api/seed-demo 创建家庭，45 个任务、11 奖励、2 孩子、30 天活动。无密码魔法链接登录。
+测试：Jest + React Testing Library。每个组件、hook、API 路由都有测试。">Credit: credit_settings, credit_transactions, interest_tiers. Kids borrow now, repay with interest — teaching financial literacy!
+Reports: Cron at /api/cron/daily-jobs generates Markdown via fetchReportBaseData() + buildChildrenStats(), sends via Resend.
+Demo: POST /api/seed-demo creates family with 45 quests, 11 rewards, 2 children, 30 days of activity. Passwordless magic link login.
+Testing: Jest + React Testing Library. Every component, hook, API route tested.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 2: ARCHITECTURE ========== -->
+<section id="tab-architecture">
+  <h2 style="margin-bottom:1.2rem;color:var(--accent);font-size:1.5rem">
+    <span data-en="System Architecture" data-zh="系统架构">System Architecture</span>
+  </h2>
+  <div class="search-bar">
+    <span>🔍</span>
+    <input type="text" id="arch-search" placeholder="Search components..." data-en-placeholder="Search components..." data-zh-placeholder="搜索组件..." oninput="filterComponents(this.value)">
+  </div>
+  <div class="arch-container">
+    <div class="arch-diagram" id="arch-svg-container">
+      <svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="var(--text-dim)" opacity="0.5"/>
+          </marker>
+        </defs>
+        <!-- Arrows -->
+        <path id="f1" class="flow-path" stroke="#00d4ff" d="M 460,107 L 460,198" marker-end="url(#ah)"/>
+        <text class="flow-label"><textPath href="#f1" startOffset="50%" data-en="pages &amp; API" data-zh="页面和API">pages &amp; API</textPath></text>
+        <path id="f2" class="flow-path" stroke="#51cf66" d="M 460,277 L 460,383" marker-end="url(#ah)"/>
+        <text class="flow-label"><textPath href="#f2" startOffset="50%" data-en="SQL queries" data-zh="SQL查询">SQL queries</textPath></text>
+        <path id="f3" class="flow-path" stroke="#c39eff" d="M 360,238 L 220,238" marker-end="url(#ah)"/>
+        <text class="flow-label"><textPath href="#f3" startOffset="50%" data-en="verify session" data-zh="验证会话">verify session</textPath></text>
+        <path id="f4" class="flow-path" stroke="#ffd43b" d="M 560,238 L 690,238" marker-end="url(#ah)"/>
+        <text class="flow-label"><textPath href="#f4" startOffset="50%" data-en="send emails" data-zh="发送邮件">send emails</textPath></text>
+        <path id="f5" class="flow-path" stroke="#ff6b9d" d="M 540,68 C 660,30 790,60 800,198" marker-end="url(#ah)"/>
+        <text class="flow-label"><textPath href="#f5" startOffset="45%" data-en="capture events" data-zh="捕获事件">capture events</textPath></text>
+        <path id="f6" class="flow-path" stroke="#ff6b9d" d="M 540,258 C 660,278 790,258 800,238" marker-end="url(#ah)"/>
+        <text class="flow-label"><textPath href="#f6" startOffset="45%" data-en="server events" data-zh="服务端事件">server events</textPath></text>
+        <!-- Nodes -->
+        <g class="node-group" data-id="frontend" data-name="Frontend">
+          <rect class="node-rect" x="370" y="28" width="180" height="79" fill="var(--node-fill)" stroke="#00d4ff"/>
+          <text class="node-label" x="460" y="56" data-en="🌐 Frontend" data-zh="🌐 前端">🌐 Frontend</text>
+          <text class="node-sublabel" x="460" y="78" data-en="React + Tailwind" data-zh="React + Tailwind">React + Tailwind</text>
+        </g>
+        <g class="node-group" data-id="server" data-name="Server">
+          <rect class="node-rect" x="370" y="198" width="180" height="79" fill="var(--node-fill)" stroke="#ff6b9d"/>
+          <text class="node-label" x="460" y="226" data-en="🧠 Server" data-zh="🧠 服务端">🧠 Server</text>
+          <text class="node-sublabel" x="460" y="248" data-en="Next.js 15 API" data-zh="Next.js 15 API">Next.js 15 API</text>
+        </g>
+        <g class="node-group" data-id="auth" data-name="Auth">
+          <rect class="node-rect" x="50" y="198" width="170" height="79" fill="var(--node-fill)" stroke="#c39eff"/>
+          <text class="node-label" x="135" y="226" data-en="🔒 Auth" data-zh="🔒 认证">🔒 Auth</text>
+          <text class="node-sublabel" x="135" y="248" data-en="Middleware + RLS" data-zh="中间件 + RLS">Middleware + RLS</text>
+        </g>
+        <g class="node-group" data-id="email" data-name="Email">
+          <rect class="node-rect" x="690" y="198" width="170" height="79" fill="var(--node-fill)" stroke="#ffd43b"/>
+          <text class="node-label" x="775" y="226" data-en="📧 Email" data-zh="📧 邮件">📧 Email</text>
+          <text class="node-sublabel" x="775" y="248" data-en="Resend" data-zh="Resend 邮件">Resend</text>
+        </g>
+        <g class="node-group" data-id="database" data-name="Database">
+          <rect class="node-rect" x="370" y="383" width="180" height="79" fill="var(--node-fill)" stroke="#51cf66"/>
+          <text class="node-label" x="460" y="411" data-en="🗄️ Database" data-zh="🗄️ 数据库">🗄️ Database</text>
+          <text class="node-sublabel" x="460" y="433" data-en="Supabase + PostgreSQL" data-zh="Supabase + PostgreSQL">Supabase + PostgreSQL</text>
+        </g>
+        <g class="node-group" data-id="analytics" data-name="Analytics">
+          <rect class="node-rect" x="690" y="28" width="170" height="79" fill="var(--node-fill)" stroke="#8888aa"/>
+          <text class="node-label" x="775" y="56" data-en="📊 Analytics" data-zh="📊 分析">📊 Analytics</text>
+          <text class="node-sublabel" x="775" y="78" data-en="PostHog" data-zh="PostHog 分析">PostHog</text>
+        </g>
+      </svg>
+    </div>
+    <div class="inline-detail" id="inline-detail">
+      <button class="close-btn" onclick="closePanel()">&times;</button>
+      <h2 id="panel-title"></h2>
+      <div id="panel-tags"></div>
+      <div class="desc" id="panel-desc"></div>
+      <div class="connections" id="panel-connections"></div>
+    </div>
+    <div class="arch-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#00d4ff"></div><span data-en="Frontend" data-zh="前端">Frontend</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff6b9d"></div><span data-en="Backend" data-zh="后端">Backend</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#51cf66"></div><span data-en="Database" data-zh="数据库">Database</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c39eff"></div><span data-en="Middleware" data-zh="中间件">Middleware</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffd43b"></div><span data-en="External" data-zh="外部服务">External</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8888aa"></div><span data-en="Analytics" data-zh="分析">Analytics</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 3: HOW TO USE ========== -->
+<section id="tab-howto">
+  <h2 style="margin-bottom:1.2rem;color:var(--accent);font-size:1.5rem">
+    <span data-en="How to Use StarQuest" data-zh="如何使用 StarQuest">How to Use StarQuest</span>
+  </h2>
+  <div class="howto-grid">
+    <div class="howto-card">
+      <div class="card-icon">🚀</div>
+      <h3><span data-en="Getting Started" data-zh="开始使用">Getting Started</span></h3>
+      <p><span data-en="Set up your family in minutes." data-zh="几分钟建立家庭。">Set up your family in minutes.</span></p>
+      <ol class="steps">
+        <li><span data-en="Register as a parent" data-zh="以家长注册">Register as a parent</span></li>
+        <li><span data-en="Verify email" data-zh="验证邮箱">Verify email</span></li>
+        <li><span data-en="Add children from Settings" data-zh="在设置中添加孩子">Add children from Settings</span></li>
+        <li><span data-en="Get 45 quests, 11 rewards, 7 levels auto!" data-zh="自动获得 45 任务、11 奖励、7 等级！">Get 45 quests, 11 rewards, 7 levels auto!</span></li>
+      </ol>
+    </div>
+    <div class="howto-card">
+      <div class="card-icon">👨‍👩</div>
+      <h3><span data-en="Parent's Daily Routine" data-zh="家长日常">Parent's Daily Routine</span></h3>
+      <p><span data-en="Manage quests, review requests, track progress." data-zh="管理任务、审核请求、跟踪进度。">Manage quests, review requests, track progress.</span></p>
+      <ol class="steps">
+        <li><span data-en="Create/customize quests" data-zh="创建/自定义任务">Create/customize quests</span></li>
+        <li><span data-en="Review star requests" data-zh="审核星星请求">Review star requests</span></li>
+        <li><span data-en="Approve/reject redemptions" data-zh="批准/拒绝兑换">Approve/reject redemptions</span></li>
+        <li><span data-en="Record stars or batch actions" data-zh="记录星星或批量操作">Record stars or batch actions</span></li>
+        <li><span data-en="Check weekly/monthly reports" data-zh="查看周报/月报">Check weekly/monthly reports</span></li>
+      </ol>
+    </div>
+    <div class="howto-card">
+      <div class="card-icon">👧</div>
+      <h3><span data-en="Child's Adventure" data-zh="孩子的冒险">Child's Adventure</span></h3>
+      <p><span data-en="Earn stars and spend on rewards!" data-zh="赚星星换奖品！">Earn stars and spend on rewards!</span></p>
+      <ol class="steps">
+        <li><span data-en="Browse bonus quests" data-zh="浏览奖励任务">Browse bonus quests</span></li>
+        <li><span data-en="Complete and tap Request Stars" data-zh="完成后点击申请星星">Complete and tap Request Stars</span></li>
+        <li><span data-en="Add a note for parents" data-zh="给家长添加备注">Add a note for parents</span></li>
+        <li><span data-en="Watch balance grow!" data-zh="看余额增长！">Watch balance grow!</span></li>
+        <li><span data-en="Redeem awesome rewards" data-zh="兑换超棒奖励">Redeem awesome rewards</span></li>
+      </ol>
+    </div>
+    <div class="howto-card">
+      <div class="card-icon">💎</div>
+      <h3><span data-en="Power Features" data-zh="高级功能">Power Features</span></h3>
+      <p><span data-en="Level up your experience." data-zh="升级你的体验。">Level up your experience.</span></p>
+      <ol class="steps">
+        <li><span data-en="💳 Credit — borrow stars with interest" data-zh="💳 信用 — 借星星有利息">💳 Credit — borrow stars with interest</span></li>
+        <li><span data-en="📊 On-demand reports (daily-yearly)" data-zh="📊 按需报告（日报到年报）">📊 On-demand reports (daily-yearly)</span></li>
+        <li><span data-en="🏷️ Custom quest categories" data-zh="🏷️ 自定义任务类别">🏷️ Custom quest categories</span></li>
+        <li><span data-en="👥 Invite co-parent via email" data-zh="👥 邮件邀请另一家长">👥 Invite co-parent via email</span></li>
+        <li><span data-en="📅 Calendar activity view" data-zh="📅 日历活动视图">📅 Calendar activity view</span></li>
+      </ol>
+    </div>
+    <div class="howto-card">
+      <div class="card-icon">🌐</div>
+      <h3><span data-en="Bilingual Support" data-zh="双语支持">Bilingual Support</span></h3>
+      <p><span data-en="English and Chinese with one click." data-zh="一键切换中英文。">English and Chinese with one click.</span></p>
+      <ol class="steps">
+        <li><span data-en="Toggle language from top menu" data-zh="从顶部菜单切换语言">Toggle language from top menu</span></li>
+        <li><span data-en="Quests have name_en + name_zh" data-zh="任务有 name_en + name_zh">Quests have name_en + name_zh</span></li>
+        <li><span data-en="Reports respect your preference" data-zh="报告遵循你的语言偏好">Reports respect your preference</span></li>
+      </ol>
+    </div>
+    <div class="howto-card">
+      <div class="card-icon">🎭</div>
+      <h3><span data-en="Try the Demo" data-zh="试玩演示">Try the Demo</span></h3>
+      <p><span data-en="Explore instantly — no registration!" data-zh="立即体验 — 无需注册！">Explore instantly — no registration!</span></p>
+      <ol class="steps">
+        <li><span data-en="Click 'Try Demo' on login page" data-zh="在登录页点"试玩演示"">Click 'Try Demo' on login page</span></li>
+        <li><span data-en="Pick: Parent, Alisa, or Alexander" data-zh="选角色：家长、Alisa 或 Alexander">Pick: Parent, Alisa, or Alexander</span></li>
+        <li><span data-en="Explore 30 days of real data" data-zh="探索 30 天真实数据">Explore 30 days of real data</span></li>
+        <li><span data-en="Magic link login — no password" data-zh="魔法链接登录 — 无需密码">Magic link login — no password</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 4: DATA FLOW ========== -->
+<section id="tab-dataflow">
+  <h2 style="margin-bottom:1.2rem;color:var(--accent);font-size:1.5rem">
+    <span data-en="How Data Flows Through StarQuest" data-zh="数据如何在 StarQuest 中流动">How Data Flows Through StarQuest</span>
+  </h2>
+  <div class="arch-diagram" id="dataflow-svg-container">
+    <svg viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="da" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="var(--text-dim)" opacity="0.5"/>
+        </marker>
+      </defs>
+      <!-- FLOW 1: Star Request -->
+      <text x="480" y="22" fill="#00d4ff" font-size="16" font-weight="bold" text-anchor="middle" data-en="⭐ Quest Star Request Flow" data-zh="⭐ 任务星星申请流程">⭐ Quest Star Request Flow</text>
+      <rect x="30" y="42" width="110" height="55" rx="10" fill="var(--node-fill)" stroke="#00d4ff" stroke-width="2"/>
+      <text x="85" y="63" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="👧 Child" data-zh="👧 孩子">👧 Child</text>
+      <text x="85" y="81" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="taps Request" data-zh="点击申请">taps Request</text>
+      <path id="d1" class="flow-path" stroke="#00d4ff" d="M 140,70 L 180,70" marker-end="url(#da)"/>
+      <rect x="180" y="42" width="120" height="55" rx="10" fill="var(--node-fill)" stroke="#00d4ff" stroke-width="2"/>
+      <text x="240" y="63" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🌐 Frontend" data-zh="🌐 前端">🌐 Frontend</text>
+      <text x="240" y="81" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="form + validate" data-zh="表单验证">form + validate</text>
+      <path id="d2" class="flow-path" stroke="#ff6b9d" d="M 300,70 L 340,70" marker-end="url(#da)"/>
+      <rect x="340" y="42" width="120" height="55" rx="10" fill="var(--node-fill)" stroke="#ff6b9d" stroke-width="2"/>
+      <text x="400" y="63" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🧠 Server" data-zh="🧠 服务端">🧠 Server</text>
+      <text x="400" y="81" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="API route" data-zh="API 路由">API route</text>
+      <path id="d3" class="flow-path" stroke="#51cf66" d="M 460,70 L 500,70" marker-end="url(#da)"/>
+      <rect x="500" y="42" width="130" height="55" rx="10" fill="var(--node-fill)" stroke="#51cf66" stroke-width="2"/>
+      <text x="565" y="63" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🗄️ Database" data-zh="🗄️ 数据库">🗄️ Database</text>
+      <text x="565" y="81" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="INSERT pending" data-zh="INSERT 待审批">INSERT pending</text>
+      <path id="d4" class="flow-path" stroke="#ffd43b" d="M 630,70 L 670,70" marker-end="url(#da)"/>
+      <rect x="670" y="42" width="130" height="55" rx="10" fill="var(--node-fill)" stroke="#ffd43b" stroke-width="2"/>
+      <text x="735" y="63" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="👨‍👩 Parent" data-zh="👨‍👩 家长">👨‍👩 Parent</text>
+      <text x="735" y="81" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="approve" data-zh="批准">approve</text>
+      <path id="d5" class="flow-path" stroke="#51cf66" d="M 800,70 L 840,70" marker-end="url(#da)"/>
+      <rect x="840" y="42" width="100" height="55" rx="10" fill="var(--node-fill)" stroke="#FFD700" stroke-width="2"/>
+      <text x="890" y="63" fill="#FFD700" font-size="13" font-weight="600" text-anchor="middle" data-en="⭐ +15" data-zh="⭐ +15">⭐ +15</text>
+      <text x="890" y="81" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="balance updated" data-zh="余额更新">balance updated</text>
+
+      <!-- FLOW 2: Reward Redemption -->
+      <text x="480" y="152" fill="#51cf66" font-size="16" font-weight="bold" text-anchor="middle" data-en="🎁 Reward Redemption Flow" data-zh="🎁 奖励兑换流程">🎁 Reward Redemption Flow</text>
+      <rect x="80" y="172" width="120" height="55" rx="10" fill="var(--node-fill)" stroke="#51cf66" stroke-width="2"/>
+      <text x="140" y="193" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="👧 Child" data-zh="👧 孩子">👧 Child</text>
+      <text x="140" y="211" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="picks reward" data-zh="选择奖励">picks reward</text>
+      <path id="d6" class="flow-path" stroke="#51cf66" d="M 200,200 L 260,200" marker-end="url(#da)"/>
+      <rect x="260" y="172" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#51cf66" stroke-width="2"/>
+      <text x="330" y="193" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🗄️ redemptions" data-zh="🗄️ 兑换表">🗄️ redemptions</text>
+      <text x="330" y="211" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="INSERT pending" data-zh="INSERT 待审批">INSERT pending</text>
+      <path id="d7" class="flow-path" stroke="#ffd43b" d="M 400,200 L 460,200" marker-end="url(#da)"/>
+      <rect x="460" y="172" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#ffd43b" stroke-width="2"/>
+      <text x="530" y="193" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="👨‍👩 Parent" data-zh="👨‍👩 家长">👨‍👩 Parent</text>
+      <text x="530" y="211" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="approve + date" data-zh="批准 + 设日期">approve + date</text>
+      <path id="d8" class="flow-path" stroke="#51cf66" d="M 600,200 L 660,200" marker-end="url(#da)"/>
+      <rect x="660" y="172" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#FFD700" stroke-width="2"/>
+      <text x="730" y="193" fill="#FFD700" font-size="13" font-weight="600" text-anchor="middle" data-en="💰 -50 stars" data-zh="💰 -50 星">💰 -50 stars</text>
+      <text x="730" y="211" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="balance deducted" data-zh="余额扣除">balance deducted</text>
+
+      <!-- FLOW 3: Auth -->
+      <text x="480" y="282" fill="#c39eff" font-size="16" font-weight="bold" text-anchor="middle" data-en="🔒 Authentication Flow" data-zh="🔒 认证流程">🔒 Authentication Flow</text>
+      <rect x="30" y="302" width="110" height="55" rx="10" fill="var(--node-fill)" stroke="#c39eff" stroke-width="2"/>
+      <text x="85" y="323" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="👤 User" data-zh="👤 用户">👤 User</text>
+      <text x="85" y="341" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="login" data-zh="登录">login</text>
+      <path id="d9" class="flow-path" stroke="#c39eff" d="M 140,330 L 190,330" marker-end="url(#da)"/>
+      <rect x="190" y="302" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#c39eff" stroke-width="2"/>
+      <text x="260" y="323" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🔐 Supabase Auth" data-zh="🔐 Supabase 认证">🔐 Supabase Auth</text>
+      <text x="260" y="341" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="verify credentials" data-zh="验证凭据">verify credentials</text>
+      <path id="d10" class="flow-path" stroke="#c39eff" d="M 330,330 L 380,330" marker-end="url(#da)"/>
+      <rect x="380" y="302" width="130" height="55" rx="10" fill="var(--node-fill)" stroke="#c39eff" stroke-width="2"/>
+      <text x="445" y="323" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🍪 Session" data-zh="🍪 会话">🍪 Session</text>
+      <text x="445" y="341" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="cookie set" data-zh="设置cookie">cookie set</text>
+      <path id="d11" class="flow-path" stroke="#c39eff" d="M 510,330 L 560,330" marker-end="url(#da)"/>
+      <rect x="560" y="302" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#ff6b9d" stroke-width="2"/>
+      <text x="630" y="323" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🛡️ Middleware" data-zh="🛡️ 中间件">🛡️ Middleware</text>
+      <text x="630" y="341" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="role -> route" data-zh="角色 -> 路由">role -> route</text>
+      <path id="d12" class="flow-path" stroke="#00d4ff" d="M 700,330 L 750,330" marker-end="url(#da)"/>
+      <rect x="750" y="302" width="120" height="55" rx="10" fill="var(--node-fill)" stroke="#00d4ff" stroke-width="2"/>
+      <text x="810" y="323" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="📱 App" data-zh="📱 应用">📱 App</text>
+      <text x="810" y="341" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="/admin or /app" data-zh="/admin 或 /app">/admin or /app</text>
+
+      <!-- FLOW 4: Reports -->
+      <text x="480" y="412" fill="#ffd43b" font-size="16" font-weight="bold" text-anchor="middle" data-en="📧 Automated Report Flow" data-zh="📧 自动报告流程">📧 Automated Report Flow</text>
+      <rect x="80" y="432" width="120" height="55" rx="10" fill="var(--node-fill)" stroke="#ffd43b" stroke-width="2"/>
+      <text x="140" y="453" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="⏰ Cron" data-zh="⏰ 定时任务">⏰ Cron</text>
+      <text x="140" y="471" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="daily trigger" data-zh="每日触发">daily trigger</text>
+      <path id="d13" class="flow-path" stroke="#ffd43b" d="M 200,460 L 260,460" marker-end="url(#da)"/>
+      <rect x="260" y="432" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#51cf66" stroke-width="2"/>
+      <text x="330" y="453" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="🗄️ Fetch Data" data-zh="🗄️ 获取数据">🗄️ Fetch Data</text>
+      <text x="330" y="471" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="stars + redemptions" data-zh="星星 + 兑换">stars + redemptions</text>
+      <path id="d14" class="flow-path" stroke="#ff6b9d" d="M 400,460 L 460,460" marker-end="url(#da)"/>
+      <rect x="460" y="432" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#ff6b9d" stroke-width="2"/>
+      <text x="530" y="453" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="📝 Build Stats" data-zh="📝 生成统计">📝 Build Stats</text>
+      <text x="530" y="471" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="per-child summary" data-zh="按孩子汇总">per-child summary</text>
+      <path id="d15" class="flow-path" stroke="#ffd43b" d="M 600,460 L 660,460" marker-end="url(#da)"/>
+      <rect x="660" y="432" width="140" height="55" rx="10" fill="var(--node-fill)" stroke="#ffd43b" stroke-width="2"/>
+      <text x="730" y="453" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="📧 Resend" data-zh="📧 发送邮件">📧 Resend</text>
+      <text x="730" y="471" fill="var(--node-sublabel)" font-size="11" text-anchor="middle" data-en="email to parents" data-zh="邮件给家长">email to parents</text>
+
+      <!-- FLOW 5: Credit -->
+      <text x="480" y="542" fill="#FBBF24" font-size="16" font-weight="bold" text-anchor="middle" data-en="💳 Credit System Flow" data-zh="💳 信用系统流程">💳 Credit System Flow</text>
+      <rect x="80" y="560" width="120" height="44" rx="10" fill="var(--node-fill)" stroke="#FBBF24" stroke-width="2"/>
+      <text x="140" y="586" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="💳 Borrow" data-zh="💳 借星星">💳 Borrow</text>
+      <path id="d16" class="flow-path" stroke="#FBBF24" d="M 200,582 L 260,582" marker-end="url(#da)"/>
+      <rect x="260" y="560" width="140" height="44" rx="10" fill="var(--node-fill)" stroke="#FBBF24" stroke-width="2"/>
+      <text x="330" y="586" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="📈 Interest" data-zh="📈 利息">📈 Interest</text>
+      <path id="d17" class="flow-path" stroke="#FBBF24" d="M 400,582 L 460,582" marker-end="url(#da)"/>
+      <rect x="460" y="560" width="140" height="44" rx="10" fill="var(--node-fill)" stroke="#FBBF24" stroke-width="2"/>
+      <text x="530" y="586" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="⏰ Settle" data-zh="⏰ 结算">⏰ Settle</text>
+      <path id="d18" class="flow-path" stroke="#FBBF24" d="M 600,582 L 660,582" marker-end="url(#da)"/>
+      <rect x="660" y="560" width="140" height="44" rx="10" fill="var(--node-fill)" stroke="#51cf66" stroke-width="2"/>
+      <text x="730" y="586" fill="var(--node-label)" font-size="13" font-weight="600" text-anchor="middle" data-en="💰 Updated" data-zh="💰 更新">💰 Updated</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ========== TAB 5: QUALITY & SECURITY ========== -->
+<section id="tab-quality">
+  <h2 style="margin-bottom:1.2rem;color:var(--accent);font-size:1.5rem">
+    <span data-en="Quality &amp; Security" data-zh="质量与安全">Quality &amp; Security</span>
+  </h2>
+
+  <div class="quality-section">
+    <h3><span data-en="Test Coverage" data-zh="测试覆盖">Test Coverage</span></h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value">2,849</div>
+        <div class="stat-label"><span data-en="Tests Passing" data-zh="测试通过">Tests Passing</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">~99%</div>
+        <div class="stat-label"><span data-en="Code Coverage" data-zh="代码覆盖率">Code Coverage</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">Jest</div>
+        <div class="stat-label"><span data-en="+ React Testing Library" data-zh="+ React Testing Library">+ React Testing Library</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">TDD</div>
+        <div class="stat-label"><span data-en="Red → Green → Refactor" data-zh="红 → 绿 → 重构">Red → Green → Refactor</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quality-section">
+    <h3><span data-en="Security Features" data-zh="安全特性">Security Features</span></h3>
+    <div class="security-grid">
+      <div class="security-card">
+        <div class="sec-icon">🛡️</div>
+        <h4><span data-en="Row-Level Security" data-zh="行级安全">Row-Level Security</span></h4>
+        <p><span data-en="Every table uses family_id with PostgreSQL RLS. Each family can only access their own data — enforced at the database level." data-zh="每张表用 family_id 配合 PostgreSQL RLS。每家只能访问自己的数据 — 数据库层面强制执行。">Every table uses family_id with PostgreSQL RLS. Each family can only access their own data — enforced at the database level.</span></p>
+      </div>
+      <div class="security-card">
+        <div class="sec-icon">🔒</div>
+        <h4><span data-en="Middleware Auth" data-zh="中间件认证">Middleware Auth</span></h4>
+        <p><span data-en="Intl middleware runs first, then Supabase session check. This order is critical — reversing it breaks sessions." data-zh="国际化中间件先运行，然后检查 Supabase 会话。此顺序至关重要 — 反转会破坏会话。">Intl middleware runs first, then Supabase session check. This order is critical — reversing it breaks sessions.</span></p>
+      </div>
+      <div class="security-card">
+        <div class="sec-icon">👥</div>
+        <h4><span data-en="Role-Based Access" data-zh="基于角色的访问控制">Role-Based Access</span></h4>
+        <p><span data-en="Parents route to /admin, children to /app. requireParent() and requireAuth() guards protect every route." data-zh="家长路由到 /admin，孩子到 /app。requireParent() 和 requireAuth() 守卫保护每个路由。">Parents route to /admin, children to /app. requireParent() and requireAuth() guards protect every route.</span></p>
+      </div>
+      <div class="security-card">
+        <div class="sec-icon">🔐</div>
+        <h4><span data-en="Privacy-First Analytics" data-zh="隐私优先分析">Privacy-First Analytics</span></h4>
+        <p><span data-en="Children identified by UUID only — no email, no name. Session recordings disabled for all child accounts." data-zh="儿童仅用 UUID 标识 — 无邮箱、无姓名。所有儿童账户禁用会话录制。">Children identified by UUID only — no email, no name. Session recordings disabled for all child accounts.</span></p>
+      </div>
+      <div class="security-card">
+        <div class="sec-icon">⚡</div>
+        <h4><span data-en="SECURITY DEFINER" data-zh="SECURITY DEFINER 函数">SECURITY DEFINER</span></h4>
+        <p><span data-en="Sensitive operations (password reset, email update, child delete) run via SECURITY DEFINER functions — never exposed to client." data-zh="敏感操作（密码重置、邮箱更新、删除孩子）通过 SECURITY DEFINER 函数运行 — 从不暴露给客户端。">Sensitive operations (password reset, email update, child delete) run via SECURITY DEFINER functions — never exposed to client.</span></p>
+      </div>
+      <div class="security-card">
+        <div class="sec-icon">🍪</div>
+        <h4><span data-en="Cookie-Based Sessions" data-zh="基于Cookie的会话">Cookie-Based Sessions</span></h4>
+        <p><span data-en="httpOnly cookies via @supabase/ssr. Post-auth uses window.location.href (not router.push) to avoid login loops." data-zh="通过 @supabase/ssr 使用 httpOnly cookie。登录后用 window.location.href（非 router.push）避免登录循环。">httpOnly cookies via @supabase/ssr. Post-auth uses window.location.href (not router.push) to avoid login loops.</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quality-section">
+    <h3><span data-en="Code Quality" data-zh="代码质量">Code Quality</span></h3>
+    <div class="badge-row">
+      <span class="quality-badge"><span data-en="TypeScript strict" data-zh="TypeScript 严格模式">TypeScript strict</span></span>
+      <span class="quality-badge"><span data-en="TDD workflow" data-zh="TDD 工作流">TDD workflow</span></span>
+      <span class="quality-badge"><span data-en="Bilingual EN/中文" data-zh="双语 EN/中文">Bilingual EN/中文</span></span>
+      <span class="quality-badge"><span data-en="~99% coverage" data-zh="~99% 覆盖率">~99% coverage</span></span>
+      <span class="quality-badge"><span data-en="Every component tested" data-zh="每个组件都有测试">Every component tested</span></span>
+      <span class="quality-badge"><span data-en="Family-scoped RLS" data-zh="家庭范围 RLS">Family-scoped RLS</span></span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 6: STAR ECONOMY ========== -->
+<section id="tab-economy">
+  <h2 style="margin-bottom:1.2rem;color:var(--accent);font-size:1.5rem">
+    <span data-en="Featured Functions" data-zh="特色功能">Featured Functions</span> 💰
+  </h2>
+  <p style="color:var(--text-dim);margin-bottom:1.5rem;font-size:0.95rem">
+    <span data-en="Different quests earn (or lose!) different amounts of stars. Click any cell to learn more!" data-zh="不同任务赚取（或失去！）不同数量的星星。点击任意单元格了解更多！">Different quests earn (or lose!) different amounts of stars. Click any cell to learn more!</span>
+  </p>
+
+  <div id="economy-grid" style="position:relative">
+    <!-- Quest Matrix -->
+    <div>
+      <h3 style="color:var(--text);margin-bottom:16px;font-size:1rem;font-weight:700">
+        <span data-en="Quest Matrix — Stars by Type × Scope" data-zh="任务矩阵 — 类型 × 范围的星星对照表">Quest Matrix — Stars by Type × Scope</span>
+      </h3>
+      <div id="quest-matrix"><!-- Filled by JS --></div>
+      <p style="font-size:0.88rem;color:var(--text-dim);margin-top:12px">
+        <span data-en="👆 Click any cell to see details" data-zh="👆 点击任意单元格查看详情">👆 Click any cell to see details</span>
+      </p>
+    </div>
+
+    <!-- Star Flow + Credit -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <h3 style="color:var(--text);margin-bottom:8px;font-size:1rem;font-weight:700;align-self:flex-start">
+        <span data-en="Star Flow Diagram" data-zh="星星流动图">Star Flow Diagram</span>
+      </h3>
+
+      <div id="star-flow">
+        <div class="econ-flow-node econ-flow-node-earn">
+          <span data-en="⭐ Earn Stars" data-zh="⭐ 赚取星星">⭐ Earn Stars</span>
+          <div style="font-size:0.88rem;opacity:0.7;font-weight:400;margin-top:4px">
+            <span data-en="Complete quests → parent approves" data-zh="完成任务 → 家长批准">Complete quests → parent approves</span>
+          </div>
+        </div>
+        <div class="econ-flow-arrow">↓</div>
+        <div class="econ-flow-node econ-flow-node-balance">
+          <span data-en="💰 Star Balance" data-zh="💰 星星余额">💰 Star Balance</span>
+          <div style="font-size:0.88rem;opacity:0.7;font-weight:400;margin-top:4px">child_balances VIEW</div>
+        </div>
+        <div class="econ-flow-arrow">↓</div>
+        <div class="econ-flow-node econ-flow-node-reward">
+          <span data-en="🎁 Redeem Reward" data-zh="🎁 兑换奖励">🎁 Redeem Reward</span>
+          <div style="font-size:0.88rem;opacity:0.7;font-weight:400;margin-top:4px">
+            <span data-en="Stars deducted → parent confirms" data-zh="扣除星星 → 家长确认">Stars deducted → parent confirms</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="credit-mini">
+        <h4><span data-en="💳 Credit System" data-zh="💳 信用系统">💳 Credit System</span></h4>
+        <p><span data-en="Like a piggy bank loan! Kids can borrow stars when they run low. Each month, a small interest charge is automatically settled." data-zh="像小猪存钱罐贷款！孩子星星不够时可以借。每月自动结算少量利息。">Like a piggy bank loan! Kids can borrow stars when they run low. Each month, a small interest charge is automatically settled.</span> 🏦</p>
+        <div style="margin-top:8px;font-size:0.88rem;color:var(--accent2)">
+          Tables: <code>credit_settings</code> · <code>credit_transactions</code> · <code>interest_tiers</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Matrix Tooltip -->
+  <div id="matrix-tooltip"></div>
+</section>
+
+<!-- ========== TAB 7: DATABASE ========== -->
+<section id="tab-database">
+  <h2 style="margin-bottom:1.2rem;color:var(--accent);font-size:1.5rem">
+    <span data-en="The Database Memory" data-zh="数据库记忆">The Database Memory</span> 🗄️
+  </h2>
+  <p style="color:var(--text-dim);margin-bottom:1.5rem;font-size:0.95rem">
+    <span data-en="Everything in StarQuest is saved in a PostgreSQL database. Tables hold the data, and arrows show how they connect!" data-zh="StarQuest 的一切都保存在 PostgreSQL 数据库中。表格存储数据，箭头显示它们如何连接！">Everything in StarQuest is saved in a PostgreSQL database. Tables hold the data, and arrows show how they connect!</span>
+  </p>
+
+  <!-- Schema Tables -->
+  <div id="schema-tables"><!-- Filled by JS --></div>
+
+  <!-- RLS Banner -->
+  <div class="db-rls-banner">
+    🔒 <strong>Row-Level Security (RLS):</strong>
+    <span data-en="Every table has a magic shield — you can only read or write data that belongs to your own family. Even if someone guessed another family's ID, the database refuses! This is built right into PostgreSQL." data-zh="每张表都有一个魔法盾牌 — 你只能读写属于你自己家庭的数据。即使有人猜到了其他家庭的 ID，数据库也会拒绝！这直接内置于 PostgreSQL 中。">Every table has a magic shield — you can only read or write data that belongs to your own family. Even if someone guessed another family's ID, the database refuses! This is built right into PostgreSQL.</span>
+  </div>
+
+  <!-- Interactive Demo -->
+  <div id="db-demo">
+    <h3 style="color:var(--text);font-size:1rem;font-weight:700">
+      <span data-en="🎮 Interactive Demo — Try it yourself!" data-zh="🎮 互动演示 — 亲自试试！">🎮 Interactive Demo — Try it yourself!</span>
+    </h3>
+    <div id="db-demo-btns">
+      <button class="db-demo-btn db-demo-btn-insert" onclick="dbDemoInsert()">
+        <span data-en="➕ Alisa completes a quest" data-zh="➕ Alisa 完成了一个任务">➕ Alisa completes a quest</span>
+      </button>
+      <button class="db-demo-btn db-demo-btn-approve" onclick="dbDemoApprove()" id="btn-approve" disabled>
+        <span data-en="✅ Parent approves it" data-zh="✅ 家长批准了">✅ Parent approves it</span>
+      </button>
+    </div>
+
+    <div id="db-live-table">
+      <div id="db-live-table-header">
+        <div>id</div>
+        <div><span data-en="description" data-zh="描述">description</span></div>
+        <div><span data-en="stars" data-zh="星星">stars</span></div>
+        <div><span data-en="status" data-zh="状态">status</span></div>
+        <div><span data-en="child" data-zh="孩子">child</span></div>
+      </div>
+      <div id="db-live-rows"><!-- Rows inserted by JS --></div>
+    </div>
+
+    <div id="db-balance-display">
+      <span id="db-balance-label"><span data-en="⭐ Alisa's Balance:" data-zh="⭐ Alisa 的余额：">⭐ Alisa's Balance:</span></span>
+      <span id="db-balance-value">265</span>
+      <span style="color:var(--text-dim);font-size:0.8rem"><span data-en="stars" data-zh="星">stars</span></span>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Footer -->
+<footer>
+  <div class="brand">⭐ StarQuest · Beluga Tempo · 鲸律</div>
+  <div><span data-en="A gamified family behavior tracking app — Next.js 15 + Supabase" data-zh="游戏化家庭行为追踪 — Next.js 15 + Supabase">A gamified family behavior tracking app — Next.js 15 + Supabase</span></div>
+  <div style="margin-top:8px">
+    <a id="try-cta" href="https://starquest.beluga-tempo.com/en" target="_blank">Try it now!</a>
+    · 2,849 tests · ~99% coverage
+  </div>
+</footer>
+
+<script>
+var currentLang = 'en';
+function toggleLang() {
+  currentLang = currentLang === 'en' ? 'zh' : 'en';
+  document.querySelectorAll('[data-en]').forEach(function(el) {
+    el.textContent = el.getAttribute('data-' + currentLang);
+  });
+  document.querySelectorAll('[data-en-placeholder]').forEach(function(el) {
+    el.placeholder = el.getAttribute('data-' + currentLang + '-placeholder');
+  });
+}
+
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+function createStars() {
+  var c = document.getElementById('starry-bg');
+  if (!c) return;
+  while (c.firstChild) c.removeChild(c.firstChild);
+  for (var i = 0; i < 55; i++) {
+    var s = document.createElement('div');
+    s.className = Math.random() > 0.3 ? 'star dim' : 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+    s.style.animationDelay = Math.random() * 3 + 's';
+    c.appendChild(s);
+  }
+  [{x:'20%',y:'15%',sz:'300px',col:'#5a4a9a'},{x:'70%',y:'60%',sz:'350px',col:'#4a3a8a'},{x:'50%',y:'85%',sz:'250px',col:'#5a5aa0'}].forEach(function(n) {
+    var el = document.createElement('div');
+    el.className = 'nebula';
+    el.style.cssText = 'left:'+n.x+';top:'+n.y+';width:'+n.sz+';height:'+n.sz+';background:'+n.col;
+    c.appendChild(el);
+  });
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('nav .tabs button').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+  closePanel();
+}
+
+document.addEventListener('click', function(e) {
+  var step = e.target.closest('.story-step');
+  if (step) step.classList.toggle('expanded');
+});
+
+var COMPONENTS = {
+  "frontend": {
+    name: "Frontend", name_zh: "前端", tooltip: "React + Tailwind UI layer", tooltip_zh: "React + Tailwind 界面层",
+    desc: "The Frontend renders everything you see: quest cards, star counters, reward lists, calendar view. Built with React + Tailwind CSS, it uses next-intl for bilingual switching. Client Components handle interactive elements, Server Components pre-render pages for speed.",
+    desc_zh: "前端渲染你看到的一切：任务卡片、星星计数器、奖励列表、日历视图。用 React + Tailwind CSS 构建，next-intl 实现双语切换。客户端组件处理交互，服务端组件预渲染提速。",
+    tags: ["React", "Tailwind CSS", "next-intl", "TypeScript"],
+    connections: [
+      { target: "server", direction: "out", label: "HTTP requests", label_zh: "HTTP 请求" },
+      { target: "analytics", direction: "out", label: "capture events", label_zh: "捕获事件" }
+    ]
+  },
+  "server": {
+    name: "Server", name_zh: "服务端", tooltip: "Next.js 15 server-side logic", tooltip_zh: "Next.js 15 服务端逻辑",
+    desc: "The brain of StarQuest. Pre-cooks pages with Server Components, runs API routes for star requests and redemptions, handles cron jobs for automated reports, manages email via Resend. Middleware checks auth and routes to correct locale on every request.",
+    desc_zh: "StarQuest 的大脑。用服务端组件预渲染页面，运行 API 路由处理星星请求和兑换，处理定时任务自动报告，通过 Resend 管理邮件。中间件每次请求检查认证并路由到正确语言。",
+    tags: ["Next.js 15", "API Routes", "Cron", "Middleware"],
+    connections: [
+      { target: "database", direction: "out", label: "SQL via Supabase", label_zh: "Supabase SQL 查询" },
+      { target: "auth", direction: "out", label: "verify sessions", label_zh: "验证会话" },
+      { target: "email", direction: "out", label: "send emails", label_zh: "发送邮件" }
+    ]
+  },
+  "database": {
+    name: "Database", name_zh: "数据库", tooltip: "Supabase + PostgreSQL with RLS", tooltip_zh: "Supabase + PostgreSQL 行级安全",
+    desc: "Stores families, quests, star_transactions, rewards, redemptions, levels, credit data. Every table uses family_id with Row-Level Security — each family only sees their own data. The child_balances VIEW auto-calculates star balances.",
+    desc_zh: "存储家庭、任务、star_transactions、奖励、兑换、等级、信用数据。每张表用 family_id 配合行级安全 — 每家只看自己的数据。child_balances 视图自动计算星星余额。",
+    tags: ["PostgreSQL", "Supabase", "RLS", "Views"],
+    connections: [{ target: "server", direction: "in", label: "responds to queries", label_zh: "响应查询" }]
+  },
+  "auth": {
+    name: "Auth", name_zh: "认证", tooltip: "Authentication + Authorization", tooltip_zh: "认证 + 授权",
+    desc: "Supabase Auth handles login and magic links for demo mode. Next.js middleware runs intl first, then checks session. Parents go to /admin, children to /app. Critical: use window.location.href after login, NOT router.push!",
+    desc_zh: "Supabase Auth 处理登录和演示模式魔法链接。Next.js 中间件先运行国际化，再检查会话。家长进 /admin，孩子进 /app。关键：登录后用 window.location.href，不是 router.push！",
+    tags: ["Supabase Auth", "Magic Links", "RBAC"],
+    connections: [{ target: "database", direction: "out", label: "user lookup", label_zh: "用户查询" }]
+  },
+  "email": {
+    name: "Email", name_zh: "邮件", tooltip: "Transactional email via Resend", tooltip_zh: "通过 Resend 发送事务邮件",
+    desc: "Sends parent invitations, weekly star summaries, monthly reports, and settlement notices. Templates are branded HTML with bilingual support. Daily cron triggers report generation automatically.",
+    desc_zh: "发送家长邀请、每周星星摘要、月报和结算通知。模板是带品牌的双语 HTML。每日定时任务自动触发报告生成。",
+    tags: ["Resend", "HTML Templates", "Cron"],
+    connections: [{ target: "server", direction: "in", label: "triggered by API", label_zh: "由 API 触发" }]
+  },
+  "analytics": {
+    name: "Analytics", name_zh: "分析", tooltip: "PostHog product analytics", tooltip_zh: "PostHog 产品分析",
+    desc: "PostHog tracks logins, star requests, redemptions. Privacy-first: children identified by UUID only, no session recordings for kids. Uses posthog-js (client) + posthog-node (server) with config split to prevent webpack errors.",
+    desc_zh: "PostHog 追踪登录、星星请求、兑换。隐私优先：儿童仅用 UUID 标识，不录制儿童会话。使用 posthog-js（客户端）+ posthog-node（服务端），配置拆分防 webpack 错误。",
+    tags: ["PostHog", "Privacy-First"],
+    connections: [
+      { target: "frontend", direction: "in", label: "client events", label_zh: "客户端事件" },
+      { target: "server", direction: "in", label: "server events", label_zh: "服务端事件" }
+    ]
+  }
+};
+
+var currentNodeId = null;
+function openPanel(data, nodeId) {
+  var panel = document.getElementById('inline-detail');
+  if (currentNodeId === nodeId) {
+    closePanel();
+    return;
+  }
+  currentNodeId = nodeId;
+  document.getElementById('panel-title').textContent = currentLang === 'zh' ? (data.name_zh || data.name) : data.name;
+  var tagsEl = document.getElementById('panel-tags');
+  tagsEl.textContent = '';
+  (data.tags || []).forEach(function(t) {
+    var span = document.createElement('span');
+    span.className = 'tag';
+    span.textContent = t;
+    tagsEl.appendChild(span);
+  });
+  var descEl = document.getElementById('panel-desc');
+  descEl.textContent = currentLang === 'zh' ? (data.desc_zh || data.desc) : data.desc;
+  var connEl = document.getElementById('panel-connections');
+  connEl.textContent = '';
+  if (data.connections && data.connections.length) {
+    var h4 = document.createElement('h4');
+    h4.textContent = currentLang === 'zh' ? '关联' : 'Connections';
+    connEl.appendChild(h4);
+    data.connections.forEach(function(c) {
+      var div = document.createElement('div');
+      div.className = 'conn-item';
+      div.textContent = (c.direction === 'out' ? '→ ' : '← ') + c.target + ': ' + (currentLang === 'zh' ? (c.label_zh || c.label) : c.label);
+      connEl.appendChild(div);
+    });
+  }
+  panel.classList.remove('open');
+  void panel.offsetWidth;
+  panel.classList.add('open');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function closePanel() {
+  var panel = document.getElementById('inline-detail');
+  panel.classList.remove('open');
+  currentNodeId = null;
+}
+
+var tooltip = document.getElementById('tooltip');
+function showTooltip(e, text) {
+  tooltip.textContent = text;
+  tooltip.style.left = e.clientX + 10 + 'px';
+  tooltip.style.top = e.clientY + 10 + 'px';
+  tooltip.classList.add('visible');
+}
+function hideTooltip() { tooltip.classList.remove('visible'); }
+
+function filterComponents(query) {
+  var q = query.toLowerCase();
+  document.querySelectorAll('.node-group').forEach(function(node) {
+    var name = (node.getAttribute('data-name') || '').toLowerCase();
+    node.style.opacity = !q || name.includes(q) ? '1' : '0.2';
+  });
+}
+
+/* ============================================================
+   TAB 6: QUEST MATRIX DATA + RENDERING
+   ============================================================ */
+var QUEST_MATRIX_DATA = {
+  bonus: {
+    self:   { stars: '+15 ⭐', range: '5–30',  color: 'bonus', desc_en: 'Self-improvement bonus: reading, exercise, study habits. Earn stars for building personal skills!', desc_zh: '自我提升奖励：阅读、锻炼、学习习惯。培养个人技能赚星星！' },
+    family: { stars: '+15 ⭐', range: '10–25', color: 'bonus', desc_en: 'Family bonus: helping with dishes, cooking, cleaning. Stars for being a team player!', desc_zh: '家庭奖励：帮忙洗碗、做饭、打扫。做团队一员赚星星！' },
+    other:  { stars: '+20 ⭐', range: '10–25', color: 'bonus', desc_en: 'Helping others: charity, sharing, kindness to friends. Extra stars for generosity!', desc_zh: '帮助他人：慈善、分享、对朋友友善。慷慨大方额外得星！' }
+  },
+  duty: {
+    self:   { stars: '-10 ⭐', range: '-5 to -15', color: 'duty', desc_en: 'Self duties: daily hygiene, homework, bedtime. Lose stars if duties are missed!', desc_zh: '自我义务：日常卫生、作业、按时睡觉。未完成扣星！' },
+    family: { stars: '-10 ⭐', range: '-5 to -15', color: 'duty', desc_en: 'Family duties: assigned chores, pet care. Stars deducted when skipped.', desc_zh: '家庭义务：分配的家务、照顾宠物。跳过时扣星。' },
+    other:  { stars: '-10 ⭐', range: '-5 to -15', color: 'duty', desc_en: 'Social duties: being polite, following rules at school. Missing them costs stars.', desc_zh: '社交义务：礼貌待人、遵守学校规则。缺失扣星。' }
+  },
+  violation: {
+    self:   { stars: '-30 ⭐', range: '-10 to -50', color: 'violation', desc_en: 'Self violations: tantrums, lying, breaking promises. Significant star penalty!', desc_zh: '自我违规：发脾气、说谎、违反承诺。大量扣星！' },
+    family: { stars: '-30 ⭐', range: '-10 to -50', color: 'violation', desc_en: 'Family violations: fighting with siblings, disrespecting parents. Serious consequences.', desc_zh: '家庭违规：和兄弟姐妹打架、不尊重父母。严重后果。' },
+    other:  { stars: '-30 ⭐', range: '-10 to -50', color: 'violation', desc_en: 'Social violations: bullying, destructive behavior. Heaviest penalties.', desc_zh: '社交违规：欺凌、破坏行为。最重处罚。' }
+  }
+};
+
+function renderQuestMatrix() {
+  var container = document.getElementById('quest-matrix');
+  if (!container) return;
+  var types = ['bonus', 'duty', 'violation'];
+  var scopes = ['self', 'family', 'other'];
+  var typeLabelsEn = { bonus: 'Bonus', duty: 'Duty', violation: 'Violation' };
+  var typeLabelsZh = { bonus: '奖励', duty: '义务', violation: '违规' };
+  var scopeLabelsEn = { self: 'Self', family: 'Family', other: 'Others' };
+  var scopeLabelsZh = { self: '自我', family: '家庭', other: '他人' };
+
+  // corner blank
+  container.textContent = '';
+  var blank = document.createElement('div');
+  container.appendChild(blank);
+
+  // column headers
+  types.forEach(function(tp) {
+    var h = document.createElement('div');
+    h.className = 'matrix-header matrix-header-' + tp;
+    h.setAttribute('data-en', typeLabelsEn[tp]);
+    h.setAttribute('data-zh', typeLabelsZh[tp]);
+    h.textContent = currentLang === 'zh' ? typeLabelsZh[tp] : typeLabelsEn[tp];
+    container.appendChild(h);
+  });
+
+  // rows
+  scopes.forEach(function(scope) {
+    var label = document.createElement('div');
+    label.className = 'matrix-row-label';
+    label.setAttribute('data-en', scopeLabelsEn[scope]);
+    label.setAttribute('data-zh', scopeLabelsZh[scope]);
+    label.textContent = currentLang === 'zh' ? scopeLabelsZh[scope] : scopeLabelsEn[scope];
+    container.appendChild(label);
+
+    types.forEach(function(type) {
+      var d = QUEST_MATRIX_DATA[type][scope];
+      var cell = document.createElement('div');
+      cell.className = 'matrix-cell matrix-cell-' + d.color;
+      var starsDiv = document.createElement('div');
+      starsDiv.className = 'matrix-stars';
+      starsDiv.textContent = d.stars;
+      var rangeDiv = document.createElement('div');
+      rangeDiv.className = 'matrix-range';
+      rangeDiv.textContent = d.range;
+      cell.appendChild(starsDiv);
+      cell.appendChild(rangeDiv);
+      cell.addEventListener('click', function(e) {
+        showMatrixTooltip(e, currentLang === 'zh' ? d.desc_zh : d.desc_en);
+      });
+      container.appendChild(cell);
+    });
+  });
+}
+
+function showMatrixTooltip(e, text) {
+  var tip = document.getElementById('matrix-tooltip');
+  if (!tip) return;
+  tip.textContent = text;
+  tip.classList.add('visible');
+  var rect = e.target.getBoundingClientRect();
+  var section = document.getElementById('tab-economy');
+  var sRect = section.getBoundingClientRect();
+  tip.style.left = (rect.left - sRect.left + rect.width / 2 - 110) + 'px';
+  tip.style.top = (rect.bottom - sRect.top + 8) + 'px';
+  setTimeout(function() { tip.classList.remove('visible'); }, 3000);
+}
+
+/* ============================================================
+   TAB 7: DATABASE SCHEMA + DEMO
+   ============================================================ */
+var DB_TABLES = [
+  { name: 'families', cols: [
+    { label: 'id', type: 'pk' }, { label: 'name', type: '' }, { label: 'created_at', type: '' }
+  ]},
+  { name: 'users', cols: [
+    { label: 'id', type: 'pk' }, { label: 'family_id', type: 'fk' },
+    { label: 'name', type: '' }, { label: 'role', type: '' }, { label: 'email', type: '' }
+  ]},
+  { name: 'quests', cols: [
+    { label: 'id', type: 'pk' }, { label: 'family_id', type: 'fk' },
+    { label: 'name_en / zh', type: '' }, { label: 'type', type: '' },
+    { label: 'scope', type: '' }, { label: 'stars', type: '' }
+  ]},
+  { name: 'star_transactions', cols: [
+    { label: 'id', type: 'pk' }, { label: 'child_id', type: 'fk' },
+    { label: 'quest_id', type: 'fk' }, { label: 'stars', type: '' },
+    { label: 'status', type: '' }, { label: 'child_note', type: '' }
+  ]},
+  { name: 'rewards', cols: [
+    { label: 'id', type: 'pk' }, { label: 'family_id', type: 'fk' },
+    { label: 'name_en / zh', type: '' }, { label: 'stars_cost', type: '' }
+  ]},
+  { name: 'redemptions', cols: [
+    { label: 'id', type: 'pk' }, { label: 'child_id', type: 'fk' },
+    { label: 'reward_id', type: 'fk' }, { label: 'status', type: '' }
+  ]},
+  { name: 'levels', cols: [
+    { label: 'id', type: 'pk' }, { label: 'family_id', type: 'fk' },
+    { label: 'min_stars', type: '' }, { label: 'title_en', type: '' }
+  ]},
+  { name: 'child_balances', isView: true, cols: [
+    { label: 'child_id', type: 'fk' }, { label: 'total_stars', type: '' },
+    { label: 'spendable', type: '' }, { label: 'level_title', type: '' }
+  ]}
+];
+
+function renderSchema() {
+  var container = document.getElementById('schema-tables');
+  if (!container) return;
+  container.textContent = '';
+
+  DB_TABLES.forEach(function(table) {
+    var box = document.createElement('div');
+    box.className = 'db-table' + (table.isView ? ' view-table' : '');
+
+    var header = document.createElement('div');
+    header.className = 'db-table-header';
+    if (table.isView) {
+      var viewLabel = currentLang === 'zh' ? '视图' : 'VIEW';
+      header.textContent = '👁️ ' + table.name + ' ';
+      var viewSpan = document.createElement('span');
+      viewSpan.style.cssText = 'font-size:0.6rem;opacity:0.7';
+      viewSpan.textContent = viewLabel;
+      header.appendChild(viewSpan);
+    } else {
+      header.textContent = table.name;
+    }
+    box.appendChild(header);
+
+    table.cols.forEach(function(col) {
+      var row = document.createElement('div');
+      row.className = 'db-table-row ' + col.type;
+      var iconSpan = document.createElement('span');
+      iconSpan.className = 'col-icon';
+      iconSpan.textContent = col.type === 'pk' ? '🔑' : col.type === 'fk' ? '🔗' : '·';
+      row.appendChild(iconSpan);
+      row.appendChild(document.createTextNode(col.label));
+      box.appendChild(row);
+    });
+
+    container.appendChild(box);
+
+    if (table.isView) {
+      var note = document.createElement('div');
+      note.style.cssText = 'font-size:0.82rem;color:var(--accent);text-align:center;margin-top:4px';
+      note.textContent = currentLang === 'zh' ? '✨ 自动计算！' : '✨ Computed!';
+      note.setAttribute('data-en', '✨ Computed!');
+      note.setAttribute('data-zh', '✨ 自动计算！');
+      container.appendChild(note);
+    }
+  });
+}
+
+var dbRowId = 1;
+var dbDemoState = 'idle';
+var currentBalance = 265;
+
+function dbDemoInsert() {
+  if (dbDemoState !== 'idle') return;
+  dbDemoState = 'inserted';
+  var rowsEl = document.getElementById('db-live-rows');
+  var newRow = document.createElement('div');
+  newRow.className = 'db-live-row';
+  newRow.id = 'db-row-' + dbRowId;
+
+  var idCol = document.createElement('div');
+  idCol.className = 'id-col';
+  idCol.textContent = '#' + String(dbRowId).padStart(3, '0');
+  var descCol = document.createElement('div');
+  descCol.className = 'desc-col';
+  descCol.textContent = currentLang === 'zh' ? '帮忙洗碗' : 'Help with Dishes';
+  var starsCol = document.createElement('div');
+  starsCol.className = 'stars-col';
+  starsCol.textContent = '+15';
+  var statusCol = document.createElement('div');
+  var badge = document.createElement('span');
+  badge.className = 'badge-pending';
+  badge.textContent = currentLang === 'zh' ? '待审批' : 'pending';
+  statusCol.appendChild(badge);
+  var childCol = document.createElement('div');
+  childCol.style.color = '#a5b4fc';
+  childCol.textContent = 'Alisa';
+
+  newRow.appendChild(idCol);
+  newRow.appendChild(descCol);
+  newRow.appendChild(starsCol);
+  newRow.appendChild(statusCol);
+  newRow.appendChild(childCol);
+  newRow.style.animation = 'rowInsert 0.6s ease forwards';
+  rowsEl.appendChild(newRow);
+  document.getElementById('btn-approve').disabled = false;
+}
+
+function dbDemoApprove() {
+  if (dbDemoState !== 'inserted') return;
+  dbDemoState = 'approved';
+  var row = document.getElementById('db-row-' + dbRowId);
+  if (!row) return;
+  row.style.animation = 'goldFlash 0.8s ease 2';
+  setTimeout(function() {
+    var bdg = row.querySelector('.badge-pending');
+    if (bdg) {
+      bdg.className = 'badge-approved';
+      bdg.textContent = currentLang === 'zh' ? '已批准' : 'approved';
+    }
+  }, 800);
+  var balanceEl = document.getElementById('db-balance-value');
+  var newBalance = currentBalance + 15;
+  animateCounter(balanceEl, currentBalance, newBalance, 1000);
+  currentBalance = newBalance;
+  document.getElementById('btn-approve').disabled = true;
+  setTimeout(function() { dbRowId++; dbDemoState = 'idle'; }, 1500);
+}
+
+function animateCounter(el, from, to, duration) {
+  var start = performance.now();
+  function tick(now) {
+    var elapsed = now - start;
+    var progress = Math.min(elapsed / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3);
+    var value = Math.round(from + (to - from) * eased);
+    el.textContent = value;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+(function() {
+  var zh = /^zh/i.test(navigator.language);
+  var a = document.getElementById('try-cta');
+  if (a) {
+    a.href = 'https://starquest.beluga-tempo.com/' + (zh ? 'zh-CN' : 'en');
+    a.textContent = zh ? '现在就试试吧' : 'Try it now!';
+  }
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  createStars();
+  renderQuestMatrix();
+  renderSchema();
+  document.querySelectorAll('.node-group').forEach(function(node) {
+    var id = node.getAttribute('data-id');
+    if (id && COMPONENTS[id]) {
+      node.addEventListener('click', function() { openPanel(COMPONENTS[id], id); });
+      node.addEventListener('mouseenter', function(e) {
+        showTooltip(e, currentLang === 'zh' ? (COMPONENTS[id].tooltip_zh || COMPONENTS[id].name) : (COMPONENTS[id].tooltip || COMPONENTS[id].name));
+      });
+      node.addEventListener('mouseleave', hideTooltip);
+    }
+  });
+  document.querySelectorAll('.flow-path').forEach(function(path) {
+    var particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    particle.classList.add('flow-particle');
+    particle.setAttribute('r', '3');
+    particle.setAttribute('fill', path.getAttribute('stroke') || '#00d4ff');
+    var anim = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+    anim.setAttribute('dur', (2 + Math.random() * 2) + 's');
+    anim.setAttribute('repeatCount', 'indefinite');
+    var mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+    mpath.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + path.id);
+    anim.appendChild(mpath);
+    particle.appendChild(anim);
+    path.parentNode.appendChild(particle);
+  });
+});
+</script>
+</body>
+</html>
