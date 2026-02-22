@@ -43,6 +43,9 @@ backups/
 # local planning docs
 .github/refactor_plan/
 
+# supabase CLI cache
+supabase/.temp/
+
 # vercel
 .vercel
 
