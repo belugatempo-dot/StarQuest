@@ -11,7 +11,7 @@ export default async function HomePage({
   const t = await getTranslations();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/20 to-background p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center starry-bg p-8">
       {/* Language Switcher - Top Right */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
