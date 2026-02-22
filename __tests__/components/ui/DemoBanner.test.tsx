@@ -23,7 +23,7 @@ describe("DemoBanner", () => {
 
     const link = screen.getByText("signUp");
     expect(link).toBeInTheDocument();
-    expect(link.closest("a")).toHaveAttribute("href", "/en/auth/register");
+    expect(link).toHaveAttribute("href", "/en/auth/register");
   });
 
   it("renders nothing when user is not a demo user", () => {

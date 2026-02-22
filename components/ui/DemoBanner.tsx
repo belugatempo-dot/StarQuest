@@ -5,6 +5,7 @@
  * Communicates read-only mode and offers sign-up CTA.
  */
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useDemoMode } from "@/lib/demo/demo-context";
 
@@ -21,12 +22,12 @@ export function DemoBanner() {
     >
       <span>{t("banner")}</span>
       {" "}
-      <a
+      <Link
         href="/en/auth/register"
         className="underline font-medium hover:text-yellow-100"
       >
         {t("signUp")}
-      </a>
+      </Link>
     </div>
   );
 }
