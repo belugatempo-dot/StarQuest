@@ -7,7 +7,7 @@ import {
   DEMO_FAMILY_NAME,
   DEMO_PARENT_NAME,
   DEMO_CHILDREN,
-  DEMO_HISTORY_DAYS,
+  DEMO_START_DATE,
   DemoChildProfile,
 } from "./demo-config";
 
@@ -108,13 +108,23 @@ function pickRandom<T>(arr: T[], count: number, rand: () => number): T[] {
   return shuffled.slice(0, Math.min(count, arr.length));
 }
 
+export interface SeedOptions {
+  startDate?: Date;
+  endDate?: Date;
+}
+
 /**
  * Create the complete demo family with all data.
+ * Uses fixed date range: DEMO_START_DATE to endDate (default: today).
  */
 export async function seedDemoFamily(
-  supabase: AdminClient
+  supabase: AdminClient,
+  options?: SeedOptions
 ): Promise<SeedResult> {
-  const rng = createRng(42);
+  const startDate = options?.startDate ?? DEMO_START_DATE;
+  const endDate = options?.endDate ?? new Date();
+  const rngSeed = options?.startDate ? startDate.getTime() : 42;
+  const rng = createRng(rngSeed);
   const parentPassword = process.env.DEMO_PARENT_PASSWORD;
   if (!parentPassword) {
     throw new Error("DEMO_PARENT_PASSWORD environment variable is required");
@@ -217,7 +227,9 @@ export async function seedDemoFamily(
   const violationQuests = quests.filter((q) => q.type === "violation");
 
   // 5. Generate transactions for each child
-  const now = new Date();
+  const totalDays = Math.floor(
+    (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+  );
   let totalTransactions = 0;
   let totalRedemptions = 0;
 
@@ -227,12 +239,13 @@ export async function seedDemoFamily(
     const { behavior } = childProfile;
     const transactions: Record<string, unknown>[] = [];
 
-    for (let dayOffset = DEMO_HISTORY_DAYS; dayOffset >= 0; dayOffset--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - dayOffset);
+    for (let dayOffset = 0; dayOffset <= totalDays; dayOffset++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + dayOffset);
       date.setHours(0, 0, 0, 0);
 
-      const isRecent = dayOffset <= 5;
+      const daysFromEnd = totalDays - dayOffset;
+      const isRecent = daysFromEnd <= 5;
 
       // Duty misses (negative stars, parent-recorded, evening)
       for (const quest of dutyQuests) {
@@ -331,8 +344,8 @@ export async function seedDemoFamily(
 
     for (let r = 0; r < selectedRewards.length; r++) {
       const reward = selectedRewards[r];
-      const daysAgo = 5 + Math.floor(rng() * 20);
-      const date = new Date(now);
+      const daysAgo = 5 + Math.floor(rng() * Math.min(20, totalDays - 5));
+      const date = new Date(endDate);
       date.setDate(date.getDate() - daysAgo);
       const createdAt = randomTimestamp(date, 10, 18, rng);
 
@@ -424,7 +437,7 @@ export async function seedDemoFamily(
     stats: {
       transactions: totalTransactions,
       redemptions: totalRedemptions,
-      days: DEMO_HISTORY_DAYS,
+      days: totalDays,
     },
   };
 }
