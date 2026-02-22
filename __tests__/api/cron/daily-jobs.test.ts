@@ -122,11 +122,13 @@ function createRequest() {
 describe("Daily Jobs Cron Route", () => {
   let consoleSpy: jest.SpyInstance;
   let consoleErrorSpy: jest.SpyInstance;
+  let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     consoleSpy = jest.spyOn(console, "log").mockImplementation();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
     // Default: auth passes
     mockVerifyCronAuth.mockReturnValue(null);
     // Default: email service available
@@ -136,6 +138,7 @@ describe("Daily Jobs Cron Route", () => {
   afterEach(() => {
     consoleSpy.mockRestore();
     consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
     jest.useRealTimers();
   });
 
@@ -486,12 +489,14 @@ describe("Daily Jobs Cron Route", () => {
         ],
         error: null,
       });
+      const reportHistoryChain = makeChain({ data: null, error: null });
 
       setupFromMock({
         families: familiesChain,
         family_report_preferences: prefsChain,
         credit_settlements: creditSettlementsChain,
         users: makeChain({ data: null, error: null }),
+        report_history: reportHistoryChain,
       });
 
       mockRpc.mockResolvedValue({ data: null, error: null });
@@ -505,6 +510,75 @@ describe("Daily Jobs Cron Route", () => {
         subject: "Settlement Notice",
         html: "<html>settlement</html>",
       });
+      // Verify audit trail entry created in report_history
+      expect(reportHistoryChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          family_id: "fam-1",
+          report_type: "settlement",
+          status: "sent",
+          sent_to_email: "parent@test.com",
+        })
+      );
+    });
+
+    it("logs to report_history with status 'failed' when email send fails", async () => {
+      const familiesChain = makeChain({
+        data: [{ id: "fam-1", name: "Failed Email Family", settlement_day: 15 }],
+        error: null,
+      });
+      const prefsChain = makeChain({
+        data: {
+          family_id: "fam-1",
+          settlement_email_enabled: true,
+          report_email: "parent@test.com",
+          report_locale: "en",
+        },
+        error: null,
+      });
+      const creditSettlementsChain = makeChain({
+        data: [
+          {
+            child_id: "child-1",
+            users: { name: "Alice" },
+            debt_amount: 10,
+            interest_calculated: 1,
+            interest_breakdown: [],
+            credit_limit_before: 100,
+            credit_limit_after: 90,
+            credit_limit_adjustment: -10,
+          },
+        ],
+        error: null,
+      });
+      const reportHistoryChain = makeChain({ data: null, error: null });
+
+      setupFromMock({
+        families: familiesChain,
+        family_report_preferences: prefsChain,
+        credit_settlements: creditSettlementsChain,
+        users: makeChain({ data: null, error: null }),
+        report_history: reportHistoryChain,
+      });
+
+      mockRpc.mockResolvedValue({ data: null, error: null });
+      mockSendEmail.mockResolvedValue({ success: false, error: "Sandbox sender rejected" });
+
+      await GET(createRequest());
+
+      // Verify audit trail entry with failed status
+      expect(reportHistoryChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          family_id: "fam-1",
+          report_type: "settlement",
+          status: "failed",
+          sent_to_email: "parent@test.com",
+          error_message: "Sandbox sender rejected",
+        })
+      );
+      // Verify error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Settlement email failed for Failed Email Family")
+      );
     });
   });
 
@@ -531,6 +605,9 @@ describe("Daily Jobs Cron Route", () => {
       expect(result.body.results.settlement.processed).toBe(1);
       // sendEmail should NOT have been called for settlement notification
       expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("email service not available")
+      );
     });
 
     it("returns early when settlement email disabled in prefs", async () => {
@@ -559,6 +636,9 @@ describe("Daily Jobs Cron Route", () => {
       await GET(createRequest());
 
       expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("disabled in preferences")
+      );
     });
 
     it("returns early when no email found", async () => {
@@ -589,6 +669,9 @@ describe("Daily Jobs Cron Route", () => {
       await GET(createRequest());
 
       expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("no email address found")
+      );
     });
 
     it("returns early when no settlements found", async () => {
@@ -620,6 +703,9 @@ describe("Daily Jobs Cron Route", () => {
       await GET(createRequest());
 
       expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("no settlements found")
+      );
     });
 
     it("returns early when settlements data is null", async () => {
@@ -651,6 +737,9 @@ describe("Daily Jobs Cron Route", () => {
       await GET(createRequest());
 
       expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("no settlements found")
+      );
     });
 
     it("handles settlement with missing interest breakdown", async () => {
@@ -2284,6 +2373,118 @@ describe("Daily Jobs Cron Route", () => {
             }),
           ]),
         })
+      );
+    });
+
+    it("settlement .or() filter has no trailing comma on non-last-day", async () => {
+      // Jan 15 is NOT last day of month
+      setFakeDate(new Date(Date.UTC(2025, 0, 15, 0, 0, 0)));
+
+      const familiesChain = makeChain({ data: [], error: null });
+      setupFromMock({ families: familiesChain });
+
+      await GET(createRequest());
+
+      // The first .or() call is from runSettlementIfDue
+      expect(familiesChain.or).toHaveBeenCalledWith("settlement_day.eq.15");
+    });
+
+    it("settlement .or() filter includes both conditions on last-day-of-month", async () => {
+      // Jan 31 IS last day of January
+      setFakeDate(new Date(Date.UTC(2025, 0, 31, 0, 0, 0)));
+
+      const familiesChain = makeChain({ data: [], error: null });
+      setupFromMock({ families: familiesChain });
+
+      await GET(createRequest());
+
+      // Both settlement and monthly .or() calls should have both conditions
+      expect(familiesChain.or).toHaveBeenCalledWith(
+        "settlement_day.eq.31,settlement_day.eq.0"
+      );
+    });
+
+    it("logs warning when weekly reportData is null", async () => {
+      // Sunday for weekly reports
+      setFakeDate(new Date(Date.UTC(2025, 0, 19, 0, 0, 0)));
+
+      let callCount = 0;
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "families") {
+          callCount++;
+          if (callCount === 1) return makeChain({ data: [], error: null }); // settlement
+          if (callCount === 2)
+            return makeChain({
+              data: [{ id: "fam-1", name: "Broken Family" }],
+              error: null,
+            }); // weekly
+          return makeChain({ data: [], error: null }); // monthly
+        }
+        if (table === "family_report_preferences") {
+          return makeChain({
+            data: {
+              family_id: "fam-1",
+              weekly_report_enabled: true,
+              report_email: "parent@test.com",
+              report_locale: "en",
+            },
+            error: null,
+          });
+        }
+        if (table === "report_history") {
+          return makeChain({ data: null, error: null });
+        }
+        return makeChain({ data: null, error: null });
+      });
+
+      mockGenerateWeeklyReportData.mockResolvedValue(null);
+
+      const result = await GET(createRequest());
+
+      expect(result.body.results.weekly.failed).toBe(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Weekly report generation failed for Broken Family (fam-1)")
+      );
+    });
+
+    it("logs warning when monthly reportData is null", async () => {
+      // Jan 15 — settlement day for family
+      setFakeDate(new Date(Date.UTC(2025, 0, 15, 0, 0, 0)));
+
+      let callCount = 0;
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "families") {
+          callCount++;
+          if (callCount === 1) return makeChain({ data: [], error: null }); // settlement
+          return makeChain({
+            data: [{ id: "fam-1", name: "Broken Monthly Family", settlement_day: 15 }],
+            error: null,
+          }); // monthly
+        }
+        if (table === "family_report_preferences") {
+          return makeChain({
+            data: {
+              family_id: "fam-1",
+              monthly_report_enabled: true,
+              report_email: "parent@test.com",
+              report_locale: "en",
+            },
+            error: null,
+          });
+        }
+        if (table === "report_history") {
+          return makeChain({ data: null, error: null });
+        }
+        return makeChain({ data: null, error: null });
+      });
+
+      mockGenerateMonthlyReportData.mockResolvedValue(null);
+
+      const result = await GET(createRequest());
+
+      expect(result.body.results.monthly.failed).toBe(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Monthly report generation failed for Broken Monthly Family (fam-1)")
       );
     });
 

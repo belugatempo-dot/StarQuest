@@ -104,12 +104,13 @@ async function runSettlementIfDue(
 
   // Get families due for settlement
   // settlement_day = 0 means last day of month
+  const settlementFilter = isLastDayOfMonth
+    ? `settlement_day.eq.${todayDay},settlement_day.eq.0`
+    : `settlement_day.eq.${todayDay}`;
   const { data: families, error } = (await adminClient
     .from("families")
     .select("id, name, settlement_day")
-    .or(
-      `settlement_day.eq.${todayDay},${isLastDayOfMonth ? "settlement_day.eq.0" : ""}`
-    )) as { data: { id: string; name: string; settlement_day: number }[] | null; error: any };
+    .or(settlementFilter)) as { data: { id: string; name: string; settlement_day: number }[] | null; error: any };
 
   if (error) {
     result.errors.push(`Failed to fetch families: ${error.message}`);
@@ -153,15 +154,25 @@ async function runSettlementIfDue(
 }
 
 /**
+ * Settlement email result for observability
+ */
+interface SettlementEmailResult {
+  sent: boolean;
+  skippedReason?: string;
+  error?: string;
+}
+
+/**
  * Send settlement notification email
  */
 async function sendSettlementNotification(
   adminClient: ReturnType<typeof createAdminClient>,
   familyId: string,
   familyName: string
-): Promise<void> {
+): Promise<SettlementEmailResult> {
   if (!isEmailServiceAvailable()) {
-    return;
+    console.warn(`Settlement email skipped: email service not available (family: ${familyName})`);
+    return { sent: false, skippedReason: "email_service_unavailable" };
   }
 
   // Check if settlement email is enabled
@@ -172,13 +183,15 @@ async function sendSettlementNotification(
     .maybeSingle()) as { data: Database["public"]["Tables"]["family_report_preferences"]["Row"] | null };
 
   if (prefs && !prefs.settlement_email_enabled) {
-    return;
+    console.warn(`Settlement email skipped: disabled in preferences (family: ${familyName})`);
+    return { sent: false, skippedReason: "disabled_in_preferences" };
   }
 
   // Get parent email or override
   const email = await getReportEmail(adminClient, familyId, prefs?.report_email);
   if (!email) {
-    return;
+    console.warn(`Settlement email skipped: no email address found (family: ${familyName})`);
+    return { sent: false, skippedReason: "no_email_address" };
   }
 
   const locale: ReportLocale = (prefs?.report_locale as ReportLocale) || "en";
@@ -192,7 +205,8 @@ async function sendSettlementNotification(
     .eq("settlement_date", today);
 
   if (!settlements || settlements.length === 0) {
-    return;
+    console.warn(`Settlement email skipped: no settlements found (family: ${familyName})`);
+    return { sent: false, skippedReason: "no_settlements_found" };
   }
 
   const children: ChildSettlementData[] = settlements.map((s: any) => ({
@@ -227,7 +241,26 @@ async function sendSettlementNotification(
   const html = generateSettlementNoticeHtml(data);
   const subject = getSettlementNoticeSubject(data, locale);
 
-  await sendEmail({ to: email, subject, html });
+  const emailResult = await sendEmail({ to: email, subject, html });
+
+  // Audit trail: log to report_history (parity with weekly/monthly reports)
+  await (adminClient.from("report_history") as any).insert({
+    family_id: familyId,
+    report_type: "settlement",
+    report_period_start: today,
+    report_period_end: today,
+    status: emailResult.success ? "sent" : "failed",
+    sent_to_email: email,
+    sent_at: emailResult.success ? new Date().toISOString() : null,
+    error_message: emailResult.error || null,
+  });
+
+  if (!emailResult.success) {
+    console.error(`Settlement email failed for ${familyName}: ${emailResult.error}`);
+    return { sent: false, error: emailResult.error };
+  }
+
+  return { sent: true };
 }
 
 /**
@@ -305,6 +338,7 @@ async function runWeeklyReports(
       );
 
       if (!reportData) {
+        console.warn(`Weekly report generation failed for ${family.name} (${family.id}) — check fetchReportBaseData logs above`);
         result.failed++;
         continue;
       }
@@ -367,12 +401,13 @@ async function runMonthlyReports(
   }
 
   // Get families due for monthly report (same logic as settlement)
+  const monthlyFilter = isLastDayOfMonth
+    ? `settlement_day.eq.${todayDay},settlement_day.eq.0`
+    : `settlement_day.eq.${todayDay}`;
   const { data: families, error } = (await adminClient
     .from("families")
     .select("id, name, settlement_day")
-    .or(
-      `settlement_day.eq.${todayDay},${isLastDayOfMonth ? "settlement_day.eq.0" : ""}`
-    )) as { data: { id: string; name: string; settlement_day: number }[] | null; error: any };
+    .or(monthlyFilter)) as { data: { id: string; name: string; settlement_day: number }[] | null; error: any };
 
   if (error || !families || families.length === 0) {
     return result;
@@ -431,6 +466,7 @@ async function runMonthlyReports(
       );
 
       if (!reportData) {
+        console.warn(`Monthly report generation failed for ${family.name} (${family.id}) — check fetchReportBaseData logs above`);
         result.failed++;
         continue;
       }
