@@ -1,6 +1,6 @@
 /**
  * Tests for POST /api/demo-login — passwordless demo login via Admin generateLink.
- * Auto-reset: fast snapshot restore, with fallback to cleanup + seed + snapshot save.
+ * Demo accounts are read-only (RLS enforced) — no data reset needed.
  */
 
 // ---- Mock next/server ----
@@ -36,24 +36,6 @@ jest.mock("@/lib/supabase/server", () => ({
   createAdminClient: () => mockAdminClient,
 }));
 
-// ---- Mock demo modules ----
-const mockCleanupDemoFamily = jest.fn();
-jest.mock("@/lib/demo/demo-cleanup", () => ({
-  cleanupDemoFamily: (...args: unknown[]) => mockCleanupDemoFamily(...args),
-}));
-
-const mockSeedDemoFamily = jest.fn();
-jest.mock("@/lib/demo/demo-seed", () => ({
-  seedDemoFamily: (...args: unknown[]) => mockSeedDemoFamily(...args),
-}));
-
-const mockRestoreDemoData = jest.fn();
-const mockSaveDemoSnapshot = jest.fn();
-jest.mock("@/lib/demo/demo-snapshot", () => ({
-  restoreDemoData: (...args: unknown[]) => mockRestoreDemoData(...args),
-  saveDemoSnapshot: (...args: unknown[]) => mockSaveDemoSnapshot(...args),
-}));
-
 // ---- Import route (after mocks) ----
 import { POST } from "@/app/api/demo-login/route";
 
@@ -69,30 +51,21 @@ function createRequest(body?: Record<string, unknown>) {
 describe("POST /api/demo-login", () => {
   const originalEnv = process.env;
   let consoleErrorSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
-  let consoleLogSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
     process.env = {
       ...originalEnv,
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
       NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
     };
-
-    // Default: fast restore succeeds
-    mockRestoreDemoData.mockResolvedValue(undefined);
   });
 
   afterAll(() => {
     process.env = originalEnv;
     consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
-    consoleLogSpy.mockRestore();
   });
 
   // -- Validation tests --
@@ -198,163 +171,17 @@ describe("POST /api/demo-login", () => {
     expect(res.body).toEqual({ error: "Failed to generate demo login token" });
   });
 
-  // -- Fast restore (snapshot) --
-  describe("fast restore from snapshot", () => {
-    it("calls restoreDemoData before generateLink", async () => {
-      const callOrder: string[] = [];
-      mockRestoreDemoData.mockImplementation(async () => {
-        callOrder.push("restore");
-      });
-      mockGenerateLink.mockImplementation(async () => {
-        callOrder.push("generateLink");
-        return { data: { properties: { hashed_token: "tok_abc" } }, error: null };
-      });
-
-      await POST(createRequest({ role: "parent" }));
-
-      expect(callOrder).toEqual(["restore", "generateLink"]);
+  // -- No data reset should happen --
+  it("does not import or call any restore/cleanup/seed functions", async () => {
+    mockGenerateLink.mockResolvedValue({
+      data: { properties: { hashed_token: "tok_abc" } },
+      error: null,
     });
 
-    it("passes adminClient to restoreDemoData", async () => {
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
+    const res = await POST(createRequest({ role: "parent" }));
+    expect(res.status).toBe(200);
 
-      await POST(createRequest({ role: "parent" }));
-
-      expect(mockRestoreDemoData).toHaveBeenCalledWith(mockAdminClient);
-    });
-
-    it("logs success when restore succeeds", async () => {
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
-
-      await POST(createRequest({ role: "parent" }));
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining("restored from snapshot")
-      );
-    });
-
-    it("does not call cleanup or seed when restore succeeds", async () => {
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
-
-      await POST(createRequest({ role: "parent" }));
-
-      expect(mockCleanupDemoFamily).not.toHaveBeenCalled();
-      expect(mockSeedDemoFamily).not.toHaveBeenCalled();
-    });
-  });
-
-  // -- Fallback: restore fails → cleanup + seed + save snapshot --
-  describe("fallback when restore fails", () => {
-    beforeEach(() => {
-      mockRestoreDemoData.mockRejectedValue(new Error("No demo snapshot found"));
-    });
-
-    it("falls back to cleanup + seed + save snapshot", async () => {
-      mockCleanupDemoFamily.mockResolvedValue({ found: true, familyId: "old", deletedAuthUsers: 3 });
-      mockSeedDemoFamily.mockResolvedValue({
-        familyId: "fam-1",
-        parentId: "p",
-        children: [],
-        stats: { transactions: 100, redemptions: 5, days: 30 },
-      });
-      mockSaveDemoSnapshot.mockResolvedValue(undefined);
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
-
-      const res = await POST(createRequest({ role: "parent" }));
-
-      expect(res.status).toBe(200);
-      expect(res.body.token_hash).toBe("tok_abc");
-
-      expect(mockCleanupDemoFamily).toHaveBeenCalledWith(mockAdminClient);
-      expect(mockSeedDemoFamily).toHaveBeenCalledWith(mockAdminClient);
-      expect(mockSaveDemoSnapshot).toHaveBeenCalledWith(mockAdminClient, "fam-1");
-    });
-
-    it("logs fallback success", async () => {
-      mockCleanupDemoFamily.mockResolvedValue({ found: false, familyId: null, deletedAuthUsers: 0 });
-      mockSeedDemoFamily.mockResolvedValue({
-        familyId: "fam-1",
-        parentId: "p",
-        children: [],
-        stats: {},
-      });
-      mockSaveDemoSnapshot.mockResolvedValue(undefined);
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
-
-      await POST(createRequest({ role: "parent" }));
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining("fallback")
-      );
-    });
-
-    it("still returns 200 when fallback also throws (race condition)", async () => {
-      mockCleanupDemoFamily.mockRejectedValue(new Error("Concurrent cleanup"));
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
-
-      const res = await POST(createRequest({ role: "parent" }));
-
-      expect(res.status).toBe(200);
-      expect(res.body.token_hash).toBe("tok_abc");
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Demo data reset failed"),
-        expect.any(String)
-      );
-    });
-
-    it("still returns 200 when seed in fallback throws", async () => {
-      mockCleanupDemoFamily.mockResolvedValue({ found: false, familyId: null, deletedAuthUsers: 0 });
-      mockSeedDemoFamily.mockRejectedValue(new Error("Duplicate key"));
-      mockGenerateLink.mockResolvedValue({
-        data: { properties: { hashed_token: "tok_abc" } },
-        error: null,
-      });
-
-      const res = await POST(createRequest({ role: "parent" }));
-
-      expect(res.status).toBe(200);
-      expect(res.body.token_hash).toBe("tok_abc");
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Demo data reset failed"),
-        expect.any(String)
-      );
-    });
-  });
-
-  // -- Guard: no reset for invalid requests --
-  describe("no reset for invalid requests", () => {
-    it("does not call restore when role is invalid", async () => {
-      await POST(createRequest({ role: "hacker" }));
-
-      expect(mockRestoreDemoData).not.toHaveBeenCalled();
-      expect(mockCleanupDemoFamily).not.toHaveBeenCalled();
-    });
-
-    it("does not call restore when service key is missing", async () => {
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-      await POST(createRequest({ role: "parent" }));
-
-      expect(mockRestoreDemoData).not.toHaveBeenCalled();
-      expect(mockCleanupDemoFamily).not.toHaveBeenCalled();
-    });
+    // Route should only call generateLink — no other side effects
+    expect(mockGenerateLink).toHaveBeenCalledTimes(1);
   });
 });

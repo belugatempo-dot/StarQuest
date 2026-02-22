@@ -37,6 +37,10 @@ jest.mock("@/components/analytics/PostHogPageView", () => ({
   PostHogPageView: () => null,
 }));
 
+jest.mock("sonner", () => ({
+  Toaster: () => null,
+}));
+
 import LocaleLayout, {
   generateStaticParams,
 } from "@/app/[locale]/layout";

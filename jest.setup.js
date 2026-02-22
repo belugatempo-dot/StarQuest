@@ -47,6 +47,12 @@ jest.mock('posthog-js/react', () => ({
   useFeatureFlagEnabled: jest.fn(() => false),
 }))
 
+// Mock sonner (toast library)
+jest.mock('sonner', () => ({
+  Toaster: () => null,
+  toast: jest.fn(),
+}))
+
 // Mock Supabase client
 jest.mock('@/lib/supabase/client', () => ({
   createClient: () => ({

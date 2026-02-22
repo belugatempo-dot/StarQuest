@@ -144,7 +144,7 @@ BEGIN
   SELECT rows INTO v_rows FROM demo_data_snapshot WHERE table_name = 'users';
   FOR r IN SELECT jsonb_array_elements(v_rows)
   LOOP
-    INSERT INTO users (id, family_id, name, role, email, avatar_url, locale, created_at)
+    INSERT INTO users (id, family_id, name, role, email, avatar_url, locale, is_demo, created_at)
     VALUES (
       (r->>'id')::UUID,
       (r->>'family_id')::UUID,
@@ -153,6 +153,7 @@ BEGIN
       r->>'email',
       r->>'avatar_url',
       r->>'locale',
+      COALESCE((r->>'is_demo')::BOOLEAN, false),
       (r->>'created_at')::TIMESTAMPTZ
     );
   END LOOP;

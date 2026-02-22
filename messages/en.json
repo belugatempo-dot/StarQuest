@@ -65,7 +65,10 @@
   "demo": {
     "pickRole": "Choose a demo account",
     "pickRoleHint": "Select a role to explore StarQuest instantly",
-    "loginFailed": "Demo login failed. Please try again."
+    "loginFailed": "Demo login failed. Please try again.",
+    "banner": "You're exploring StarQuest in demo mode. Changes won't be saved.",
+    "signUp": "Sign up →",
+    "writeBlocked": "Demo mode — changes won't be saved"
   },
   "verification": {
     "checkEmailTitle": "Check Your Email",

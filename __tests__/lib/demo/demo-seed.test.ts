@@ -29,6 +29,7 @@ function makeChain(resolvedValue: { data: unknown; error: unknown } = { data: nu
   chain.select = jest.fn().mockReturnValue(chain);
   chain.eq = jest.fn().mockReturnValue(chain);
   chain.insert = jest.fn().mockResolvedValue(resolvedValue);
+  chain.update = jest.fn().mockReturnValue(chain);
   chain.delete = jest.fn().mockReturnValue(chain);
   chain.maybeSingle = jest.fn().mockResolvedValue(resolvedValue);
   chain.then = ((resolve: (v: unknown) => void, reject?: (e: unknown) => void) =>
