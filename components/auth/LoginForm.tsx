@@ -177,9 +177,7 @@ export default function LoginForm() {
 
       // Use window.location for hard navigation to ensure cookies are set
       // This forces a full page reload which properly establishes the session
-      const redirectPath = role === "parent"
-        ? `/${locale}/admin`
-        : `/${locale}/app`;
+      const redirectPath = `/${locale}/dashboard`;
 
       window.location.href = redirectPath;
 

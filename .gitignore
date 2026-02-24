@@ -44,6 +44,7 @@ backups/
 .github/refactor_plan/
 gtm_plan.md
 visualization_plan.md
+MergeParent&ChildPlan.md
 
 # supabase CLI cache
 supabase/.temp/

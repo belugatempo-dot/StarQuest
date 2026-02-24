@@ -50,7 +50,7 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Report preferences settings page
 - [x] Database backup system (manual + automated weekly)
 - [x] Architecture refactoring (UnifiedActivityList → shared components)
-- [x] Comprehensive test coverage (2918 tests, ~99% coverage)
+- [x] Comprehensive test coverage (2986 tests, ~99% coverage)
 - [x] Demo seed API (fully-populated demo family with 30 days of activity)
 - [x] Generate markdown summary reports (on-demand report download from activity page)
 - [x] Unified admin dashboard (consolidated parent pages)
@@ -64,6 +64,11 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Demo data snapshot (fast restore via SQL, ~40 RPCs → 1-2)
 - [x] Starry night landing page with interactive visualization link
 - [x] RedemptionRequestList hook extraction (useRedemptionActions)
+- [x] Demo read-only mode (database-level RLS write protection)
+- [x] Visual design system (Starfield particles, Tailwind animation tokens, glass morphism)
+- [x] Demo login performance optimization (~1min → <5s, parallelized queries)
+- [x] Keep-alive cron endpoint (Vercel Hobby tier cold start prevention)
+- [x] Unified navigation: merge parent & child routes (AppNav, unified dashboard)
 
 ---
 
@@ -127,10 +132,11 @@ StarQuest/
 ├── app/
 │   └── [locale]/          # Locale-based routing
 │       ├── (auth)/        # Auth pages (login, register)
-│       ├── (child)/       # Child view pages
-│       └── (parent)/      # Parent/Admin pages
+│       ├── (main)/        # Unified authenticated pages (both roles)
+│       ├── (child)/       # Legacy child views (redirects to /dashboard)
+│       └── (parent)/      # Legacy parent views (redirects to /dashboard)
 ├── components/
-│   ├── ui/                # Reusable UI components
+│   ├── ui/                # Reusable UI components (DemoBanner, Starfield, ModalFrame)
 │   ├── auth/              # Authentication components
 │   ├── child/             # Child-specific components
 │   ├── admin/             # Admin-specific components
@@ -157,7 +163,7 @@ StarQuest/
 │   └── zh-CN.json
 ├── supabase/
 │   └── migrations/        # Database migration files
-└── __tests__/             # Test files (2918 tests, 133 suites)
+└── __tests__/             # Test files (2986 tests, 144 suites)
 ```
 
 ---
@@ -175,6 +181,12 @@ Danger (Red):          #EF4444
 Background:            #F9FAFB
 ```
 
+### Visual Effects
+
+- **Starfield** (`components/ui/Starfield.tsx`): Fixed-position particle background with 100 stars and nebula patches, SSR-safe via seeded PRNG
+- **Animations**: 8 custom keyframes in `tailwind.config.ts` (twinkle, pulse-glow, slide-up, shine, float, glow-pulse, shimmer, spin-slow)
+- **Glass morphism**: Backdrop blur + translucent surfaces defined in `app/globals.css`
+
 ### Key Concepts
 
 - **Stars**: Points earned for completing positive behaviors
@@ -187,7 +199,7 @@ Background:            #F9FAFB
 ## 🧪 Testing
 
 ```bash
-# Run all tests (2918 tests, 133 suites)
+# Run all tests (2986 tests, 144 suites)
 npm test
 
 # Watch mode
@@ -231,7 +243,7 @@ A GitHub Actions workflow runs every Sunday at midnight UTC, creating a backup a
 
 A demo seed API creates a fully-populated demo family with 30 days of realistic activity history, including two children with different behavioral profiles, star transactions, redemptions, and credit system usage.
 
-Demo login is passwordless — click "Try Demo" on the landing page, pick a role (Parent/Alisa/Alexander), and you're in. Data auto-resets on each login via a snapshot restore system.
+Demo login is passwordless — click "Try Demo" on the landing page, pick a role (Parent/Alisa/Alexander), and you're in. Demo data is read-only, protected by database-level RLS policies that block all write operations for demo users.
 
 ---
 
@@ -271,7 +283,7 @@ Language can be switched via the UI. User language preference is saved in their 
 6. ✅ Email reports (weekly/monthly), settlement notices, settings page
 7. ✅ Database backup system (manual + weekly GitHub Actions)
 8. ✅ Architecture refactoring (UnifiedActivityList → shared components)
-9. ✅ Comprehensive test coverage (2918 tests, ~99% coverage)
+9. ✅ Comprehensive test coverage (2986 tests, ~99% coverage)
 10. ✅ Demo seed API (realistic demo family with 30 days of activity)
 11. ✅ Generate markdown summary reports (on-demand from activity page)
 12. ✅ Unified admin dashboard, dark starry night theme
@@ -282,8 +294,12 @@ Language can be switched via the UI. User language preference is saved in their 
 17. ✅ Demo data snapshot (fast restore via SQL functions)
 18. ✅ Starry night landing page + interactive visualization
 19. ✅ useRedemptionActions hook extraction
-20. PWA support
-21. Data export
+20. ✅ Demo read-only mode (RLS-based write protection)
+21. ✅ Visual design system (Starfield, animations, glass morphism)
+22. ✅ Demo login performance (parallelized queries, keep-alive cron)
+23. ✅ Unified navigation (merge parent & child route groups)
+24. PWA support
+25. Data export
 
 ### Phase 5: Polish & Launch
 

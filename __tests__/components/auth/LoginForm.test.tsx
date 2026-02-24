@@ -248,7 +248,7 @@ describe('LoginForm', () => {
       ;(window as any).location = { href: '' }
     })
 
-    it('redirects parent users to /admin using hard navigation', async () => {
+    it('redirects parent users to /dashboard using hard navigation', async () => {
       const user = userEvent.setup()
 
       mockSignIn.mockResolvedValue({
@@ -278,14 +278,14 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(window.location.href).toBe('/en/admin')
+        expect(window.location.href).toBe('/en/dashboard')
       })
 
       // Should NOT use router.push
       expect(mockRouter.push).not.toHaveBeenCalled()
     })
 
-    it('redirects child users to /app using hard navigation', async () => {
+    it('redirects child users to /dashboard using hard navigation', async () => {
       const user = userEvent.setup()
 
       mockSignIn.mockResolvedValue({
@@ -315,7 +315,7 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(window.location.href).toBe('/en/app')
+        expect(window.location.href).toBe('/en/dashboard')
       })
 
       // Should NOT use router.push
@@ -353,7 +353,7 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(window.location.href).toBe('/zh-CN/admin')
+        expect(window.location.href).toBe('/zh-CN/dashboard')
       })
     })
   })
@@ -534,7 +534,7 @@ describe('LoginForm', () => {
       expect(screen.getByLabelText(/auth.email/i)).toBeInTheDocument()
     })
 
-    it('calls /api/demo-login and verifyOtp for parent role, redirects to /admin', async () => {
+    it('calls /api/demo-login and verifyOtp for parent role, redirects to /dashboard', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ token_hash: 'tok_abc', email: 'demo@starquest.app' }),
@@ -561,11 +561,11 @@ describe('LoginForm', () => {
       })
 
       await waitFor(() => {
-        expect(window.location.href).toBe('/en/admin/activity')
+        expect(window.location.href).toBe('/en/dashboard')
       })
     })
 
-    it('redirects child role (alisa) to /app', async () => {
+    it('redirects child role (alisa) to /dashboard', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ token_hash: 'tok_alisa', email: 'alisa.demo@starquest.app' }),
@@ -578,7 +578,7 @@ describe('LoginForm', () => {
       fireEvent.click(alisaButton)
 
       await waitFor(() => {
-        expect(window.location.href).toBe('/en/app')
+        expect(window.location.href).toBe('/en/dashboard')
       })
     })
 

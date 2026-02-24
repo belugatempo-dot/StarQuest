@@ -174,7 +174,7 @@ export default function FamilyMemberList({
                 {/* Actions */}
                 <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-white/10">
                   <Link
-                    href={`/${locale}/admin/children/${child.id}`}
+                    href={`/${locale}/profile/children/${child.id}`}
                     className="text-sm text-primary hover:text-primary/80 font-semibold text-left flex items-center space-x-2"
                   >
                     <span>📊</span>

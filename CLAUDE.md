@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2918 tests, ~99% coverage)
+# Testing (2986 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -48,10 +48,10 @@ RED → GREEN → REFACTOR → COMMIT (only when tests pass)
 **Always use `window.location.href` after login/register, NOT `router.push()`**
 ```typescript
 // ✅ CORRECT - prevents login loop
-window.location.href = `/${locale}/admin`;
+window.location.href = `/${locale}/dashboard`;
 
 // ❌ WRONG - causes infinite login loop due to cookie race condition
-router.push(`/${locale}/admin`);
+router.push(`/${locale}/dashboard`);
 ```
 
 ### 4. Quest Visibility
@@ -87,13 +87,18 @@ In `middleware.ts`: Run intl middleware FIRST, then Supabase session. Reversing 
 ### Route Structure
 ```
 app/[locale]/
-├── (auth)/        # Public: login, register
-├── (child)/app/   # Child role: /app/*
-└── (parent)/admin/ # Parent role: /admin/*
+├── (auth)/         # Public: login, register, email verification
+├── (main)/         # Authenticated: both roles (unified route merge)
+│   ├── dashboard/  # Role-branching dashboard (parent: approvals + family; child: balance + activity)
+│   └── activities/ # Unified activity list
+├── (child)/app/    # Legacy — redirects to /dashboard
+└── (parent)/admin/ # Legacy — redirects to /dashboard
 ```
 
+> **Route Migration (In Progress):** Parent and child routes being unified under `(main)`. Legacy `/admin/*` and `/app/*` routes redirect to `/dashboard`. See `MergeParent&ChildPlan.md`.
+
 **Auth Protection:**
-- `requireParent(locale)` → redirects non-parents to `/app`
+- `requireParent(locale)` → redirects non-parents to `/dashboard`
 - `requireAuth(locale)` → redirects unauthenticated to `/login`
 
 ### Database
@@ -109,7 +114,7 @@ app/[locale]/
 ### Component Organization
 ```
 components/
-├── ui/        # Shared UI (LanguageSwitcher, ModalFrame)
+├── ui/        # Shared UI (LanguageSwitcher, ModalFrame, DemoBanner, Starfield)
 ├── auth/      # Login/register (use hard navigation!)
 ├── child/     # Child UI (bonus quests only)
 ├── admin/     # Parent UI (all quest types)
@@ -120,6 +125,7 @@ components/
 │   ├── PostHogPageView.tsx           # Automatic pageview tracking on client-side navigation
 │   └── PostHogUserIdentify.tsx       # User identification + session recording control
 └── shared/    # Cross-role components
+    ├── AppNav.tsx               # Unified navigation (5 tabs, role-aware badges + settings)
     ├── UnifiedActivityList.tsx  # Main list orchestrator
     ├── ActivityItem.tsx         # Single activity row
     ├── ActivityDateGroup.tsx    # Date-grouped activity section
@@ -154,7 +160,9 @@ lib/
     ├── demo-users.ts            # Client-safe role metadata (NO passwords, importable by client)
     ├── demo-cleanup.ts          # FK-ordered cleanup of demo family data
     ├── demo-seed.ts             # Deterministic seed with 30 days of activity
-    └── demo-snapshot.ts         # Save/restore demo data via SQL (fast reset: 40 RPCs → 1-2)
+    ├── demo-snapshot.ts         # Save/restore demo data via SQL (fast reset: 40 RPCs → 1-2)
+    ├── demo-context.tsx         # DemoProvider + useDemoMode() hook (client-safe demo detection)
+    └── demo-error.ts            # isDemoWriteError() — detects PostgreSQL 42501 RLS denial
 ```
 
 **Key Types** (`types/`):
@@ -251,6 +259,30 @@ Full product analytics suite: event tracking, session recordings, feature flags,
 | Session recordings | Enabled | Disabled |
 | Autocapture | Yes | Yes |
 | Family grouping | Yes | Yes |
+
+### Demo Read-Only Mode
+Database-level write protection for demo users via RLS policies.
+- Migration: `20260223000000_demo_read_only.sql`
+- `is_demo_user()` SQL function checks `is_demo` column on `users` table
+- 20 write policies across 10 tables block INSERT/UPDATE/DELETE for demo users
+- `lib/demo/demo-context.tsx` — `DemoProvider` + `useDemoMode()` hook (client-safe)
+- `lib/demo/demo-error.ts` — `isDemoWriteError()` detects PostgreSQL 42501 (RLS denial)
+- `components/ui/DemoBanner.tsx` — Persistent banner with sign-up CTA
+- `sonner` package for toast notifications on blocked write attempts
+
+### Visual Design System (`Starfield`, Tailwind tokens)
+- `components/ui/Starfield.tsx` — Fixed-position particle system (40 bright + 60 dim stars + 3 nebula patches)
+  - SSR-safe: seeded PRNG (Mulberry32, seed=42) for deterministic positions
+- `tailwind.config.ts` — Extended with:
+  - Font families: Poppins, Playfair Display, Courier Prime
+  - 8 animation keyframes: twinkle, pulse-glow, slide-up, shine, float, glow-pulse, shimmer, spin-slow
+  - Node colors for quest types (Duty=red, Bonus=gold)
+- `app/globals.css` — Starry night-sky gradient background, glass morphism utilities
+
+### Keep-Alive Cron (`app/api/keep-alive/route.ts`)
+Prevents Supabase cold starts on Vercel Hobby tier.
+- `SELECT 1 FROM families LIMIT 1` every 12 hours (via `vercel.json` cron)
+- Protected by `verifyCronAuth()`
 
 ### Generate Markdown Reports (`components/admin/GenerateReportModal.tsx`)
 Parents can generate and download a markdown-formatted summary report on demand from the Activity page.
@@ -455,12 +487,12 @@ curl -X POST https://starquest-kappa.vercel.app/api/seed-demo \
 - Credit system for Alexander (interest tiers, credit settings, credit transaction)
 - Report preferences (weekly + monthly enabled)
 
-### Demo Data Snapshot (Fast Restore)
-On every demo login, demo data is restored from a pre-computed JSONB snapshot instead of re-running the full seed.
-- `lib/demo/demo-snapshot.ts` — `saveDemoSnapshot()`, `restoreDemoData()`, `getSnapshotLatestDate()`
+### Demo Data Protection
+Demo data is protected by database-level RLS policies (read-only mode) instead of ephemeral snapshot resets.
+- Write operations blocked at the database level for all demo users (`is_demo_user()` check)
+- `lib/demo/demo-snapshot.ts` — `saveDemoSnapshot()`, `restoreDemoData()`, `getSnapshotLatestDate()` (used during initial seed)
 - SQL functions: `save_demo_snapshot(p_family_id)`, `restore_demo_data()` (in `supabase/migrations/20260222000000_demo_snapshot.sql`)
 - `seed-demo` API supports `?mode=extend` to add new activity days on top of existing data
-- Fallback: if no snapshot exists, falls back to full cleanup + seed
 
 ### Source Files
 - `lib/demo/demo-config.ts` — Constants and child profiles (server-only, contains passwords)
@@ -469,10 +501,10 @@ On every demo login, demo data is restored from a pre-computed JSONB snapshot in
 - `lib/demo/demo-seed.ts` — Core seed with deterministic RNG
 - `lib/demo/demo-snapshot.ts` — Snapshot save/restore (reduces demo login from ~40 RPCs to 1-2)
 - `app/api/seed-demo/route.ts` — Protected API route (supports `?mode=extend`)
-- `app/api/demo-login/route.ts` — Passwordless demo login with auto-reset via snapshot restore
+- `app/api/demo-login/route.ts` — Passwordless demo login (demo data protected by RLS read-only mode)
 
 ### Passwordless Demo Login (`app/api/demo-login/route.ts`)
-One-click demo access without exposing passwords to client bundle.
+One-click demo access without exposing passwords to client bundle. Demo data is read-only (RLS-protected).
 - **Flow:** "Try Demo" → `/login?demo=true` → Role picker (Parent/Alisa/Alexander) → `POST /api/demo-login` → `verifyOtp()` → session
 - **Server:** `createAdminClient().auth.admin.generateLink({ type: 'magiclink', email })` → returns `hashed_token`
 - **Client:** `supabase.auth.verifyOtp({ token_hash, type: 'magiclink' })` → sets cookies via `@supabase/ssr`
@@ -489,4 +521,4 @@ One-click demo access without exposing passwords to client bundle.
 
 ---
 
-**Last Updated:** 2026-02-21 | **Tests:** 2918 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-23 | **Tests:** 2986 passing | **Coverage:** ~99%
