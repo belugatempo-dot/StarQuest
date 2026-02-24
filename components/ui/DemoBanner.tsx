@@ -6,11 +6,12 @@
  */
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useDemoMode } from "@/lib/demo/demo-context";
 
 export function DemoBanner() {
   const { isDemoUser } = useDemoMode();
+  const locale = useLocale();
   const t = useTranslations("demo");
 
   if (!isDemoUser) return null;
@@ -23,7 +24,7 @@ export function DemoBanner() {
       <span>{t("banner")}</span>
       {" "}
       <Link
-        href="/en/auth/register"
+        href={`/${locale}/register`}
         className="underline font-medium hover:text-yellow-100"
       >
         {t("signUp")}
