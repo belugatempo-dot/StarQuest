@@ -67,16 +67,16 @@ describe("Registration Flow", () => {
 
     it("should generate correct redirect URL", () => {
       const locale = "en";
-      const redirectUrl = `/${locale}/admin`;
+      const redirectUrl = `/${locale}/dashboard`;
 
-      expect(redirectUrl).toBe("/en/admin");
+      expect(redirectUrl).toBe("/en/dashboard");
     });
 
     it("should handle zh-CN locale correctly", () => {
       const locale = "zh-CN";
-      const redirectUrl = `/${locale}/admin`;
+      const redirectUrl = `/${locale}/dashboard`;
 
-      expect(redirectUrl).toBe("/zh-CN/admin");
+      expect(redirectUrl).toBe("/zh-CN/dashboard");
     });
   });
 
