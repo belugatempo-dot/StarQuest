@@ -21,97 +21,101 @@ export default async function ActivityPage({
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
-  // Fetch all star transactions for the family with quest and child details
-  const { data: transactions, error: txError } = (await adminClient
-    .from("star_transactions")
-    .select(`
-      *,
-      quests (
-        name_en,
-        name_zh,
-        icon,
-        category
-      ),
-      children:users!star_transactions_child_id_fkey (
-        name,
-        avatar_url
-      )
-    `)
-    .eq("family_id", user.family_id!)
-    .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
+  // Fetch all data in parallel — these are independent queries scoped by family_id
+  const [
+    txResult,
+    redemptionResult,
+    creditResult,
+    childrenResult,
+    questsResult,
+    rewardsResult,
+    balancesResult,
+    t,
+  ] = await Promise.all([
+    adminClient
+      .from("star_transactions")
+      .select(`
+        *,
+        quests (
+          name_en,
+          name_zh,
+          icon,
+          category
+        ),
+        children:users!star_transactions_child_id_fkey (
+          name,
+          avatar_url
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
+    adminClient
+      .from("redemptions")
+      .select(`
+        *,
+        rewards (
+          name_en,
+          name_zh,
+          icon,
+          category
+        ),
+        children:users!redemptions_child_id_fkey (
+          name,
+          avatar_url
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
+    adminClient
+      .from("credit_transactions")
+      .select(`
+        *,
+        children:users!credit_transactions_child_id_fkey (
+          name,
+          avatar_url
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
+    adminClient
+      .from("users")
+      .select("*")
+      .eq("family_id", user.family_id!)
+      .eq("role", "child"),
+    supabase
+      .from("quests")
+      .select("*")
+      .eq("family_id", user.family_id!)
+      .eq("is_active", true),
+    supabase
+      .from("rewards")
+      .select("*")
+      .eq("family_id", user.family_id!)
+      .eq("is_active", true),
+    adminClient
+      .from("child_balances")
+      .select("child_id, current_stars, spendable_stars")
+      .eq("family_id", user.family_id!) as unknown as Promise<{ data: any[] | null; error: any }>,
+    getTranslations(),
+  ]);
+
+  const { data: transactions, error: txError } = txResult;
+  const { data: redemptions, error: redemptionError } = redemptionResult;
+  const { data: creditTransactions, error: creditError } = creditResult;
+  const { data: familyChildren } = childrenResult;
+  const { data: activeQuests } = questsResult;
+  const { data: activeRewards } = rewardsResult;
+  const { data: childBalances } = balancesResult;
 
   if (txError) {
     console.error("Error fetching transactions:", txError);
   }
-
-  // Fetch all redemptions with reward and child details
-  const { data: redemptions, error: redemptionError } = (await adminClient
-    .from("redemptions")
-    .select(`
-      *,
-      rewards (
-        name_en,
-        name_zh,
-        icon,
-        category
-      ),
-      children:users!redemptions_child_id_fkey (
-        name,
-        avatar_url
-      )
-    `)
-    .eq("family_id", user.family_id!)
-    .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
-
   if (redemptionError) {
     console.error("Error fetching redemptions:", redemptionError);
   }
-
-  // Fetch all credit transactions with child details
-  const { data: creditTransactions, error: creditError } = (await adminClient
-    .from("credit_transactions")
-    .select(`
-      *,
-      children:users!credit_transactions_child_id_fkey (
-        name,
-        avatar_url
-      )
-    `)
-    .eq("family_id", user.family_id!)
-    .order("created_at", { ascending: false })) as { data: any[] | null; error: any };
-
   if (creditError) {
     console.error("Error fetching credit transactions:", creditError);
   }
-
-  // Fetch children for add-record modal
-  const { data: familyChildren } = await adminClient
-    .from("users")
-    .select("*")
-    .eq("family_id", user.family_id!)
-    .eq("role", "child");
-
-  // Fetch active quests for add-record modal
-  const { data: activeQuests } = await supabase
-    .from("quests")
-    .select("*")
-    .eq("family_id", user.family_id!)
-    .eq("is_active", true);
-
-  // Fetch active rewards for redeem-from-calendar modal
-  const { data: activeRewards } = await supabase
-    .from("rewards")
-    .select("*")
-    .eq("family_id", user.family_id!)
-    .eq("is_active", true);
-
-  // Fetch child balances for redeem-from-calendar modal
-  const { data: childBalances } = (await adminClient
-    .from("child_balances")
-    .select("child_id, current_stars, spendable_stars")
-    .eq("family_id", user.family_id!)) as { data: any[] | null; error: any };
-
-  const t = await getTranslations();
 
   // Convert to unified activity items using utility functions
   // Credit transactions are not shown in activity list - only displayed as a summary tile

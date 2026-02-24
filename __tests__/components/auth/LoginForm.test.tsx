@@ -561,7 +561,7 @@ describe('LoginForm', () => {
       })
 
       await waitFor(() => {
-        expect(window.location.href).toBe('/en/admin')
+        expect(window.location.href).toBe('/en/admin/activity')
       })
     })
 
