@@ -6,6 +6,7 @@ import { locales } from "@/i18n/config";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 import { PostHogPageView } from "@/components/analytics/PostHogPageView";
+import Starfield from "@/components/ui/Starfield";
 import { Toaster } from "sonner";
 import "../globals.css";
 
@@ -39,11 +40,14 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className="dark" style={{ colorScheme: 'dark' }}>
       <body>
+        <Starfield />
         <PostHogProvider>
           <PostHogPageView />
           <ThemeProvider>
             <NextIntlClientProvider messages={messages}>
-              {children}
+              <div className="relative z-[1]">
+                {children}
+              </div>
               <Toaster theme="dark" position="bottom-center" />
             </NextIntlClientProvider>
           </ThemeProvider>

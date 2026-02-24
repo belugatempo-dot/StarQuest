@@ -2,20 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   CSS CUSTOM PROPERTIES — Design System Tokens
+   (Spec §2-4: Color system, backgrounds, accents)
+   ============================================ */
 :root {
-  --foreground-rgb: 226, 232, 240;
-  --background-start-rgb: 91, 106, 191;
-  --background-end-rgb: 124, 92, 192;
+  /* Background */
+  --night-deep: #0f172a;
+  --night-swirl: #1e3a5f;
+  --night-cosmic: #312e81;
+
+  /* Text */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+
+  /* Accent */
+  --accent: #ffd700;
+  --accent-glow: rgba(255, 215, 0, 0.12);
+  --accent-amber: #fbbf24;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.15);
+  --border-accent: #ffd700;
+
+  /* Surfaces */
+  --glass-bg: rgba(75, 85, 160, 0.45);
+  --nav-bg: rgba(15, 23, 42, 0.88);
+  --card-bg: rgba(65, 75, 150, 0.5);
+  --terminal-bg: rgba(13, 17, 23, 0.8);
 }
 
+/* ============================================
+   BASE STYLES
+   (Spec §2: Fixed night-sky gradient background)
+   ============================================ */
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: var(--text-primary);
+  background-color: var(--night-deep);
+  background-image: linear-gradient(
+    170deg,
+    var(--night-swirl) 0%,
+    var(--night-deep) 35%,
+    var(--night-cosmic) 65%,
+    var(--night-deep) 100%
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 @layer utilities {
@@ -25,28 +57,20 @@ body {
 }
 
 /* ============================================
-   NIGHT THEME - Starry dark blue
-   ============================================ */
-
-/* Animation keyframes */
-@keyframes twinkle {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-
-@keyframes cosmicShimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* ============================================
-   NIGHT MODE STYLES (Default / .theme-night)
+   NIGHT THEME — Starry Backgrounds
+   (Spec §2, §8 items 1-2)
    ============================================ */
 
 /* Starry background with twinkling animation */
 .starry-bg {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #312e81 100%);
+  background: linear-gradient(
+    170deg,
+    var(--night-swirl) 0%,
+    var(--night-deep) 35%,
+    var(--night-cosmic) 65%,
+    var(--night-deep) 100%
+  );
+  background-attachment: fixed;
   position: relative;
   overflow: hidden;
 }
@@ -59,44 +83,225 @@ body {
   right: 0;
   bottom: 0;
   background-image:
-    radial-gradient(1px 1px at 20px 30px, #FEF08A, transparent),
-    radial-gradient(1px 1px at 40px 70px, #FFD700, transparent),
-    radial-gradient(1.5px 1.5px at 90px 40px, #FEF08A, transparent),
-    radial-gradient(1px 1px at 130px 80px, #FBBF24, transparent),
-    radial-gradient(1.5px 1.5px at 160px 30px, #FFD700, transparent),
-    radial-gradient(1px 1px at 200px 60px, #FEF08A, transparent),
-    radial-gradient(1.5px 1.5px at 50px 110px, #FBBF24, transparent),
-    radial-gradient(1px 1px at 100px 130px, #FFD700, transparent),
-    radial-gradient(1px 1px at 150px 100px, #FEF08A, transparent),
-    radial-gradient(1.5px 1.5px at 180px 140px, #FBBF24, transparent),
-    radial-gradient(1px 1px at 220px 90px, #FFD700, transparent),
-    radial-gradient(1px 1px at 60px 160px, #FEF08A, transparent),
-    radial-gradient(1.5px 1.5px at 120px 180px, #FBBF24, transparent),
-    radial-gradient(1px 1px at 170px 200px, #FFD700, transparent),
-    radial-gradient(1px 1px at 30px 200px, #FEF08A, transparent);
-  animation: twinkle 4s ease-in-out infinite;
+    radial-gradient(2px 2px at 20px 30px, #ffd43b, transparent),
+    radial-gradient(1px 1px at 40px 70px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 90px 40px, #ffd43b, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 160px 30px, #ffd43b, transparent),
+    radial-gradient(1px 1px at 200px 60px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 50px 110px, #ffd43b, transparent),
+    radial-gradient(1px 1px at 100px 130px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 150px 100px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 180px 140px, #ffd43b, transparent),
+    radial-gradient(1px 1px at 220px 90px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 60px 160px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 120px 180px, #ffd43b, transparent),
+    radial-gradient(1px 1px at 170px 200px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 30px 200px, rgba(255, 255, 255, 0.5), transparent);
+  background-size: 240px 220px;
+  animation: twinkle 3s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
-/* Golden text glow effect */
+/* ============================================
+   GOLDEN TEXT EFFECTS
+   (Spec §4: Logo glow, accent highlights)
+   ============================================ */
+
+/* Soft golden glow — for logos and hero titles */
 .star-glow {
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+/* Intense golden glow — for key stat numbers */
+.star-glow-strong {
   text-shadow:
     0 0 10px rgba(255, 215, 0, 0.5),
     0 0 20px rgba(255, 215, 0, 0.3),
     0 0 30px rgba(255, 215, 0, 0.2);
 }
 
-/* Glass card for periwinkle backgrounds */
+/* ============================================
+   GLASS MORPHISM
+   (Spec §2, §8 item 4: Glass cards & navigation)
+   ============================================ */
+
+/* Standard glass card — spec §2: rgba(75,85,160,0.45) + blur(12px) */
 .glass-card {
-  background: rgba(75, 85, 160, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
 }
+
+/* Glass navigation — spec §2: near-opaque dark + heavy blur */
+.glass-nav {
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Glass tooltip */
+.glass-tooltip {
+  background: rgba(30, 40, 80, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+/* ============================================
+   CARD HOVER INTERACTIONS
+   (Spec §7, §8 item 5: translateY + gold border)
+   ============================================ */
+
+.card-hover {
+  transition: all 0.3s;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.08);
+}
+
+/* Horizontal shift hover — for list items / steps */
+.step-hover {
+  transition: all 0.3s;
+}
+
+.step-hover:hover {
+  transform: translateX(4px);
+}
+
+/* ============================================
+   BADGE & TAG STYLES
+   (Spec §4: Gold-glow capsule badges)
+   ============================================ */
+
+.badge-gold {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Square tag variant */
+.tag-gold {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ============================================
+   BUTTON VARIANTS
+   (Spec §4, §7: Ghost, action-green, action-gold)
+   ============================================ */
+
+/* Ghost button — subtle background, gold on hover */
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Action button (green) — Insert / Add */
+.btn-action-green {
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.3),
+    rgba(5, 150, 105, 0.2)
+  );
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-action-green:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+/* Action button (gold) — Approve / Confirm */
+.btn-action-gold {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.2),
+    rgba(251, 191, 36, 0.1)
+  );
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: var(--accent);
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-action-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+}
+
+/* ============================================
+   NIGHT-THEMED COMPONENT UTILITIES
+   ============================================ */
 
 /* Night header gradient */
 .night-header {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #312e81 100%);
+  background: linear-gradient(
+    170deg,
+    var(--night-deep) 0%,
+    var(--night-swirl) 60%,
+    var(--night-cosmic) 100%
+  );
   position: relative;
   overflow: hidden;
 }
@@ -109,15 +314,15 @@ body {
   right: 0;
   bottom: 0;
   background-image:
-    radial-gradient(2px 2px at 10% 20%, #FFD700, transparent),
-    radial-gradient(1.5px 1.5px at 30% 70%, #FEF08A, transparent),
-    radial-gradient(2px 2px at 50% 30%, #FBBF24, transparent),
-    radial-gradient(1.5px 1.5px at 70% 60%, #FFD700, transparent),
-    radial-gradient(2px 2px at 90% 40%, #FEF08A, transparent),
-    radial-gradient(1.5px 1.5px at 25% 85%, #FBBF24, transparent),
-    radial-gradient(2px 2px at 75% 15%, #FFD700, transparent),
-    radial-gradient(1.5px 1.5px at 85% 80%, #FEF08A, transparent);
-  animation: twinkle 3s ease-in-out infinite;
+    radial-gradient(2px 2px at 10% 20%, #ffd700, transparent),
+    radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 50% 30%, #ffd43b, transparent),
+    radial-gradient(1px 1px at 70% 60%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 90% 40%, #ffd43b, transparent),
+    radial-gradient(1px 1px at 25% 85%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 75% 15%, #ffd700, transparent),
+    radial-gradient(1px 1px at 85% 80%, rgba(255, 255, 255, 0.5), transparent);
+  animation: twinkle 3s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
@@ -134,7 +339,8 @@ body {
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(135deg, #FFD700, #2563eb, #FFD700);
+  background: linear-gradient(135deg, #ffd700, #2563eb, #ffd700);
+  background-size: 200% auto;
   border-radius: inherit;
   z-index: -1;
   animation: cosmicShimmer 3s linear infinite;
@@ -155,14 +361,14 @@ body {
   right: 0;
   bottom: 0;
   background-image:
-    radial-gradient(1.5px 1.5px at 20% 30%, #FFD700, transparent),
-    radial-gradient(1px 1px at 60% 50%, #FEF08A, transparent),
-    radial-gradient(1.5px 1.5px at 80% 70%, #FBBF24, transparent);
-  animation: twinkle 2s ease-in-out infinite;
+    radial-gradient(2px 2px at 20% 30%, #ffd43b, transparent),
+    radial-gradient(1px 1px at 60% 50%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 80% 70%, #ffd43b, transparent);
+  animation: twinkle 2s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
-/* Stat tile with starry night background (varied star positions) */
+/* Stat tile with starry night background */
 .stat-night-card {
   background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
   position: relative;
@@ -177,10 +383,10 @@ body {
   right: 0;
   bottom: 0;
   background-image:
-    radial-gradient(1px 1px at 15% 25%, #FFD700, transparent),
-    radial-gradient(1.5px 1.5px at 55% 45%, #FEF08A, transparent),
-    radial-gradient(1px 1px at 85% 65%, #FBBF24, transparent);
-  animation: twinkle 2.5s ease-in-out infinite;
+    radial-gradient(2px 2px at 15% 25%, #ffd43b, transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 85% 65%, #ffd43b, transparent);
+  animation: twinkle 2.5s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
@@ -190,31 +396,39 @@ body {
   position: relative;
 }
 
+/* Terminal-style surface for data/code */
+.terminal-surface {
+  background: var(--terminal-bg);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  font-family: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
+}
+
 /* ============================================
    DARK THEME UTILITY CLASSES
    ============================================ */
 
 /* Dark card for replacing bg-white cards */
 .dark-card {
-  background: rgba(65, 75, 150, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
 }
 
 /* Dark surface for modals and drawers */
 .dark-surface {
   background: #5060b0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-subtle);
 }
 
 /* Dark input styling */
 .dark-input {
   background: rgba(55, 65, 140, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .dark-input:focus {
-  border-color: #4F46E5;
+  border-color: #4f46e5;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
   outline: none;
 }
@@ -223,3 +437,82 @@ body {
   color: #64748b;
 }
 
+/* ============================================
+   ANIMATION KEYFRAMES
+   (Spec §7: Interaction animations)
+   Note: twinkle, fadeIn, slideDown, etc. are also
+   defined in tailwind.config.ts for Tailwind classes.
+   These CSS keyframes are needed for direct usage.
+   ============================================ */
+
+@keyframes twinkle {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes cosmicShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rowInsert {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes goldFlash {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(255, 215, 0, 0.3); }
+  100% { background-color: transparent; }
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-120vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes flowDash {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
