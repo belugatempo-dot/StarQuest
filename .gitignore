@@ -43,6 +43,7 @@ backups/
 # local planning docs
 .github/refactor_plan/
 gtm_plan.md
+visualization_plan.md
 
 # supabase CLI cache
 supabase/.temp/
