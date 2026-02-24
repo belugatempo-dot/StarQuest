@@ -17,92 +17,106 @@ export default async function AdminDashboard({
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
-  // Fetch pending star requests (full data for approval tabs)
-  const { data: starRequests } = await supabase
-    .from("star_transactions")
-    .select(`
-      *,
-      users!star_transactions_child_id_fkey (
-        id,
-        name,
-        avatar_url
-      ),
-      quests (
-        name_en,
-        name_zh,
-        icon,
-        category
-      )
-    `)
-    .eq("family_id", user.family_id!)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false });
+  // Fetch all independent data in parallel
+  const [
+    starRequestsResult,
+    redemptionRequestsResult,
+    familyResult,
+    balancesResult,
+    membersResolved,
+  ] = await Promise.all([
+    supabase
+      .from("star_transactions")
+      .select(`
+        *,
+        users!star_transactions_child_id_fkey (
+          id,
+          name,
+          avatar_url
+        ),
+        quests (
+          name_en,
+          name_zh,
+          icon,
+          category
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("redemptions")
+      .select(`
+        *,
+        users!redemptions_child_id_fkey (
+          id,
+          name,
+          avatar_url
+        ),
+        rewards (
+          name_en,
+          name_zh,
+          icon,
+          category,
+          description
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("families")
+      .select("*")
+      .eq("id", user.family_id!)
+      .maybeSingle(),
+    adminClient
+      .from("child_balances")
+      .select("*")
+      .eq("family_id", user.family_id!),
+    // Members query with admin→regular client fallback (self-contained async)
+    (async () => {
+      const adminResult = await adminClient
+        .from("users")
+        .select("*")
+        .eq("family_id", user.family_id!)
+        .order("role", { ascending: false })
+        .order("created_at", { ascending: true });
 
-  // Fetch pending redemption requests (full data for approval tabs)
-  const { data: redemptionRequests } = await supabase
-    .from("redemptions")
-    .select(`
-      *,
-      users!redemptions_child_id_fkey (
-        id,
-        name,
-        avatar_url
-      ),
-      rewards (
-        name_en,
-        name_zh,
-        icon,
-        category,
-        description
-      )
-    `)
-    .eq("family_id", user.family_id!)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false });
+      if (adminResult.error) {
+        console.error("Admin client error fetching family members:", adminResult.error);
+      }
+
+      let members = adminResult.error ? null : adminResult.data;
+
+      if (!members || members.length === 0) {
+        console.log("Trying regular client as fallback for members query...");
+        const regularResult = await supabase
+          .from("users")
+          .select("*")
+          .eq("family_id", user.family_id!)
+          .order("role", { ascending: false })
+          .order("created_at", { ascending: true });
+
+        if (regularResult.error) {
+          console.error("Regular client error fetching family members:", regularResult.error);
+        } else if (regularResult.data && regularResult.data.length > 0) {
+          members = regularResult.data;
+          console.log("Found members using regular client:", members.length);
+        }
+      }
+
+      return members;
+    })(),
+  ]);
+
+  const { data: starRequests } = starRequestsResult;
+  const { data: redemptionRequests } = redemptionRequestsResult;
+  const { data: family, error: familyError } = familyResult;
+  const { data: balances } = balancesResult;
+  const members = membersResolved;
 
   const totalPending =
     (starRequests?.length || 0) + (redemptionRequests?.length || 0);
-
-  // Fetch all family members using admin client (with fallback)
-  let members: any[] | null = null;
-
-  const adminResult = await adminClient
-    .from("users")
-    .select("*")
-    .eq("family_id", user.family_id!)
-    .order("role", { ascending: false })
-    .order("created_at", { ascending: true });
-
-  if (adminResult.error) {
-    console.error("Admin client error fetching family members:", adminResult.error);
-  } else {
-    members = adminResult.data;
-  }
-
-  // Fallback to regular client if admin client returned no data
-  if (!members || members.length === 0) {
-    console.log("Trying regular client as fallback for members query...");
-    const regularResult = await supabase
-      .from("users")
-      .select("*")
-      .eq("family_id", user.family_id!)
-      .order("role", { ascending: false })
-      .order("created_at", { ascending: true });
-
-    if (regularResult.error) {
-      console.error("Regular client error fetching family members:", regularResult.error);
-    } else if (regularResult.data && regularResult.data.length > 0) {
-      members = regularResult.data;
-      console.log("Found members using regular client:", members.length);
-    }
-  }
-
-  // Fetch family info
-  const { data: family, error: familyError } = await supabase
-    .from("families")
-    .select("*")
-    .eq("id", user.family_id!)
-    .maybeSingle();
 
   if (familyError) {
     console.error("Error fetching family:", familyError);
@@ -115,12 +129,6 @@ export default async function AdminDashboard({
   const parentsCount = parents.length;
   const childrenCount = children.length;
   const totalFamilyMembers = parentsCount + childrenCount;
-
-  // Fetch children balances
-  const { data: balances } = await adminClient
-    .from("child_balances")
-    .select("*")
-    .eq("family_id", user.family_id!);
 
   return (
     <div className="space-y-6">

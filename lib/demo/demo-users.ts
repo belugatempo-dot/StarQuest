@@ -16,8 +16,8 @@ export interface DemoUserInfo {
   descriptionEn: string;
   descriptionZh: string;
   emoji: string;
-  /** Where to redirect after login: "admin" for parents, "app" for children */
-  redirectPath: "admin" | "app";
+  /** Where to redirect after login: "admin/activity" for parents, "app" for children */
+  redirectPath: string;
 }
 
 export const DEMO_USERS: DemoUserInfo[] = [
@@ -29,7 +29,7 @@ export const DEMO_USERS: DemoUserInfo[] = [
     descriptionEn: "Manage quests, approve stars, see reports",
     descriptionZh: "管理任务、审批星星、查看报告",
     emoji: "👨‍👩‍👧‍👦",
-    redirectPath: "admin",
+    redirectPath: "admin/activity",
   },
   {
     role: "alisa",
