@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="zh" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1102,15 +1102,10 @@ Testing: Jest + React Testing Library. Every component, hook, API route tested.<
 </footer>
 
 <script>
-var currentLang = 'en';
+var currentLang = 'zh';
 function toggleLang() {
   currentLang = currentLang === 'en' ? 'zh' : 'en';
-  document.querySelectorAll('[data-en]').forEach(function(el) {
-    el.textContent = el.getAttribute('data-' + currentLang);
-  });
-  document.querySelectorAll('[data-en-placeholder]').forEach(function(el) {
-    el.placeholder = el.getAttribute('data-' + currentLang + '-placeholder');
-  });
+  applyLang();
 }
 
 function toggleTheme() {
@@ -1526,8 +1521,18 @@ function animateCounter(el, from, to, duration) {
   }
 })();
 
+function applyLang() {
+  document.querySelectorAll('[data-en]').forEach(function(el) {
+    el.textContent = el.getAttribute('data-' + currentLang);
+  });
+  document.querySelectorAll('[data-en-placeholder]').forEach(function(el) {
+    el.placeholder = el.getAttribute('data-' + currentLang + '-placeholder');
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   createStars();
+  applyLang();
   renderQuestMatrix();
   renderSchema();
   document.querySelectorAll('.node-group').forEach(function(node) {
