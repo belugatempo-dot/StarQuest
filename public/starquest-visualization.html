@@ -1096,7 +1096,7 @@ Testing: Jest + React Testing Library. Every component, hook, API route tested.<
   <div class="brand">⭐ StarQuest · Beluga Tempo · 鲸律</div>
   <div><span data-en="A gamified family behavior tracking app — Next.js 15 + Supabase" data-zh="游戏化家庭行为追踪 — Next.js 15 + Supabase">A gamified family behavior tracking app — Next.js 15 + Supabase</span></div>
   <div style="margin-top:8px">
-    <a id="try-cta" href="https://starquest.beluga-tempo.com/en" target="_blank">Try it now!</a>
+    <a id="try-cta" data-en="Try it now!" data-zh="现在就试试吧" href="https://starquest.beluga-tempo.com/zh-CN" target="_blank">现在就试试吧</a>
     · 2,849 tests · ~99% coverage
   </div>
 </footer>
@@ -1512,15 +1512,6 @@ function animateCounter(el, from, to, duration) {
   requestAnimationFrame(tick);
 }
 
-(function() {
-  var zh = /^zh/i.test(navigator.language);
-  var a = document.getElementById('try-cta');
-  if (a) {
-    a.href = 'https://starquest.beluga-tempo.com/' + (zh ? 'zh-CN' : 'en');
-    a.textContent = zh ? '现在就试试吧' : 'Try it now!';
-  }
-})();
-
 function applyLang() {
   document.querySelectorAll('[data-en]').forEach(function(el) {
     el.textContent = el.getAttribute('data-' + currentLang);
@@ -1528,6 +1519,8 @@ function applyLang() {
   document.querySelectorAll('[data-en-placeholder]').forEach(function(el) {
     el.placeholder = el.getAttribute('data-' + currentLang + '-placeholder');
   });
+  var cta = document.getElementById('try-cta');
+  if (cta) cta.href = 'https://starquest.beluga-tempo.com/' + (currentLang === 'zh' ? 'zh-CN' : 'en');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
