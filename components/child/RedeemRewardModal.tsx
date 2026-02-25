@@ -411,6 +411,7 @@ export default function RedeemRewardModal({
         usesCredit: willUseCredit && creditToUse > 0,
       });
 
+      setLoading(false);
       onSuccess();
     } catch (err) {
       console.error("Error creating redemption:", err);
@@ -506,7 +507,7 @@ export default function RedeemRewardModal({
             disabled={loading || !canAfford}
             className={`flex-1 px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold ${buttonConfig.className}`}
           >
-            {buttonConfig.label}
+            {t(buttonConfig.label)}
           </button>
         </div>
       </form>

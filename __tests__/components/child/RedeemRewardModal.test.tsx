@@ -1149,6 +1149,185 @@ describe("RedeemRewardModal", () => {
       expect(submitButton.className).toContain("bg-success");
     });
   });
+
+  describe("Submit button label translation", () => {
+    it("should pass child submit label through t()", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      // t("common.submit") returns "common.submit" in our mock — confirms t() is called
+      const btn = screen.getByRole("button", { name: "common.submit" });
+      expect(btn).toBeInTheDocument();
+    });
+
+    it("should pass parent redeemNow label through t()", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          isParent={true}
+          childId="child-123"
+          familyId="family-123"
+        />
+      );
+
+      const btn = screen.getByRole("button", { name: "admin.redeemNow" });
+      expect(btn).toBeInTheDocument();
+    });
+
+    it("should pass credit.confirmBorrow label through t()", () => {
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={20}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+          creditEnabled={true}
+          availableCredit={50}
+          creditLimit={100}
+        />
+      );
+
+      const btn = screen.getByRole("button", { name: "credit.confirmBorrow" });
+      expect(btn).toBeInTheDocument();
+    });
+
+    it("should pass common.loading label through t() during submission", async () => {
+      const user = userEvent.setup();
+
+      let resolvePromise: (value: any) => void;
+      const promise = new Promise((resolve) => {
+        resolvePromise = resolve;
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "users") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: mockMaybeSingle,
+              }),
+            }),
+          };
+        }
+        if (table === "redemptions") {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: () => promise,
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "common.loading" })).toBeInTheDocument();
+      });
+
+      resolvePromise!({ data: { id: "redemption-123" }, error: null });
+
+      await waitFor(() => {
+        expect(mockOnSuccess).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Loading state reset on success", () => {
+    it("should re-enable submit button after successful redemption", async () => {
+      const user = userEvent.setup();
+
+      // Make onSuccess a no-op (modal stays mounted, simulating parent not unmounting)
+      const onSuccessNoClose = jest.fn();
+
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={onSuccessNoClose}
+          familyId="family-123"
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "common.submit" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSuccessNoClose).toHaveBeenCalled();
+      });
+
+      // After success, loading should be reset — button should not be disabled
+      await waitFor(() => {
+        const btn = screen.getByRole("button", { name: "common.submit" });
+        expect(btn).not.toBeDisabled();
+      });
+    });
+
+    it("should re-enable submit button after successful parent redemption", async () => {
+      const user = userEvent.setup();
+
+      const onSuccessNoClose = jest.fn();
+
+      render(
+        <RedeemRewardModal
+          reward={mockReward}
+          currentStars={100}
+          locale="en"
+          userId="user-123"
+          onClose={mockOnClose}
+          onSuccess={onSuccessNoClose}
+          isParent={true}
+          childId="child-456"
+          familyId="family-789"
+        />
+      );
+
+      const submitButton = screen.getByRole("button", { name: "admin.redeemNow" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSuccessNoClose).toHaveBeenCalled();
+      });
+
+      // After success, loading should be reset — button label reverts from common.loading
+      await waitFor(() => {
+        const btn = screen.getByRole("button", { name: "admin.redeemNow" });
+        expect(btn).not.toBeDisabled();
+      });
+    });
+  });
 });
 
 describe("computeCreditState", () => {
