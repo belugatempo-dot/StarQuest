@@ -24,7 +24,7 @@ export default async function VerifyEmailPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-night-cosmic/60 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center starry-bg overflow-y-auto p-4">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -32,12 +32,12 @@ export default async function VerifyEmailPage({
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">📧</div>
-          <h1 className="text-3xl font-bold text-primary mb-2">
+          <h1 className="text-3xl font-bold text-primary star-glow mb-2">
             {t("verification.checkEmailTitle")}
           </h1>
         </div>
 
-        <div className="bg-surface rounded-lg shadow-lg p-8">
+        <div className="glass-card shadow-lg p-8">
           {error === "invalid_token" && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
               {t("verification.invalidToken")}
@@ -48,7 +48,7 @@ export default async function VerifyEmailPage({
             {t("verification.checkEmailMessage")}
           </p>
           {email && (
-            <p className="font-semibold text-lg mb-6 text-center text-secondary">
+            <p className="font-semibold text-lg mb-6 text-center text-primary">
               {email}
             </p>
           )}
@@ -68,7 +68,7 @@ export default async function VerifyEmailPage({
           </div>
 
           <div className="mt-6 text-center text-sm text-slate-400">
-            <Link href={`/${locale}/login`} className="text-secondary font-semibold hover:underline">
+            <Link href={`/${locale}/login`} className="text-primary font-semibold hover:underline">
               {t("common.login")}
             </Link>
           </div>

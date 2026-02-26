@@ -56,7 +56,7 @@ export default function ResendVerificationButton({
       <button
         onClick={handleResend}
         disabled={loading || cooldown > 0}
-        className="w-full bg-secondary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-primary text-gray-900 py-2 px-4 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading
           ? locale === "zh-CN" ? "发送中..." : "Sending..."
@@ -69,8 +69,8 @@ export default function ResendVerificationButton({
         <div
           className={`mt-3 p-3 rounded-lg text-sm ${
             message.type === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : "bg-red-50 border border-red-200 text-red-700"
+              ? "bg-green-500/10 border border-green-500/30 text-green-300"
+              : "bg-red-500/10 border border-red-500/30 text-red-300"
           }`}
         >
           {message.text}

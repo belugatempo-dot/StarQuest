@@ -12,7 +12,7 @@ export default async function LoginPage({
   const t = await getTranslations();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-night-cosmic/60 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center starry-bg overflow-y-auto p-4">
       {/* Language Switcher - Top Right */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
@@ -28,8 +28,8 @@ export default async function LoginPage({
         </div>
 
         {/* Login Form Card */}
-        <div className="bg-surface rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-semibold mb-6 text-center">
+        <div className="glass-card shadow-lg p-8">
+          <h2 className="text-2xl font-semibold mb-6 text-center star-glow">
             {t("auth.loginPrompt")}
           </h2>
           <LoginForm />
@@ -39,7 +39,7 @@ export default async function LoginPage({
             Don't have an account?{" "}
             <Link
               href={`/${locale}/register`}
-              className="text-secondary font-semibold hover:underline"
+              className="text-primary font-semibold hover:underline"
             >
               {t("common.register")}
             </Link>
@@ -55,13 +55,13 @@ export default async function LoginPage({
                 href="/starquest-visualization.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 px-4 py-2 bg-slate-700 text-white border border-slate-500 rounded-lg text-sm font-medium hover:bg-slate-600 transition text-center"
+                className="flex-1 px-4 py-2 border-2 border-primary text-primary rounded-full text-sm font-bold hover:bg-primary/10 transition text-center"
               >
                 {t("auth.introduction")}
               </a>
               <Link
                 href={`/${locale}/login?demo=true`}
-                className="flex-1 px-4 py-2 bg-primary/20 text-primary border border-primary/60 rounded-lg text-sm font-medium hover:bg-primary/30 transition text-center"
+                className="flex-1 px-4 py-2 bg-primary text-gray-900 rounded-full text-sm font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition text-center"
               >
                 {t("auth.tryDemo")}
               </Link>

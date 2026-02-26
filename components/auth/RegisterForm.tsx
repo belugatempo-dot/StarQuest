@@ -204,7 +204,7 @@ export default function RegisterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "your@email.com" : "you@example.com"}
           disabled={isLoading}
         />
@@ -221,7 +221,7 @@ export default function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "至少6个字符" : "At least 6 characters"}
           disabled={isLoading}
         />
@@ -238,7 +238,7 @@ export default function RegisterForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "再次输入密码" : "Re-enter your password"}
           disabled={isLoading}
         />
@@ -256,7 +256,7 @@ export default function RegisterForm() {
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
             required={!validatedFamily}
-            className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+            className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             placeholder={locale === "zh-CN" ? "张家" : "Smith Family"}
             disabled={isLoading}
           />
@@ -273,7 +273,7 @@ export default function RegisterForm() {
           value={parentName}
           onChange={(e) => setParentName(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder={locale === "zh-CN" ? "张三" : "John Smith"}
           disabled={isLoading}
         />
@@ -285,7 +285,7 @@ export default function RegisterForm() {
           <div className="w-full border-t border-white/20"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-surface text-slate-400">
+          <span className="px-2 bg-[rgba(75,85,160,0.45)] text-slate-400">
             {locale === "zh-CN" ? "或" : "OR"}
           </span>
         </div>
@@ -308,7 +308,7 @@ export default function RegisterForm() {
           value={inviteCode}
           onChange={(e) => handleInviteCodeChange(e.target.value)}
           maxLength={8}
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent uppercase font-mono tracking-wider"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent uppercase font-mono tracking-wider"
           placeholder={locale === "zh-CN" ? "如有邀请码请输入" : "Enter if you have one"}
           disabled={isLoading || isValidating}
         />
@@ -322,7 +322,7 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-secondary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-primary text-gray-900 py-2 px-4 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading
           ? (locale === "zh-CN" ? "注册中..." : "Creating account...")
@@ -331,7 +331,7 @@ export default function RegisterForm() {
 
       <div className="text-center text-sm text-slate-400">
         {locale === "zh-CN" ? "已有账户？" : "Already have an account?"}{" "}
-        <a href={`/${locale}/login`} className="text-secondary font-semibold hover:underline">
+        <a href={`/${locale}/login`} className="text-primary font-semibold hover:underline">
           {locale === "zh-CN" ? "登录" : "Sign in"}
         </a>
       </div>

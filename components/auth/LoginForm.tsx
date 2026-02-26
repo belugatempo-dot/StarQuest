@@ -143,7 +143,7 @@ export default function LoginForm() {
             <div className="mt-2 text-sm">
               <Link
                 href={`/${locale}/register`}
-                className="text-secondary hover:underline font-medium"
+                className="text-primary hover:underline font-medium"
               >
                 {t("auth.completeRegistration")}
               </Link>
@@ -167,7 +167,7 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder="you@example.com"
         />
       </div>
@@ -182,7 +182,7 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"
+          className="w-full px-4 py-2 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder="••••••••"
         />
       </div>
@@ -190,7 +190,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-secondary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-primary text-gray-900 py-2 px-4 rounded-full font-bold hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(255,215,0,0.4)] transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? t("common.loading") : t("common.login")}
       </button>
