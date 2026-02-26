@@ -77,20 +77,6 @@ jest.mock("@/components/admin/FamilyMemberList", () => {
   };
 });
 
-jest.mock("@/components/admin/ApprovalTabs", () => {
-  return function MockApprovalTabs({
-    starRequests,
-    redemptionRequests,
-    locale,
-    parentId,
-  }: any) {
-    return (
-      <div data-testid="approval-tabs">
-        ApprovalTabs - {starRequests.length}s - {redemptionRequests.length}r
-      </div>
-    );
-  };
-});
 
 import DashboardPage from "@/app/[locale]/(main)/dashboard/page";
 
@@ -109,16 +95,12 @@ async function renderDashboard(locale: string) {
 // ---- Helper to set up mock data ----
 
 function setupParentMocks(overrides: {
-  starRequests?: any[];
-  redemptionRequests?: any[];
   family?: any;
   familyError?: any;
   balances?: any[];
   members?: any[];
 } = {}) {
   const {
-    starRequests = [],
-    redemptionRequests = [],
     family = { id: "fam-1", name: "Smith Family" },
     familyError = null,
     balances = [],
@@ -128,12 +110,6 @@ function setupParentMocks(overrides: {
   } = overrides;
 
   mockSupabaseFrom.mockImplementation((table: string) => {
-    if (table === "star_transactions") {
-      return buildChainMock({ data: starRequests, error: null });
-    }
-    if (table === "redemptions") {
-      return buildChainMock({ data: redemptionRequests, error: null });
-    }
     if (table === "families") {
       return buildChainMock({ data: family, error: familyError });
     }
@@ -213,9 +189,13 @@ describe("DashboardPage — Parent View", () => {
     expect(screen.getByText(/Welcome, Jane!/)).toBeInTheDocument();
   });
 
-  it("renders pending approvals card", async () => {
+  it("renders activities link card", async () => {
     await renderDashboard("en");
-    expect(screen.getByText("admin.pendingApprovals")).toBeInTheDocument();
+    expect(screen.getByText("admin.viewActivities")).toBeInTheDocument();
+    const activitiesLink = screen.getAllByRole("link").find(
+      (l) => l.getAttribute("href") === "/en/activities"
+    );
+    expect(activitiesLink).toBeTruthy();
   });
 
   it("renders family members card", async () => {
@@ -256,27 +236,6 @@ describe("DashboardPage — Parent View", () => {
     expect(screen.getByTestId("family-member-list")).toBeInTheDocument();
   });
 
-  it("renders ApprovalTabs when there are pending requests", async () => {
-    setupParentMocks({
-      starRequests: [{ id: "sr-1", status: "pending" }],
-      redemptionRequests: [{ id: "rr-1", status: "pending" }],
-    });
-
-    await renderDashboard("en");
-    expect(screen.getByTestId("approval-tabs")).toBeInTheDocument();
-    expect(screen.getByTestId("approval-tabs")).toHaveTextContent("1s");
-    expect(screen.getByTestId("approval-tabs")).toHaveTextContent("1r");
-  });
-
-  it("does not render ApprovalTabs when pending count is 0", async () => {
-    setupParentMocks({
-      starRequests: [],
-      redemptionRequests: [],
-    });
-
-    await renderDashboard("en");
-    expect(screen.queryByTestId("approval-tabs")).not.toBeInTheDocument();
-  });
 
   it("renders children overview with child links", async () => {
     setupParentMocks({
@@ -348,20 +307,6 @@ describe("DashboardPage — Parent View", () => {
 
     await renderDashboard("zh-CN");
     expect(screen.getByText("家庭成员")).toBeInTheDocument();
-  });
-
-  it("displays pending totals correctly", async () => {
-    setupParentMocks({
-      starRequests: [{ id: "s1" }, { id: "s2" }, { id: "s3" }],
-      redemptionRequests: [{ id: "r1" }],
-    });
-
-    await renderDashboard("en");
-    // Total pending = 3 + 1 = 4 (appears in both stats card and approval center)
-    const pendingCounts = screen.getAllByText("4");
-    expect(pendingCounts.length).toBeGreaterThanOrEqual(1);
-    // Breakdown text: "3 stars, 1 redemptions"
-    expect(screen.getByText(/3 stars, 1 redemptions/)).toBeInTheDocument();
   });
 
   it("logs error when family fetch fails", async () => {

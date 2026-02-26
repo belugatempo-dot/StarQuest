@@ -370,7 +370,7 @@ describe("useActivityActions", () => {
       );
     });
 
-    it("shows alert when trying to delete a non-star_transaction", async () => {
+    it("allows deleting redemptions from the redemptions table", async () => {
       const supabase = makeSupabase();
       const router = makeRouter();
       const batch = makeBatch();
@@ -379,7 +379,26 @@ describe("useActivityActions", () => {
       );
 
       await act(async () => {
-        await result.current.handleDelete(makeActivity({ type: "redemption" }));
+        await result.current.handleDelete(makeActivity({ type: "redemption", stars: -10 }));
+      });
+
+      expect(confirmSpy).toHaveBeenCalledWith(
+        expect.stringContaining("activity.confirmDeleteRedemption")
+      );
+      expect(supabase.from).toHaveBeenCalledWith("redemptions");
+      expect(router.refresh).toHaveBeenCalled();
+    });
+
+    it("shows alert when trying to delete a credit_transaction", async () => {
+      const supabase = makeSupabase();
+      const router = makeRouter();
+      const batch = makeBatch();
+      const { result } = renderHook(() =>
+        useActivityActions({ batch, supabase: supabase as any, router: router as any, t, locale: "en" })
+      );
+
+      await act(async () => {
+        await result.current.handleDelete(makeActivity({ type: "credit_transaction" }));
       });
 
       expect(alertSpy).toHaveBeenCalledWith("activity.canOnlyDeleteStars");

@@ -46,6 +46,8 @@ async function ParentActivities({
     questsResult,
     rewardsResult,
     balancesResult,
+    pendingStarResult,
+    pendingRedemptionResult,
   ] = await Promise.all([
     adminClient
       .from("star_transactions")
@@ -111,6 +113,45 @@ async function ParentActivities({
       .from("child_balances")
       .select("child_id, current_stars, spendable_stars")
       .eq("family_id", user.family_id!) as unknown as Promise<{ data: any[] | null; error: any }>,
+    supabase
+      .from("star_transactions")
+      .select(`
+        *,
+        users!star_transactions_child_id_fkey (
+          id,
+          name,
+          avatar_url
+        ),
+        quests (
+          name_en,
+          name_zh,
+          icon,
+          category
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("redemptions")
+      .select(`
+        *,
+        users!redemptions_child_id_fkey (
+          id,
+          name,
+          avatar_url
+        ),
+        rewards (
+          name_en,
+          name_zh,
+          icon,
+          category,
+          description
+        )
+      `)
+      .eq("family_id", user.family_id!)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
   ]);
 
   const { data: transactions, error: txError } = txResult;
@@ -120,6 +161,8 @@ async function ParentActivities({
   const { data: activeQuests } = questsResult;
   const { data: activeRewards } = rewardsResult;
   const { data: childBalances } = balancesResult;
+  const { data: pendingStarRequests } = pendingStarResult;
+  const { data: pendingRedemptionRequests } = pendingRedemptionResult;
 
   if (txError) {
     console.error("Error fetching transactions:", txError);
@@ -222,6 +265,8 @@ async function ParentActivities({
         familyId={user.family_id!}
         rewards={activeRewards || []}
         childBalances={childBalances || []}
+        pendingStarRequests={pendingStarRequests || []}
+        pendingRedemptionRequests={pendingRedemptionRequests || []}
       />
     </div>
   );

@@ -419,7 +419,90 @@ export async function seedDemoFamily(
     }
   }
 
-  // 8. Mark all demo users as read-only (is_demo = true)
+  // 8. Guaranteed pending items (ensures demo dashboard always has approvals)
+  const pendingStarNotes: Record<string, string[]> = {
+    en: [
+      "I finished this quest!",
+      "Done! Can I get my stars?",
+      "Completed it today!",
+    ],
+    "zh-CN": [
+      "我完成了这个任务！",
+      "做完啦，可以给我星星吗？",
+      "今天完成的！",
+    ],
+  };
+  const pendingRedemptionNotes: Record<string, string> = {
+    en: "Can I redeem this reward please?",
+    "zh-CN": "我可以兑换这个奖励吗？",
+  };
+
+  for (let i = 0; i < DEMO_CHILDREN.length; i++) {
+    const childProfile = DEMO_CHILDREN[i];
+    const childId = childResults[i].userId;
+    const locale = childProfile.locale;
+    const notes = pendingStarNotes[locale] ?? pendingStarNotes["en"];
+    const selectedBonuses = pickRandom(bonusQuests, 3, rng);
+    const guaranteedTx: Record<string, unknown>[] = [];
+
+    for (let j = 0; j < selectedBonuses.length; j++) {
+      const quest = selectedBonuses[j];
+      const daysAgo = Math.floor(rng() * 3); // 0–2 days ago
+      const date = new Date(endDate);
+      date.setDate(date.getDate() - daysAgo);
+      guaranteedTx.push({
+        family_id: familyId,
+        child_id: childId,
+        quest_id: quest.id,
+        stars: quest.stars,
+        source: "child_request",
+        status: "pending",
+        child_note: notes[j],
+        created_by: childId,
+        reviewed_by: null,
+        created_at: randomTimestamp(date, 8, 20, rng),
+        reviewed_at: null,
+      });
+    }
+
+    if (guaranteedTx.length > 0) {
+      const { error } = await supabase
+        .from("star_transactions")
+        .insert(guaranteedTx);
+      if (error) {
+        throw new Error(
+          `Failed to insert guaranteed pending transactions for ${childProfile.name}: ${error.message}`
+        );
+      }
+      totalTransactions += guaranteedTx.length;
+    }
+
+    // One guaranteed pending redemption per child
+    const pendingReward = pickRandom(rewards, 1, rng)[0];
+    const redemptionDaysAgo = Math.floor(rng() * 2); // 0–1 days ago
+    const redemptionDate = new Date(endDate);
+    redemptionDate.setDate(redemptionDate.getDate() - redemptionDaysAgo);
+    const { error: pendingRedemptionError } = await supabase
+      .from("redemptions")
+      .insert({
+        family_id: familyId,
+        child_id: childId,
+        reward_id: pendingReward.id,
+        stars_spent: pendingReward.stars_cost,
+        status: "pending",
+        child_note: pendingRedemptionNotes[locale] ?? pendingRedemptionNotes["en"],
+        created_at: randomTimestamp(redemptionDate, 10, 18, rng),
+        reviewed_at: null,
+      });
+    if (pendingRedemptionError) {
+      throw new Error(
+        `Failed to insert guaranteed pending redemption for ${childProfile.name}: ${pendingRedemptionError.message}`
+      );
+    }
+    totalRedemptions += 1;
+  }
+
+  // 9. Mark all demo users as read-only (is_demo = true)
   const allUserIds = [parentId, ...childResults.map((c) => c.userId)];
   for (const userId of allUserIds) {
     const { error: demoFlagError } = await supabase
@@ -434,7 +517,7 @@ export async function seedDemoFamily(
     }
   }
 
-  // 9. Set up report preferences
+  // 10. Set up report preferences
   await supabase.from("family_report_preferences").insert({
     family_id: familyId,
     report_email: DEMO_PARENT_EMAIL,

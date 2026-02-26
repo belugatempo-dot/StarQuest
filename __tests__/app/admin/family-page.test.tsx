@@ -16,7 +16,7 @@ describe("FamilyRedirectPage", () => {
       params: Promise.resolve({ locale: "en" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/en/admin/dashboard#family-management");
+    expect(redirect).toHaveBeenCalledWith("/en/dashboard#family-management");
   });
 
   it("redirects to dashboard family-management section for zh-CN locale", async () => {
@@ -24,6 +24,6 @@ describe("FamilyRedirectPage", () => {
       params: Promise.resolve({ locale: "zh-CN" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/zh-CN/admin/dashboard#family-management");
+    expect(redirect).toHaveBeenCalledWith("/zh-CN/dashboard#family-management");
   });
 });

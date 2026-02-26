@@ -6,5 +6,5 @@ export default async function FamilyRedirectPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  redirect(`/${locale}/admin/dashboard#family-management`);
+  redirect(`/${locale}/dashboard#family-management`);
 }

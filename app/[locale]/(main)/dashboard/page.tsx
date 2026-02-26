@@ -4,7 +4,6 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import InviteParentCard from "@/components/admin/InviteParentCard";
 import FamilyMemberList from "@/components/admin/FamilyMemberList";
-import ApprovalTabs from "@/components/admin/ApprovalTabs";
 
 export default async function DashboardPage({
   params,
@@ -39,51 +38,10 @@ async function ParentDashboard({
   const adminClient = createAdminClient();
 
   const [
-    starRequestsResult,
-    redemptionRequestsResult,
     familyResult,
     balancesResult,
     membersResolved,
   ] = await Promise.all([
-    supabase
-      .from("star_transactions")
-      .select(`
-        *,
-        users!star_transactions_child_id_fkey (
-          id,
-          name,
-          avatar_url
-        ),
-        quests (
-          name_en,
-          name_zh,
-          icon,
-          category
-        )
-      `)
-      .eq("family_id", user.family_id!)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("redemptions")
-      .select(`
-        *,
-        users!redemptions_child_id_fkey (
-          id,
-          name,
-          avatar_url
-        ),
-        rewards (
-          name_en,
-          name_zh,
-          icon,
-          category,
-          description
-        )
-      `)
-      .eq("family_id", user.family_id!)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
     supabase
       .from("families")
       .select("*")
@@ -126,14 +84,9 @@ async function ParentDashboard({
     })(),
   ]);
 
-  const { data: starRequests } = starRequestsResult;
-  const { data: redemptionRequests } = redemptionRequestsResult;
   const { data: family, error: familyError } = familyResult;
   const { data: balances } = balancesResult;
   const members = membersResolved;
-
-  const totalPending =
-    (starRequests?.length || 0) + (redemptionRequests?.length || 0);
 
   if (familyError) {
     console.error("Error fetching family:", familyError);
@@ -160,20 +113,22 @@ async function ParentDashboard({
 
       {/* Quick Stats */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <a href="#approval-center">
+        <Link href={`/${locale}/activities`}>
           <div className="dark-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-slate-300">
-                {t("admin.pendingApprovals")}
+                {t("admin.viewActivities")}
               </h3>
-              <span className="text-3xl">⏳</span>
+              <span className="text-3xl">📋</span>
             </div>
-            <p className="text-4xl font-bold text-warning">{totalPending}</p>
+            <p className="text-xl font-semibold text-primary mt-4">
+              {t("common.activities")}
+            </p>
             <p className="text-sm text-slate-400 mt-1">
-              {starRequests?.length || 0} stars, {redemptionRequests?.length || 0} redemptions
+              {locale === "zh-CN" ? "查看日历和审批" : "Calendar & approvals"}
             </p>
           </div>
-        </a>
+        </Link>
 
         <a href="#family-management">
           <div className="dark-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer">
@@ -224,36 +179,6 @@ async function ParentDashboard({
 
         <InviteParentCard familyId={user.family_id!} locale={locale} />
       </div>
-
-      {/* Approval Center */}
-      {totalPending > 0 && (
-        <div id="approval-center">
-          <div className="bg-gradient-to-r from-warning/20 to-primary/20 rounded-lg p-6 mb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold mb-1">
-                  {t("admin.approvalCenter")}
-                </h2>
-                <p className="text-slate-300">
-                  Review and approve requests from your children
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-slate-400 mb-1">
-                  {t("admin.pendingApprovals")}
-                </div>
-                <div className="text-4xl font-bold text-warning">{totalPending}</div>
-              </div>
-            </div>
-          </div>
-          <ApprovalTabs
-            starRequests={starRequests || []}
-            redemptionRequests={redemptionRequests || []}
-            locale={locale}
-            parentId={user.id}
-          />
-        </div>
-      )}
 
       {/* Children Overview */}
       <div className="dark-card rounded-lg shadow-md p-6">

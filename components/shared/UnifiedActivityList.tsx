@@ -13,6 +13,7 @@ import ActivityFilterBar from "@/components/shared/ActivityFilterBar";
 import ActivityDateGroup from "@/components/shared/ActivityDateGroup";
 import BatchActionBar from "@/components/shared/BatchActionBar";
 import CalendarView, { type CalendarTransaction } from "@/components/admin/CalendarView";
+import ApprovalTabs from "@/components/admin/ApprovalTabs";
 import EditTransactionModal from "@/components/admin/EditTransactionModal";
 import EditRedemptionModal from "@/components/admin/EditRedemptionModal";
 import ResubmitRequestModal from "@/components/child/ResubmitRequestModal";
@@ -127,6 +128,8 @@ export default function UnifiedActivityList({
   familyId,
   rewards,
   childBalances,
+  pendingStarRequests,
+  pendingRedemptionRequests,
 }: UnifiedActivityListProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -134,6 +137,11 @@ export default function UnifiedActivityList({
 
   // Use custom permissions or derive from role
   const permissions = customPermissions || getPermissions(role);
+
+  // Approval center state (parent only)
+  const totalPending =
+    (pendingStarRequests?.length || 0) + (pendingRedemptionRequests?.length || 0);
+  const [approvalExpanded, setApprovalExpanded] = useState(true);
 
   // View state
   const [viewMode, setViewMode] = useState<"list" | "calendar">(
@@ -265,6 +273,34 @@ export default function UnifiedActivityList({
 
   return (
     <div className="space-y-6">
+      {/* Approval Center (parent only, when pending requests exist) */}
+      {role === "parent" && totalPending > 0 && (
+        <div data-testid="approval-center">
+          <button
+            onClick={() => setApprovalExpanded(!approvalExpanded)}
+            className="w-full bg-gradient-to-r from-warning/20 to-primary/20 rounded-lg p-4 mb-2 flex items-center justify-between cursor-pointer hover:from-warning/30 hover:to-primary/30 transition"
+          >
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold">{t("admin.approvalCenter")}</h2>
+              <span className="bg-warning/30 text-warning px-2 py-0.5 rounded-full text-sm font-semibold">
+                {totalPending}
+              </span>
+            </div>
+            <span className="text-slate-400 text-lg">
+              {approvalExpanded ? "▼" : "▶"}
+            </span>
+          </button>
+          {approvalExpanded && (
+            <ApprovalTabs
+              starRequests={pendingStarRequests || []}
+              redemptionRequests={pendingRedemptionRequests || []}
+              locale={locale}
+              parentId={currentUserId || ""}
+            />
+          )}
+        </div>
+      )}
+
       {/* Filter Bar — full width in list mode only */}
       {viewMode === "list" && <ActivityFilterBar {...filterBarProps} />}
 

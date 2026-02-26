@@ -47,7 +47,7 @@ A gamified family behavior tracking system that helps children build positive ha
 - [x] Redemption date picker and editing
 - [x] Configurable quest categories
 - [x] Email reports (weekly/monthly summaries, settlement notices)
-- [x] Report preferences settings page
+- [x] Report preferences (SettingsDrawer in AppNav)
 - [x] Database backup system (manual + automated weekly)
 - [x] Architecture refactoring (UnifiedActivityList → shared components)
 - [x] Comprehensive test coverage (2986 tests, ~99% coverage)
@@ -280,7 +280,7 @@ Language can be switched via the UI. User language preference is saved in their 
 
 ### Phase 4: Advanced Features 🚧
 5. ✅ Unified activity list, calendar view, redemption date editing
-6. ✅ Email reports (weekly/monthly), settlement notices, settings page
+6. ✅ Email reports (weekly/monthly), settlement notices, settings drawer
 7. ✅ Database backup system (manual + weekly GitHub Actions)
 8. ✅ Architecture refactoring (UnifiedActivityList → shared components)
 9. ✅ Comprehensive test coverage (2986 tests, ~99% coverage)

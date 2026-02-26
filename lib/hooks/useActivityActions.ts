@@ -78,27 +78,34 @@ export function useActivityActions({
   };
 
   const handleDelete = async (activity: UnifiedActivityItem) => {
-    if (activity.type !== "star_transaction") {
+    if (activity.type !== "star_transaction" && activity.type !== "redemption") {
       alert(t("activity.canOnlyDeleteStars"));
       return;
     }
 
     const starsStr = `${activity.stars > 0 ? "+" : ""}${activity.stars}⭐`;
-    if (
-      !confirm(
-        t("activity.confirmDeleteRecord", {
-          quest: getActivityDescription(activity, locale),
-          stars: starsStr,
-        })
-      )
-    )
-      return;
+
+    const confirmMessage =
+      activity.type === "redemption"
+        ? t("activity.confirmDeleteRedemption", {
+            reward: getActivityDescription(activity, locale),
+            stars: starsStr,
+          })
+        : t("activity.confirmDeleteRecord", {
+            quest: getActivityDescription(activity, locale),
+            stars: starsStr,
+          });
+
+    if (!confirm(confirmMessage)) return;
 
     setDeletingId(activity.id);
 
+    const table =
+      activity.type === "redemption" ? "redemptions" : "star_transactions";
+
     try {
       const { error } = await supabase
-        .from("star_transactions")
+        .from(table)
         .delete()
         .eq("id", activity.id);
 
@@ -106,7 +113,7 @@ export function useActivityActions({
 
       router.refresh();
     } catch (err) {
-      console.error("Error deleting transaction:", err);
+      console.error("Error deleting record:", err);
       alert(t("activity.deleteFailed"));
     } finally {
       setDeletingId(null);

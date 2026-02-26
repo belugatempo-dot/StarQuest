@@ -100,7 +100,7 @@ export default function ActivityItem({
       >
         {variant === "list" ? `✏️ ${t("common.edit")}` : "✏️"}
       </button>
-      {activity.type === "star_transaction" && (
+      {(activity.type === "star_transaction" || activity.type === "redemption") && (
         <button
           onClick={onDelete}
           disabled={deletingId === activity.id}

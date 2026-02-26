@@ -95,7 +95,7 @@ app/[locale]/
 └── (parent)/admin/ # Legacy — redirects to /dashboard
 ```
 
-> **Route Migration (In Progress):** Parent and child routes being unified under `(main)`. Legacy `/admin/*` and `/app/*` routes redirect to `/dashboard`. See `MergeParent&ChildPlan.md`.
+> **Route Migration (Phases 0-2 done):** `/dashboard` and `/activities` unified under `(main)`. Legacy `/admin/*` and `/app/*` still contain real pages (quests, rewards, record, etc.) to be migrated in Phases 3-6. Redirect stubs exist for dashboard, activity, approve, family, settings. See `MergeParent&ChildPlan.md`.
 
 **Auth Protection:**
 - `requireParent(locale)` → redirects non-parents to `/dashboard`
@@ -240,13 +240,13 @@ Transactional email infrastructure using Resend.
   - `settlement-notice.ts` — Credit settlement notification
 - Report data generation: `lib/reports/generate-weekly.ts`, `lib/reports/generate-monthly.ts`
 - Cron endpoint: `GET /api/cron/daily-jobs` — handles settlements, weekly/monthly reports
-- Settings page: `/admin/settings` — report preferences (email, timezone, enabled reports)
+- Settings: SettingsDrawer in AppNav (report preferences, email, timezone)
 
 ### Analytics — PostHog (`components/analytics/`, `lib/analytics/`)
 Full product analytics suite: event tracking, session recordings, feature flags, A/B testing.
 - **Packages:** `posthog-js` + `posthog-node` (NOT `@posthog/nextjs` — supply chain compromised Nov 2025)
 - **Provider:** `PostHogProvider` wraps root layout → `PostHogPageView` tracks client-side navigations
-- **User Identification:** `PostHogUserIdentify` in parent/child layouts
+- **User Identification:** `PostHogUserIdentify` in `(main)` layout (primary) and legacy parent/child layouts
 - **Privacy-first:** Children identified by UUID only (no email/name); session recordings disabled for children
 - **Config split:** `posthog-config.ts` (client-safe) vs `posthog.ts` (server-only with posthog-node) — prevents webpack `node:readline` bundling error
 - **Events tracked:** `login_success`, `login_failed`, `registration_completed`, `quest_star_requested`, `star_recorded_by_parent`, `reward_redemption_requested`, `star_request_approved/rejected`, `redemption_approved/rejected`
@@ -351,7 +351,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 ```
 __tests__/
 ├── api/{admin,cron,demo-login,invite-parent,reports,seed-demo}/
-├── app/{admin,auth,child}/
+├── app/{admin,auth,child,main}/
 ├── components/{admin,analytics,auth,child,shared,ui}/
 ├── hooks/
 ├── integration/
@@ -521,4 +521,4 @@ One-click demo access without exposing passwords to client bundle. Demo data is 
 
 ---
 
-**Last Updated:** 2026-02-23 | **Tests:** 2986 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-24 | **Tests:** 2986 passing | **Coverage:** ~99%

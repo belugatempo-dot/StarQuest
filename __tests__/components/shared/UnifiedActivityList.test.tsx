@@ -116,6 +116,17 @@ jest.mock("@/components/shared/RedeemFromCalendarModal", () => {
   };
 });
 
+// Mock ApprovalTabs
+jest.mock("@/components/admin/ApprovalTabs", () => {
+  return function MockApprovalTabs({ starRequests, redemptionRequests, locale, parentId }: any) {
+    return (
+      <div data-testid="approval-tabs">
+        ApprovalTabs - {starRequests.length}s - {redemptionRequests.length}r - {parentId}
+      </div>
+    );
+  };
+});
+
 // Mock activity-utils
 jest.mock("@/lib/activity-utils", () => ({
   getActivityDescription: (activity: any, locale: string) => {
@@ -1313,11 +1324,7 @@ describe("UnifiedActivityList", () => {
   });
 
   describe("Delete Non-Star Transaction Guard", () => {
-    it("alerts when trying to delete a non-star_transaction", () => {
-      // This tests the guard at line 222: if (activity.type !== "star_transaction")
-      // This can only be triggered programmatically since the UI doesn't show delete for non-star items
-      // We test it by rendering a redemption with custom permissions that allow edit
-      // and checking the alert behavior
+    it("shows delete button for redemptions (parents can delete)", () => {
       const redemptionWithOriginalData = createActivity({
         id: "redeem-del-1",
         type: "redemption",
@@ -1335,8 +1342,29 @@ describe("UnifiedActivityList", () => {
         />
       );
 
-      // Redemptions don't show delete button in UI, so this guard is for safety
-      // The edit button exists but not delete — verified by UI behavior
+      // Redemptions now show delete button for parents
+      const deleteButtons = screen.queryAllByText("🗑️");
+      expect(deleteButtons.length).toBeGreaterThan(0);
+    });
+
+    it("does not show delete button for credit transactions", () => {
+      const creditWithOriginalData = createActivity({
+        id: "credit-del-1",
+        type: "credit_transaction",
+        stars: -5,
+        description: "Credit Transaction",
+        status: "approved",
+        originalData: { id: "credit-del-1", type: "credit_transaction" } as any,
+      });
+
+      render(
+        <UnifiedActivityList
+          activities={[creditWithOriginalData]}
+          locale="en"
+          role="parent"
+        />
+      );
+
       const deleteButtons = screen.queryAllByText("🗑️");
       expect(deleteButtons.length).toBe(0);
     });
@@ -1656,6 +1684,108 @@ describe("UnifiedActivityList", () => {
       fireEvent.click(screen.getByTestId("calendar-date-select"));
 
       expect(screen.queryByTestId("redeem-reward-button")).not.toBeInTheDocument();
+    });
+  });
+
+  // ── Approval Center Tests ──────────────────────────────────────────────────
+
+  describe("Approval Center", () => {
+    const pendingStarRequests = [
+      { id: "sr-1", status: "pending" },
+      { id: "sr-2", status: "pending" },
+    ];
+    const pendingRedemptionRequests = [
+      { id: "rr-1", status: "pending" },
+    ];
+
+    it("renders ApprovalTabs when parent has pending requests", () => {
+      render(
+        <UnifiedActivityList
+          {...parentProps}
+          currentUserId="parent-1"
+          pendingStarRequests={pendingStarRequests}
+          pendingRedemptionRequests={pendingRedemptionRequests}
+        />
+      );
+
+      expect(screen.getByTestId("approval-center")).toBeInTheDocument();
+      expect(screen.getByTestId("approval-tabs")).toBeInTheDocument();
+      expect(screen.getByTestId("approval-tabs")).toHaveTextContent("2s");
+      expect(screen.getByTestId("approval-tabs")).toHaveTextContent("1r");
+    });
+
+    it("does not render approval center when no pending requests", () => {
+      render(
+        <UnifiedActivityList
+          {...parentProps}
+          currentUserId="parent-1"
+          pendingStarRequests={[]}
+          pendingRedemptionRequests={[]}
+        />
+      );
+
+      expect(screen.queryByTestId("approval-center")).not.toBeInTheDocument();
+    });
+
+    it("does not render approval center for child role", () => {
+      render(
+        <UnifiedActivityList
+          {...childProps}
+          pendingStarRequests={pendingStarRequests}
+          pendingRedemptionRequests={pendingRedemptionRequests}
+        />
+      );
+
+      expect(screen.queryByTestId("approval-center")).not.toBeInTheDocument();
+    });
+
+    it("shows pending count badge", () => {
+      render(
+        <UnifiedActivityList
+          {...parentProps}
+          currentUserId="parent-1"
+          pendingStarRequests={pendingStarRequests}
+          pendingRedemptionRequests={pendingRedemptionRequests}
+        />
+      );
+
+      // Total pending = 2 + 1 = 3
+      expect(screen.getByText("3")).toBeInTheDocument();
+    });
+
+    it("collapses and expands approval center on toggle click", () => {
+      render(
+        <UnifiedActivityList
+          {...parentProps}
+          currentUserId="parent-1"
+          pendingStarRequests={pendingStarRequests}
+          pendingRedemptionRequests={pendingRedemptionRequests}
+        />
+      );
+
+      // Initially expanded
+      expect(screen.getByTestId("approval-tabs")).toBeInTheDocument();
+
+      // Click to collapse
+      fireEvent.click(screen.getByText(/admin\.approvalCenter/));
+      expect(screen.queryByTestId("approval-tabs")).not.toBeInTheDocument();
+
+      // Click to expand again
+      fireEvent.click(screen.getByText(/admin\.approvalCenter/));
+      expect(screen.getByTestId("approval-tabs")).toBeInTheDocument();
+    });
+
+    it("passes currentUserId as parentId to ApprovalTabs", () => {
+      render(
+        <UnifiedActivityList
+          {...parentProps}
+          currentUserId="parent-123"
+          pendingStarRequests={pendingStarRequests}
+          pendingRedemptionRequests={pendingRedemptionRequests}
+        />
+      );
+
+      expect(screen.getByTestId("approval-tabs")).toHaveTextContent("parent-123");
     });
   });
 });

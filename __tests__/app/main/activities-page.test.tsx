@@ -44,12 +44,14 @@ jest.mock("@/components/admin/ActivityPageHeader", () => {
 });
 
 jest.mock("@/components/shared/UnifiedActivityList", () => {
-  return function MockUnifiedActivityList({ activities, locale, role, rewards, childBalances }: any) {
+  return function MockUnifiedActivityList({ activities, locale, role, rewards, childBalances, pendingStarRequests, pendingRedemptionRequests }: any) {
     return (
       <div data-testid="unified-activity-list">
         UnifiedActivityList - {activities.length} items - {role}
         {rewards && <span data-testid="rewards-count">{rewards.length} rewards</span>}
         {childBalances && <span data-testid="balances-count">{childBalances.length} balances</span>}
+        {pendingStarRequests && <span data-testid="pending-stars-count">{pendingStarRequests.length} pending stars</span>}
+        {pendingRedemptionRequests && <span data-testid="pending-redemptions-count">{pendingRedemptionRequests.length} pending redemptions</span>}
       </div>
     );
   };
@@ -393,6 +395,34 @@ describe("ActivitiesPage — Parent View", () => {
     expect(screen.getByText("+50")).toBeInTheDocument();
     expect(screen.getByText("-15")).toBeInTheDocument();
     expect(screen.getByText("+35")).toBeInTheDocument();
+  });
+
+  it("passes pending approval data to UnifiedActivityList", async () => {
+    const { createClient } = require("@/lib/supabase/server");
+    const { sortActivitiesByDate } = require("@/lib/activity-utils");
+
+    const mockPendingStars = [{ id: "ps-1", status: "pending" }, { id: "ps-2", status: "pending" }];
+    const mockPendingRedemptions = [{ id: "pr-1", status: "pending" }];
+
+    const supabaseFrom = jest.fn().mockImplementation((table: string) => {
+      if (table === "star_transactions") {
+        return buildChainMock({ data: mockPendingStars, error: null });
+      }
+      if (table === "redemptions") {
+        return buildChainMock({ data: mockPendingRedemptions, error: null });
+      }
+      return buildChainMock({ data: [], error: null });
+    });
+    createClient.mockResolvedValue({ from: supabaseFrom });
+    sortActivitiesByDate.mockReturnValue([]);
+
+    const jsx = await ActivitiesPage({
+      params: Promise.resolve({ locale: "en" }),
+    });
+    render(jsx);
+
+    expect(screen.getByTestId("pending-stars-count")).toHaveTextContent("2 pending stars");
+    expect(screen.getByTestId("pending-redemptions-count")).toHaveTextContent("1 pending redemptions");
   });
 
   it("fetches and passes rewards and child balances to UnifiedActivityList", async () => {

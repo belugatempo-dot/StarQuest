@@ -16,7 +16,7 @@ describe("ApproveRedirectPage", () => {
       params: Promise.resolve({ locale: "en" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/en/admin/dashboard#approval-center");
+    expect(redirect).toHaveBeenCalledWith("/en/dashboard#approval-center");
   });
 
   it("redirects to dashboard approval-center section for zh-CN locale", async () => {
@@ -24,6 +24,6 @@ describe("ApproveRedirectPage", () => {
       params: Promise.resolve({ locale: "zh-CN" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/zh-CN/admin/dashboard#approval-center");
+    expect(redirect).toHaveBeenCalledWith("/zh-CN/dashboard#approval-center");
   });
 });

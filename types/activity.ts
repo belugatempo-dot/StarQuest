@@ -157,4 +157,6 @@ export interface UnifiedActivityListProps {
   familyId?: string;
   rewards?: Reward[];
   childBalances?: ChildBalance[];
+  pendingStarRequests?: any[];
+  pendingRedemptionRequests?: any[];
 }

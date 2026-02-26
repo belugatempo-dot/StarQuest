@@ -287,14 +287,14 @@ describe("ActivityItem", () => {
       expect(screen.getByText(/common.delete/)).toBeInTheDocument();
     });
 
-    it("does not show delete button for redemptions", () => {
+    it("shows delete button for redemptions", () => {
       render(
         <ActivityItem
           {...defaultProps}
           activity={createActivity({ type: "redemption" })}
         />
       );
-      expect(screen.queryByText(/common.delete/)).not.toBeInTheDocument();
+      expect(screen.getByText(/common.delete/)).toBeInTheDocument();
     });
 
     it("does not show action buttons for child", () => {

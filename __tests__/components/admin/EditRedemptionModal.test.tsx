@@ -98,11 +98,6 @@ describe("EditRedemptionModal", () => {
       expect(screen.getByText(/Unknown/)).toBeInTheDocument();
     });
 
-    it("displays stars spent", () => {
-      render(<EditRedemptionModal {...baseProps} />);
-      expect(screen.getByText(/-10/)).toBeInTheDocument();
-    });
-
     it("displays reward icon", () => {
       render(<EditRedemptionModal {...baseProps} />);
       expect(screen.getByText(/🍦/)).toBeInTheDocument();
@@ -120,7 +115,6 @@ describe("EditRedemptionModal", () => {
     it("shows date input", () => {
       render(<EditRedemptionModal {...baseProps} />);
       expect(screen.getByText("common.date")).toBeInTheDocument();
-      // Should have date input
       const dateInput = screen.getByDisplayValue("2025-01-15");
       expect(dateInput).toBeInTheDocument();
     });
@@ -137,10 +131,216 @@ describe("EditRedemptionModal", () => {
     });
   });
 
-  describe("Form Submission", () => {
-    it("submits updated date/time", async () => {
+  describe("Stars Spent Field", () => {
+    it("shows editable stars spent input with current value", () => {
       render(<EditRedemptionModal {...baseProps} />);
+      const input = screen.getByDisplayValue("10");
+      expect(input).toBeInTheDocument();
+      expect(input).toHaveAttribute("type", "number");
+      expect(input).toHaveAttribute("min", "1");
+      expect(input).toHaveAttribute("required");
+    });
 
+    it("shows stars spent hint text", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      expect(screen.getByText("editRedemption.starsSpentHint")).toBeInTheDocument();
+    });
+
+    it("allows editing stars spent value", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "25" } });
+      expect(input).toHaveValue(25);
+    });
+
+    it("submits with updated stars_spent value", async () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "20" } });
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.stars_spent).toBe(20);
+      });
+    });
+  });
+
+  describe("Status Selector", () => {
+    it("shows status dropdown with current value", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const select = screen.getByDisplayValue("status.approved");
+      expect(select).toBeInTheDocument();
+    });
+
+    it("has all four status options", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      expect(screen.getByText("status.pending")).toBeInTheDocument();
+      expect(screen.getByText("status.approved")).toBeInTheDocument();
+      expect(screen.getByText("status.rejected")).toBeInTheDocument();
+      expect(screen.getByText("status.fulfilled")).toBeInTheDocument();
+    });
+
+    it("allows changing status", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const select = screen.getByDisplayValue("status.approved");
+      fireEvent.change(select, { target: { value: "rejected" } });
+      expect(select).toHaveValue("rejected");
+    });
+
+    it("shows status change hint when status differs from original", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const select = screen.getByDisplayValue("status.approved");
+      fireEvent.change(select, { target: { value: "rejected" } });
+      expect(screen.getByText(/editRedemption.statusChangeHint/)).toBeInTheDocument();
+    });
+
+    it("does not show status change hint when status matches original", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      expect(screen.queryByText(/editRedemption.statusChangeHint/)).not.toBeInTheDocument();
+    });
+
+    it("submits with updated status", async () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const select = screen.getByDisplayValue("status.approved");
+      fireEvent.change(select, { target: { value: "rejected" } });
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.status).toBe("rejected");
+        expect(updateData.reviewed_at).toBeDefined();
+      });
+    });
+
+    it("clears reviewed_at when changing to pending", async () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const select = screen.getByDisplayValue("status.approved");
+      fireEvent.change(select, { target: { value: "pending" } });
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.status).toBe("pending");
+        expect(updateData.reviewed_at).toBeNull();
+      });
+    });
+  });
+
+  describe("Parent Note", () => {
+    it("shows parent note textarea", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      expect(screen.getByText("editRedemption.parentNote")).toBeInTheDocument();
+      const textarea = screen.getByPlaceholderText("editRedemption.parentNotePlaceholder");
+      expect(textarea).toBeInTheDocument();
+    });
+
+    it("initializes parent note from redemption data", () => {
+      const withNote = { ...mockRedemption, parent_response: "Great choice!" };
+      render(<EditRedemptionModal {...baseProps} redemption={withNote} />);
+      const textarea = screen.getByDisplayValue("Great choice!");
+      expect(textarea).toBeInTheDocument();
+    });
+
+    it("allows editing parent note", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const textarea = screen.getByPlaceholderText("editRedemption.parentNotePlaceholder");
+      fireEvent.change(textarea, { target: { value: "Nice reward!" } });
+      expect(textarea).toHaveValue("Nice reward!");
+    });
+
+    it("submits parent_response as null when empty", async () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.parent_response).toBeNull();
+      });
+    });
+
+    it("submits parent_response when provided", async () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const textarea = screen.getByPlaceholderText("editRedemption.parentNotePlaceholder");
+      fireEvent.change(textarea, { target: { value: "Good job" } });
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.parent_response).toBe("Good job");
+      });
+    });
+  });
+
+  describe("Balance Warning", () => {
+    it("shows balance warning text", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      expect(screen.getByText("editRedemption.balanceWarning")).toBeInTheDocument();
+    });
+  });
+
+  describe("Quick Approve", () => {
+    it("shows quick approve for pending redemptions", () => {
+      const pending = { ...mockRedemption, status: "pending" };
+      render(<EditRedemptionModal {...baseProps} redemption={pending} />);
+      expect(screen.getByText("editRedemption.quickAction")).toBeInTheDocument();
+      expect(screen.getByText("editRedemption.saveAndApprove")).toBeInTheDocument();
+    });
+
+    it("shows quick approve for rejected redemptions", () => {
+      const rejected = { ...mockRedemption, status: "rejected" };
+      render(<EditRedemptionModal {...baseProps} redemption={rejected} />);
+      expect(screen.getByText("editRedemption.saveAndApprove")).toBeInTheDocument();
+    });
+
+    it("does not show quick approve for already approved redemptions", () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      expect(screen.queryByText("editRedemption.saveAndApprove")).not.toBeInTheDocument();
+    });
+
+    it("does not show quick approve for fulfilled redemptions", () => {
+      const fulfilled = { ...mockRedemption, status: "fulfilled" };
+      render(<EditRedemptionModal {...baseProps} redemption={fulfilled} />);
+      expect(screen.queryByText("editRedemption.saveAndApprove")).not.toBeInTheDocument();
+    });
+
+    it("submits with approved status on quick approve click", async () => {
+      const pending = { ...mockRedemption, status: "pending" };
+      render(<EditRedemptionModal {...baseProps} redemption={pending} />);
+      fireEvent.click(screen.getByText("editRedemption.saveAndApprove"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.status).toBe("approved");
+        expect(updateData.reviewed_at).toBeDefined();
+      });
+    });
+  });
+
+  describe("Form Submission", () => {
+    it("submits all fields together", async () => {
+      const pending = { ...mockRedemption, status: "pending" };
+      render(<EditRedemptionModal {...baseProps} redemption={pending} />);
+
+      // Change stars
+      const starsInput = screen.getByDisplayValue("10");
+      fireEvent.change(starsInput, { target: { value: "15" } });
+
+      // Change status
+      const statusSelect = screen.getByDisplayValue("status.pending");
+      fireEvent.change(statusSelect, { target: { value: "approved" } });
+
+      // Add parent note
+      const textarea = screen.getByPlaceholderText("editRedemption.parentNotePlaceholder");
+      fireEvent.change(textarea, { target: { value: "Well deserved" } });
+
+      // Change date
       const dateInput = screen.getByDisplayValue("2025-01-15");
       fireEvent.change(dateInput, { target: { value: "2025-01-20" } });
 
@@ -148,8 +348,12 @@ describe("EditRedemptionModal", () => {
 
       await waitFor(() => {
         expect(mockTypedUpdate).toHaveBeenCalled();
-        const updateCall = mockTypedUpdate.mock.calls[0];
-        expect(updateCall[1]).toBe("redemptions");
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.stars_spent).toBe(15);
+        expect(updateData.status).toBe("approved");
+        expect(updateData.parent_response).toBe("Well deserved");
+        expect(updateData.created_at).toBeDefined();
+        expect(updateData.reviewed_at).toBeDefined();
         expect(mockOnClose).toHaveBeenCalled();
         expect(mockRefresh).toHaveBeenCalled();
       });
@@ -225,41 +429,30 @@ describe("EditRedemptionModal", () => {
     it("updates time value when time input changes", () => {
       render(<EditRedemptionModal {...baseProps} />);
 
-      // Find the time input element (type="time")
       const timeInputs = document.querySelectorAll('input[type="time"]');
       expect(timeInputs).toHaveLength(1);
       const timeInput = timeInputs[0] as HTMLInputElement;
 
-      // Change the time value
       fireEvent.change(timeInput, { target: { value: "09:15" } });
-
-      // Verify the time input updated
       expect(timeInput.value).toBe("09:15");
     });
 
     it("submits with updated time value", async () => {
       render(<EditRedemptionModal {...baseProps} />);
 
-      // Find and change the time input
       const timeInput = document.querySelector('input[type="time"]') as HTMLInputElement;
       fireEvent.change(timeInput, { target: { value: "18:45" } });
 
-      // Submit
       fireEvent.click(screen.getByText("common.save"));
 
       await waitFor(() => {
         expect(mockTypedUpdate).toHaveBeenCalled();
       });
 
-      // typedUpdate is called as typedUpdate(supabase, "redemptions", { created_at: ... })
-      // The created_at is an ISO string built from "2025-01-15T18:45:00" local time
-      // We verify the date was changed and the update was called with a valid ISO date
       const callArgs = mockTypedUpdate.mock.calls[0];
       expect(callArgs[1]).toBe("redemptions");
       const createdAt = callArgs[2].created_at;
-      // Verify it's a valid ISO date string (timezone conversion makes the exact value vary)
       expect(new Date(createdAt).toISOString()).toBe(createdAt);
-      // The created_at should differ from the original since we changed the time
       const originalIso = new Date(mockRedemption.created_at).toISOString();
       expect(createdAt).not.toBe(originalIso);
     });
@@ -283,9 +476,23 @@ describe("EditRedemptionModal", () => {
         />
       );
 
-      // In zh-CN locale, name_zh should be preferred over name_en
       expect(screen.getByText(/电影票/)).toBeInTheDocument();
       expect(screen.queryByText(/Movie Ticket/)).not.toBeInTheDocument();
+    });
+
+    it("sets reviewed_at for fulfilled status", async () => {
+      render(<EditRedemptionModal {...baseProps} />);
+      const select = screen.getByDisplayValue("status.approved");
+      fireEvent.change(select, { target: { value: "fulfilled" } });
+      fireEvent.click(screen.getByText("common.save"));
+
+      await waitFor(() => {
+        expect(mockTypedUpdate).toHaveBeenCalled();
+        const updateData = mockTypedUpdate.mock.calls[0][2];
+        expect(updateData.status).toBe("fulfilled");
+        // fulfilled doesn't set reviewed_at (not approved/rejected/pending)
+        expect(updateData).not.toHaveProperty("reviewed_at");
+      });
     });
   });
 

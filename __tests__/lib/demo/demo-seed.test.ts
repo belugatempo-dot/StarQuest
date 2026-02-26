@@ -265,6 +265,7 @@ describe("seedDemoFamily", () => {
       { id: "q2", type: "bonus", stars: 3, name_en: "Read a book", is_active: true },
       { id: "q3", type: "bonus", stars: 5, name_en: "Help cooking", is_active: true },
       { id: "q4", type: "violation", stars: 3, name_en: "Fighting", is_active: true },
+      { id: "q5", type: "bonus", stars: 4, name_en: "Practice piano", is_active: true },
     ];
     const mockRewards = [
       { id: "r1", stars_cost: 10, name_en: "Screen time", is_active: true },
@@ -274,12 +275,16 @@ describe("seedDemoFamily", () => {
     ];
 
     const insertOk = makeChain({ data: null, error: null });
+    const starTxChain = makeChain({ data: null, error: null });
+    const redemptionsChain = makeChain({ data: null, error: null });
     const questsChain = makeChain({ data: mockQuests, error: null });
     const rewardsChain = makeChain({ data: mockRewards, error: null });
 
     mockFrom.mockImplementation((table: string) => {
       if (table === "quests") return questsChain;
       if (table === "rewards") return rewardsChain;
+      if (table === "star_transactions") return starTxChain;
+      if (table === "redemptions") return redemptionsChain;
       return insertOk;
     });
 
@@ -322,6 +327,42 @@ describe("seedDemoFamily", () => {
     // Verify children auth created
     expect(mockCreateUser.mock.calls[1][0].email).toBe(DEMO_CHILDREN[0].email);
     expect(mockCreateUser.mock.calls[2][0].email).toBe(DEMO_CHILDREN[1].email);
+
+    // Verify guaranteed pending star requests (3 per child × 2 children = 2 extra insert calls)
+    // Main loop inserts + 2 guaranteed batch inserts
+    const starTxInsertCalls = starTxChain.insert.mock.calls;
+    const guaranteedStarCalls = starTxInsertCalls.filter(
+      (call: any[]) =>
+        Array.isArray(call[0]) &&
+        call[0].every((tx: any) => tx.status === "pending" && tx.source === "child_request")
+    );
+    expect(guaranteedStarCalls).toHaveLength(2); // one batch per child
+    // Each batch has 3 pending transactions
+    for (const call of guaranteedStarCalls) {
+      expect(call[0]).toHaveLength(3);
+      for (const tx of call[0]) {
+        expect(tx.status).toBe("pending");
+        expect(tx.reviewed_by).toBeNull();
+        expect(tx.reviewed_at).toBeNull();
+        expect(tx.child_note).toBeTruthy();
+      }
+    }
+
+    // Verify guaranteed pending redemptions (1 per child × 2 children = 2 extra insert calls)
+    const redemptionInsertCalls = redemptionsChain.insert.mock.calls;
+    const guaranteedRedemptionCalls = redemptionInsertCalls.filter(
+      (call: any[]) =>
+        !Array.isArray(call[0]) && call[0].status === "pending" && call[0].child_note
+    );
+    expect(guaranteedRedemptionCalls).toHaveLength(2);
+    for (const call of guaranteedRedemptionCalls) {
+      expect(call[0].reviewed_at).toBeNull();
+      expect(call[0].child_note).toBeTruthy();
+    }
+
+    // Verify stats include guaranteed items (6 star tx + 2 redemptions)
+    expect(result.stats.transactions).toBeGreaterThanOrEqual(6);
+    expect(result.stats.redemptions).toBeGreaterThanOrEqual(2 + 2); // original + guaranteed
 
     // Verify report preferences inserted
     const reportCalls = mockFrom.mock.calls.filter(
