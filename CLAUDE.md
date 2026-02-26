@@ -18,7 +18,7 @@ npm run dev              # Dev server (port 3003 if 3000 occupied)
 npm run build            # Production build
 npm run lint             # Linting
 
-# Testing (2986 tests, ~99% coverage)
+# Testing (3050 tests, ~99% coverage)
 npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
@@ -48,10 +48,10 @@ RED → GREEN → REFACTOR → COMMIT (only when tests pass)
 **Always use `window.location.href` after login/register, NOT `router.push()`**
 ```typescript
 // ✅ CORRECT - prevents login loop
-window.location.href = `/${locale}/dashboard`;
+window.location.href = `/${locale}/activities`;
 
 // ❌ WRONG - causes infinite login loop due to cookie race condition
-router.push(`/${locale}/dashboard`);
+router.push(`/${locale}/activities`);
 ```
 
 ### 4. Quest Visibility
@@ -89,16 +89,16 @@ In `middleware.ts`: Run intl middleware FIRST, then Supabase session. Reversing 
 app/[locale]/
 ├── (auth)/         # Public: login, register, email verification
 ├── (main)/         # Authenticated: both roles (unified route merge)
-│   ├── dashboard/  # Role-branching dashboard (parent: approvals + family; child: balance + activity)
-│   └── activities/ # Unified activity list
-├── (child)/app/    # Legacy — redirects to /dashboard
-└── (parent)/admin/ # Legacy — redirects to /dashboard
+│   ├── activities/ # Star Calendar — default landing page (approval center, calendar, activity list)
+│   └── dashboard/  # Role-branching dashboard (parent: family overview; child: balance + activity)
+├── (child)/app/    # Legacy — redirects to /activities
+└── (parent)/admin/ # Legacy — redirects to /activities
 ```
 
-> **Route Migration (Phases 0-2 done):** `/dashboard` and `/activities` unified under `(main)`. Legacy `/admin/*` and `/app/*` still contain real pages (quests, rewards, record, etc.) to be migrated in Phases 3-6. Redirect stubs exist for dashboard, activity, approve, family, settings. See `MergeParent&ChildPlan.md`.
+> **Default Landing Page:** `/activities` (Star Calendar) is the default post-login destination for all roles. The logo and first nav tab link here. Legacy `/admin/*` and `/app/*` redirect stubs all point to `/activities`.
 
 **Auth Protection:**
-- `requireParent(locale)` → redirects non-parents to `/dashboard`
+- `requireParent(locale)` → redirects non-parents to `/activities`
 - `requireAuth(locale)` → redirects unauthenticated to `/login`
 
 ### Database
@@ -125,7 +125,7 @@ components/
 │   ├── PostHogPageView.tsx           # Automatic pageview tracking on client-side navigation
 │   └── PostHogUserIdentify.tsx       # User identification + session recording control
 └── shared/    # Cross-role components
-    ├── AppNav.tsx               # Unified navigation (5 tabs, role-aware badges + settings)
+    ├── AppNav.tsx               # Unified navigation (5 tabs: Star Calendar first, role-aware badges + settings)
     ├── UnifiedActivityList.tsx  # Main list orchestrator
     ├── ActivityItem.tsx         # Single activity row
     ├── ActivityDateGroup.tsx    # Date-grouped activity section
@@ -521,4 +521,4 @@ One-click demo access without exposing passwords to client bundle. Demo data is 
 
 ---
 
-**Last Updated:** 2026-02-24 | **Tests:** 2986 passing | **Coverage:** ~99%
+**Last Updated:** 2026-02-25 | **Tests:** 3050 passing | **Coverage:** ~99%
