@@ -60,7 +60,12 @@
     "tryDemo": "体验演示",
     "introduction": "产品介绍",
     "demoHint": "邮箱: demo@starquest.app",
-    "orExplore": "或先了解一下"
+    "orExplore": "或先了解一下",
+    "emailNotVerified": "您的邮箱尚未验证。请查收验证邮件。",
+    "userRecordNotFound": "找不到用户记录。您的注册可能未完成。",
+    "familySetupRequired": "请完成家庭设置。",
+    "completeRegistration": "重新完成注册 →",
+    "loginFailed": "登录失败，请重试。"
   },
   "demo": {
     "pickRole": "选择演示账号",
@@ -219,11 +224,18 @@
     "itemsSelectedCount": "已选择 {count} 项"
   },
   "editRedemption": {
-    "title": "编辑兑换日期",
+    "title": "编辑兑换记录",
     "reward": "兑换奖励",
     "starsSpent": "花费星星",
+    "starsSpentHint": "此次兑换扣除的星星数量",
     "updateFailed": "更新失败",
-    "time": "时间"
+    "time": "时间",
+    "parentNote": "家长备注",
+    "parentNotePlaceholder": "添加备注（可选）",
+    "statusChangeHint": "状态将从\"{from}\"更改为\"{to}\"",
+    "quickAction": "快速操作：保存并批准",
+    "saveAndApprove": "保存并批准",
+    "balanceWarning": "更改星星数或状态将影响孩子的余额"
   },
   "editTransaction": {
     "title": "编辑记录",
@@ -272,6 +284,7 @@
     "batchRejectFailed": "批量拒绝失败",
     "canOnlyDeleteStars": "只能删除星星记录",
     "confirmDeleteRecord": "确定要删除这条记录吗？\n\n任务: {quest}\n星星: {stars}",
+    "confirmDeleteRedemption": "确定删除这条兑换记录吗？\n\n奖励: {reward}\n星星: {stars}\n\n孩子的余额将自动调整。",
     "deleteFailed": "删除失败，请重试",
     "noRecordsFound": "没有找到记录",
     "records": "条记录",

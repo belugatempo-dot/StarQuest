@@ -60,7 +60,12 @@
     "tryDemo": "Try Demo",
     "introduction": "Introduction",
     "demoHint": "Email: demo@starquest.app",
-    "orExplore": "Or explore first"
+    "orExplore": "Or explore first",
+    "emailNotVerified": "Your email is not verified. Please check your inbox.",
+    "userRecordNotFound": "User record not found. Your registration may not have completed.",
+    "familySetupRequired": "Please complete family setup.",
+    "completeRegistration": "Complete registration →",
+    "loginFailed": "Login failed. Please try again."
   },
   "demo": {
     "pickRole": "Choose a demo account",
@@ -219,11 +224,18 @@
     "itemsSelectedCount": "{count} items selected"
   },
   "editRedemption": {
-    "title": "Edit Redemption Date",
+    "title": "Edit Redemption",
     "reward": "Reward",
     "starsSpent": "Stars Spent",
+    "starsSpentHint": "Stars deducted for this redemption",
     "updateFailed": "Failed to update",
-    "time": "Time"
+    "time": "Time",
+    "parentNote": "Parent Note",
+    "parentNotePlaceholder": "Add a note (optional)",
+    "statusChangeHint": "Status will change from \"{from}\" to \"{to}\"",
+    "quickAction": "Quick action: Save and approve",
+    "saveAndApprove": "Save & Approve",
+    "balanceWarning": "Changing stars or status will affect the child's balance"
   },
   "editTransaction": {
     "title": "Edit Record",
@@ -272,6 +284,7 @@
     "batchRejectFailed": "Batch reject failed",
     "canOnlyDeleteStars": "Can only delete star transactions",
     "confirmDeleteRecord": "Are you sure you want to delete this record?\n\nQuest: {quest}\nStars: {stars}",
+    "confirmDeleteRedemption": "Delete this redemption?\n\nReward: {reward}\nStars: {stars}\n\nThe child's balance will be adjusted.",
     "deleteFailed": "Failed to delete, please try again",
     "noRecordsFound": "No records found",
     "records": "records",
