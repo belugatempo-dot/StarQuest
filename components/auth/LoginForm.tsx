@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
-import { trackLogin, trackLoginFailed, trackDemoLogin } from "@/lib/analytics/events";
+import { trackDemoLogin } from "@/lib/analytics/events";
 import ResendVerificationButton from "@/components/auth/ResendVerificationButton";
 import { DEMO_USERS, type DemoRole } from "@/lib/demo/demo-users";
+import { useLoginForm } from "@/lib/hooks/useLoginForm";
 
 // ---- DemoRolePicker (local sub-component) ----
 
@@ -106,105 +107,45 @@ function DemoRolePicker({ locale }: { locale: string }) {
 
 export default function LoginForm() {
   const t = useTranslations();
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const locale = pathname.split("/")[1];
   const isDemo = searchParams.get("demo") === "true";
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showResendButton, setShowResendButton] = useState(false);
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    error,
+    showResendButton,
+    showRegistrationLink,
+    handleLogin,
+  } = useLoginForm(locale);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const supabase = createClient();
-
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      trackLoginFailed(signInError.message.includes("Email not confirmed") ? "email_not_confirmed" : "invalid_credentials");
-      // Check if error is due to unverified email
-      if (signInError.message.includes("Email not confirmed")) {
-        setError(
-          locale === "zh-CN"
-            ? "您的邮箱尚未验证。请查收验证邮件。"
-            : "Your email is not verified. Please check your inbox."
-        );
-        setShowResendButton(true);
-      } else {
-        setError(signInError.message);
-      }
-      setLoading(false);
-      return;
-    }
-
-    if (data.user) {
-      // Fetch user role to determine redirect
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("role, family_id")
-        .eq("id", data.user.id)
-        .maybeSingle();
-
-      if (userError) {
-        const message = locale === "zh-CN"
-          ? "找不到用户记录。您的注册可能未完成。"
-          : "User record not found. Your registration may not have completed.";
-        setError(message);
-        setLoading(false);
-        return;
-      }
-
-      if (!(userData as any)?.family_id) {
-        // User exists but has no family - shouldn't happen but handle it
-        setError("Please complete family setup.");
-        setLoading(false);
-        return;
-      }
-
-      // Track successful login before hard navigation destroys JS context
-      const role = (userData as any)?.role;
-      trackLogin(role, locale);
-
-      // Use window.location for hard navigation to ensure cookies are set
-      // This forces a full page reload which properly establishes the session
-      const redirectPath = `/${locale}/dashboard`;
-
-      window.location.href = redirectPath;
-
-      // Keep loading state to prevent UI flicker during redirect
-      return;
-    }
-
-    setLoading(false);
-  };
-
-  // Demo mode: show role picker instead of login form
   if (isDemo) {
     return <DemoRolePicker locale={locale} />;
   }
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleLogin();
+      }}
+      className="space-y-4"
+    >
       {error && (
         <div className="bg-danger/10 border border-danger text-danger px-4 py-3 rounded">
           {error}
-          {(error.includes("User record not found") || error.includes("找不到用户记录")) && (
+          {showRegistrationLink && (
             <div className="mt-2 text-sm">
               <Link
                 href={`/${locale}/register`}
                 className="text-secondary hover:underline font-medium"
               >
-                {locale === "zh-CN" ? "重新完成注册 →" : "Complete registration →"}
+                {t("auth.completeRegistration")}
               </Link>
             </div>
           )}

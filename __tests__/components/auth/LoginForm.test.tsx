@@ -159,7 +159,7 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/your email is not verified/i)).toBeInTheDocument()
+        expect(screen.getByText('auth.emailNotVerified')).toBeInTheDocument()
       })
     })
 
@@ -185,7 +185,7 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/您的邮箱尚未验证/i)).toBeInTheDocument()
+        expect(screen.getByText('auth.emailNotVerified')).toBeInTheDocument()
       })
     })
 
@@ -389,8 +389,8 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/user record not found/i)).toBeInTheDocument()
-        expect(screen.getByText(/complete registration →/i)).toBeInTheDocument()
+        expect(screen.getByText('auth.userRecordNotFound')).toBeInTheDocument()
+        expect(screen.getByText('auth.completeRegistration')).toBeInTheDocument()
       })
     })
 
@@ -425,8 +425,8 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/找不到用户记录/i)).toBeInTheDocument()
-        expect(screen.getByText(/重新完成注册 →/i)).toBeInTheDocument()
+        expect(screen.getByText('auth.userRecordNotFound')).toBeInTheDocument()
+        expect(screen.getByText('auth.completeRegistration')).toBeInTheDocument()
       })
     })
 
@@ -460,7 +460,7 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        const registerLink = screen.getByRole('link', { name: /complete registration →/i })
+        const registerLink = screen.getByRole('link', { name: 'auth.completeRegistration' })
         expect(registerLink).toHaveAttribute('href', '/en/register')
       })
     })
@@ -495,7 +495,57 @@ describe('LoginForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/please complete family setup/i)).toBeInTheDocument()
+        expect(screen.getByText('auth.familySetupRequired')).toBeInTheDocument()
+      })
+    })
+
+    it('does not show registration link for generic errors', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: null,
+        error: { message: 'Invalid credentials' },
+      })
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'test@example.com')
+      await user.type(passwordInput, 'wrongpassword')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
+      })
+
+      expect(screen.queryByRole('link', { name: 'auth.completeRegistration' })).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Null User Handling', () => {
+    it('shows error when signIn succeeds but data.user is null', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: null },
+        error: null,
+      })
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'test@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('auth.loginFailed')).toBeInTheDocument()
       })
     })
   })
