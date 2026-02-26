@@ -81,10 +81,10 @@ describe("AppNav", () => {
     render(<AppNav user={parentUser} locale="en" />);
 
     const expectedPaths = [
+      "/en/activities",
       "/en/dashboard",
       "/en/quests",
       "/en/rewards",
-      "/en/activities",
       "/en/profile",
     ];
 
@@ -100,10 +100,10 @@ describe("AppNav", () => {
   it("renders nav labels using i18n keys", () => {
     render(<AppNav user={parentUser} locale="en" />);
     // Each label appears twice (desktop + mobile)
+    expect(screen.getAllByText("common.starCalendar")).toHaveLength(2);
     expect(screen.getAllByText("dashboard.title")).toHaveLength(2);
     expect(screen.getAllByText("common.quests")).toHaveLength(2);
     expect(screen.getAllByText("common.rewards")).toHaveLength(2);
-    expect(screen.getAllByText("common.activities")).toHaveLength(2);
     expect(screen.getAllByText("common.profile")).toHaveLength(2);
   });
 
@@ -190,10 +190,10 @@ describe("AppNav", () => {
     render(<AppNav user={parentUser} locale="zh-CN" />);
 
     const expectedPaths = [
+      "/zh-CN/activities",
       "/zh-CN/dashboard",
       "/zh-CN/quests",
       "/zh-CN/rewards",
-      "/zh-CN/activities",
       "/zh-CN/profile",
     ];
 
@@ -207,11 +207,11 @@ describe("AppNav", () => {
 
   // ---- Logo link ----
 
-  it("logo links to dashboard page", () => {
+  it("logo links to activities page", () => {
     render(<AppNav user={parentUser} locale="en" />);
     const logoLink = screen.getAllByRole("link").find(
       (l) =>
-        l.getAttribute("href") === "/en/dashboard" &&
+        l.getAttribute("href") === "/en/activities" &&
         l.querySelector(".text-2xl")
     );
     expect(logoLink).toBeTruthy();

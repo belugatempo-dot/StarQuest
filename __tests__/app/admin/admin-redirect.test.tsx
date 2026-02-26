@@ -16,14 +16,14 @@ describe("AdminRedirectPage", () => {
       params: Promise.resolve({ locale: "en" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/en/dashboard");
+    expect(redirect).toHaveBeenCalledWith("/en/activities");
   });
 
-  it("redirects to dashboard for zh-CN locale", async () => {
+  it("redirects to activities for zh-CN locale", async () => {
     await AdminRedirectPage({
       params: Promise.resolve({ locale: "zh-CN" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/zh-CN/dashboard");
+    expect(redirect).toHaveBeenCalledWith("/zh-CN/activities");
   });
 });

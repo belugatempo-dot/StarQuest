@@ -43,7 +43,7 @@ export async function requireParent(locale: string = "en") {
   const user = await requireAuth(locale);
 
   if (user.role !== "parent") {
-    redirect(`/${locale}/dashboard`);
+    redirect(`/${locale}/activities`);
   }
 
   return user;

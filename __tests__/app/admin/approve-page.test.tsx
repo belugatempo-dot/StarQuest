@@ -11,19 +11,19 @@ describe("ApproveRedirectPage", () => {
     jest.clearAllMocks();
   });
 
-  it("redirects to dashboard approval-center section for en locale", async () => {
+  it("redirects to activities page for en locale", async () => {
     await ApproveRedirectPage({
       params: Promise.resolve({ locale: "en" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/en/dashboard#approval-center");
+    expect(redirect).toHaveBeenCalledWith("/en/activities");
   });
 
-  it("redirects to dashboard approval-center section for zh-CN locale", async () => {
+  it("redirects to activities page for zh-CN locale", async () => {
     await ApproveRedirectPage({
       params: Promise.resolve({ locale: "zh-CN" }),
     });
 
-    expect(redirect).toHaveBeenCalledWith("/zh-CN/dashboard#approval-center");
+    expect(redirect).toHaveBeenCalledWith("/zh-CN/activities");
   });
 });

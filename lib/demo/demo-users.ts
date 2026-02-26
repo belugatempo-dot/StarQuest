@@ -16,7 +16,7 @@ export interface DemoUserInfo {
   descriptionEn: string;
   descriptionZh: string;
   emoji: string;
-  /** Where to redirect after login — unified to "dashboard" for all roles */
+  /** Where to redirect after login — unified to "activities" for all roles */
   redirectPath: string;
 }
 
@@ -29,7 +29,7 @@ export const DEMO_USERS: DemoUserInfo[] = [
     descriptionEn: "Manage quests, approve stars, see reports",
     descriptionZh: "管理任务、审批星星、查看报告",
     emoji: "👨‍👩‍👧‍👦",
-    redirectPath: "dashboard",
+    redirectPath: "activities",
   },
   {
     role: "alisa",
@@ -39,7 +39,7 @@ export const DEMO_USERS: DemoUserInfo[] = [
     descriptionEn: "Level 3, compliant child, English UI",
     descriptionZh: "3级，听话的孩子，英文界面",
     emoji: "🌟",
-    redirectPath: "dashboard",
+    redirectPath: "activities",
   },
   {
     role: "alexander",
@@ -49,7 +49,7 @@ export const DEMO_USERS: DemoUserInfo[] = [
     descriptionEn: "Level 2, credit enabled, Chinese UI",
     descriptionZh: "2级，有信用额度，中文界面",
     emoji: "🚀",
-    redirectPath: "dashboard",
+    redirectPath: "activities",
   },
 ];
 

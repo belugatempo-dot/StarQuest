@@ -483,7 +483,7 @@ describe("ActivitiesPage — Child View", () => {
     });
     render(jsx);
 
-    expect(screen.getByText("common.activities")).toBeInTheDocument();
+    expect(screen.getByText("common.starCalendar")).toBeInTheDocument();
   });
 
   it("does not render parent stats cards for child", async () => {

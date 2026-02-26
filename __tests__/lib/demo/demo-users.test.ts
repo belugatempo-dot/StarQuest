@@ -38,15 +38,15 @@ describe("demo-users", () => {
       }
     });
 
-    it("parent redirects to dashboard", () => {
+    it("parent redirects to activities", () => {
       const parent = DEMO_USERS.find((u) => u.role === "parent");
-      expect(parent?.redirectPath).toBe("dashboard");
+      expect(parent?.redirectPath).toBe("activities");
     });
 
-    it("children redirect to dashboard", () => {
+    it("children redirect to activities", () => {
       const children = DEMO_USERS.filter((u) => u.role !== "parent");
       for (const child of children) {
-        expect(child.redirectPath).toBe("dashboard");
+        expect(child.redirectPath).toBe("activities");
       }
     });
   });

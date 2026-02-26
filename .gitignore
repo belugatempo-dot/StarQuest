@@ -41,10 +41,7 @@ backups/
 .worktrees/
 
 # local planning docs
-.github/refactor_plan/
-gtm_plan.md
-visualization_plan.md
-MergeParent&ChildPlan.md
+plans/
 
 # supabase CLI cache
 supabase/.temp/

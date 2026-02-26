@@ -159,7 +159,7 @@ describe("useLoginForm", () => {
     expect(result.current.loading).toBe(false);
   });
 
-  it("redirects to /{locale}/dashboard on success", async () => {
+  it("redirects to /{locale}/activities on success", async () => {
     mockSignIn.mockResolvedValue({
       data: { user: { id: "u1" } },
       error: null,
@@ -182,7 +182,7 @@ describe("useLoginForm", () => {
 
     await act(() => result.current.handleLogin());
 
-    expect(window.location.href).toBe("/en/dashboard");
+    expect(window.location.href).toBe("/en/activities");
     expect(mockTrackLogin).toHaveBeenCalledWith("parent", "en");
   });
 
@@ -209,7 +209,7 @@ describe("useLoginForm", () => {
 
     await act(() => result.current.handleLogin());
 
-    expect(window.location.href).toBe("/zh-CN/dashboard");
+    expect(window.location.href).toBe("/zh-CN/activities");
     expect(mockTrackLogin).toHaveBeenCalledWith("child", "zh-CN");
   });
 

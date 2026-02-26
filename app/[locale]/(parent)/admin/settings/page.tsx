@@ -6,5 +6,5 @@ export default async function SettingsRedirectPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  redirect(`/${locale}/dashboard`);
+  redirect(`/${locale}/activities`);
 }

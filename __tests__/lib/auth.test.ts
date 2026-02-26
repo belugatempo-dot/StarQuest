@@ -126,10 +126,10 @@ describe("lib/auth", () => {
       });
 
       await expect(requireParent()).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockRedirect).toHaveBeenCalledWith("/en/dashboard");
+      expect(mockRedirect).toHaveBeenCalledWith("/en/activities");
     });
 
-    it("redirects to /dashboard when user is child", async () => {
+    it("redirects to /activities when user is child", async () => {
       const mockUser = { id: "child-1", name: "Alice", role: "child", family_id: "fam-1" };
       mockGetUser.mockResolvedValue({ data: { user: { id: "child-1" } } });
       mockFrom.mockReturnValue({
@@ -141,7 +141,7 @@ describe("lib/auth", () => {
       });
 
       await expect(requireParent("en")).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockRedirect).toHaveBeenCalledWith("/en/dashboard");
+      expect(mockRedirect).toHaveBeenCalledWith("/en/activities");
     });
   });
 

@@ -79,7 +79,7 @@ export function useLoginForm(locale: string): UseLoginFormReturn {
       const role = userData?.role;
       trackLogin(role, locale);
 
-      window.location.href = `/${locale}/dashboard`;
+      window.location.href = `/${locale}/activities`;
       return;
     } else {
       setError(t("auth.loginFailed"));

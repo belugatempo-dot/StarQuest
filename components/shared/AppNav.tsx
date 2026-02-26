@@ -26,10 +26,10 @@ export default function AppNav({ user, locale }: { user: User; locale: string })
   };
 
   const navItems = [
+    { path: `/${locale}/activities`, label: t("common.starCalendar"), icon: "📅" },
     { path: `/${locale}/dashboard`, label: t("dashboard.title"), icon: "🏠" },
     { path: `/${locale}/quests`, label: t("common.quests"), icon: "📋" },
     { path: `/${locale}/rewards`, label: t("common.rewards"), icon: "🎁" },
-    { path: `/${locale}/activities`, label: t("common.activities"), icon: "📊" },
     { path: `/${locale}/profile`, label: t("common.profile"), icon: "👤" },
   ];
 
@@ -38,7 +38,7 @@ export default function AppNav({ user, locale }: { user: User; locale: string })
       <div className="container mx-auto px-4 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href={`/${locale}/dashboard`} className="flex items-center space-x-2">
+          <Link href={`/${locale}/activities`} className="flex items-center space-x-2">
             <span className="text-2xl">⭐</span>
             <div>
               <span className="text-2xl font-bold text-primary">{t("brand.name")}</span>

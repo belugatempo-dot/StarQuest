@@ -321,7 +321,7 @@ async function ChildActivities({
   return (
     <div className="space-y-6">
       <div className="dark-card rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold mb-2">{t("common.activities")}</h1>
+        <h1 className="text-3xl font-bold mb-2">{t("common.starCalendar")}</h1>
         <p className="text-slate-400">
           {locale === "zh-CN"
             ? "查看所有星星的获得和扣除记录"

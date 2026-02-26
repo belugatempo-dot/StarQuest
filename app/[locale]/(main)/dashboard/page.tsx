@@ -122,7 +122,7 @@ async function ParentDashboard({
               <span className="text-3xl">📋</span>
             </div>
             <p className="text-xl font-semibold text-primary mt-4">
-              {t("common.activities")}
+              {t("common.starCalendar")}
             </p>
             <p className="text-sm text-slate-400 mt-1">
               {locale === "zh-CN" ? "查看日历和审批" : "Calendar & approvals"}
