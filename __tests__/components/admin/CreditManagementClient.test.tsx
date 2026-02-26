@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import CreditManagementClient from "@/app/[locale]/(parent)/admin/credit/CreditManagementClient";
+import CreditManagementClient from "@/components/admin/CreditManagementClient";
 
 // Mock next-intl
 jest.mock("next-intl", () => ({
