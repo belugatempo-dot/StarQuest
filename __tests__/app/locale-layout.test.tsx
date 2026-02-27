@@ -21,12 +21,6 @@ jest.mock("@/i18n/config", () => ({
   locales: ["en", "zh-CN"],
 }));
 
-jest.mock("@/components/ThemeProvider", () => ({
-  ThemeProvider: ({ children }: any) => (
-    <div data-testid="theme-provider">{children}</div>
-  ),
-}));
-
 jest.mock("@/components/analytics/PostHogProvider", () => ({
   PostHogProvider: ({ children }: any) => (
     <div data-testid="posthog-provider">{children}</div>
@@ -58,7 +52,6 @@ describe("LocaleLayout", () => {
     });
     const { container } = render(jsx);
 
-    expect(screen.getByTestId("theme-provider")).toBeInTheDocument();
     expect(screen.getByTestId("intl-provider")).toBeInTheDocument();
     expect(screen.getByTestId("child-content")).toBeInTheDocument();
   });
@@ -72,7 +65,7 @@ describe("LocaleLayout", () => {
 
     // The html tag is rendered but in JSDOM it becomes part of the container
     // We check that the layout rendered successfully
-    expect(screen.getByTestId("theme-provider")).toBeInTheDocument();
+    expect(screen.getByTestId("intl-provider")).toBeInTheDocument();
   });
 
   it("calls notFound for invalid locale", async () => {

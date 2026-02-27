@@ -4,6 +4,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["posthog-js", "@supabase/supabase-js", "sonner"],
+  },
   async redirects() {
     return [
       {

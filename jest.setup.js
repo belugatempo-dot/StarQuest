@@ -1,6 +1,12 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+// Mock React's cache() — RSC-only API not available in Jest
+const React = require('react')
+if (!React.cache) {
+  React.cache = (fn) => fn
+}
+
 // Mock next-intl
 jest.mock('next-intl', () => ({
   useTranslations: () => (key) => key,

@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { Database } from "@/types/database";
 
 export type User = Database["public"]["Tables"]["users"]["Row"];
 
-export async function getUser(): Promise<User | null> {
+async function getUserImpl(): Promise<User | null> {
   const supabase = await createClient();
 
   const {
@@ -28,6 +29,11 @@ export async function getUser(): Promise<User | null> {
 
   return user;
 }
+
+// Deduplicate auth calls within a single server request.
+// Layout and page both call requireAuth() → getUser(), but React's cache()
+// ensures only one actual network roundtrip per request.
+export const getUser = cache(getUserImpl);
 
 export async function requireAuth(locale: string = "en") {
   const user = await getUser();

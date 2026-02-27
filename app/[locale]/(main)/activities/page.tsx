@@ -65,7 +65,8 @@ async function ParentActivities({
         )
       `)
       .eq("family_id", user.family_id!)
-      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
+      .order("created_at", { ascending: false })
+      .limit(100) as unknown as Promise<{ data: any[] | null; error: any }>,
     adminClient
       .from("redemptions")
       .select(`
@@ -82,7 +83,8 @@ async function ParentActivities({
         )
       `)
       .eq("family_id", user.family_id!)
-      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
+      .order("created_at", { ascending: false })
+      .limit(100) as unknown as Promise<{ data: any[] | null; error: any }>,
     adminClient
       .from("credit_transactions")
       .select(`
@@ -93,7 +95,8 @@ async function ParentActivities({
         )
       `)
       .eq("family_id", user.family_id!)
-      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
+      .order("created_at", { ascending: false })
+      .limit(100) as unknown as Promise<{ data: any[] | null; error: any }>,
     adminClient
       .from("users")
       .select("*")
@@ -297,7 +300,8 @@ async function ChildActivities({
         )
       `)
       .eq("child_id", user.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(100),
     supabase
       .from("quests")
       .select("*")

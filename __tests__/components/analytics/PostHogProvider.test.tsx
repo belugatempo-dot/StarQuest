@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import posthog from "posthog-js";
-import { PostHogProvider } from "@/components/analytics/PostHogProvider";
+import PostHogProviderInner from "@/components/analytics/PostHogProviderInner";
 
-describe("PostHogProvider", () => {
+describe("PostHogProviderInner", () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -16,9 +16,9 @@ describe("PostHogProvider", () => {
 
   it("renders children", () => {
     const { getByText } = render(
-      <PostHogProvider>
+      <PostHogProviderInner>
         <div>Test Child</div>
-      </PostHogProvider>
+      </PostHogProviderInner>
     );
     expect(getByText("Test Child")).toBeInTheDocument();
   });
@@ -26,9 +26,9 @@ describe("PostHogProvider", () => {
   it("initializes PostHog when NEXT_PUBLIC_POSTHOG_KEY is set", () => {
     process.env.NEXT_PUBLIC_POSTHOG_KEY = "phc_test_key";
     render(
-      <PostHogProvider>
+      <PostHogProviderInner>
         <div>Test</div>
-      </PostHogProvider>
+      </PostHogProviderInner>
     );
     expect(posthog.init).toHaveBeenCalledWith(
       "phc_test_key",
@@ -43,9 +43,9 @@ describe("PostHogProvider", () => {
   it("does not initialize PostHog when key is missing", () => {
     delete process.env.NEXT_PUBLIC_POSTHOG_KEY;
     render(
-      <PostHogProvider>
+      <PostHogProviderInner>
         <div>Test</div>
-      </PostHogProvider>
+      </PostHogProviderInner>
     );
     expect(posthog.init).not.toHaveBeenCalled();
   });
@@ -53,9 +53,9 @@ describe("PostHogProvider", () => {
   it("passes person_profiles: identified_only config", () => {
     process.env.NEXT_PUBLIC_POSTHOG_KEY = "phc_test_key";
     render(
-      <PostHogProvider>
+      <PostHogProviderInner>
         <div>Test</div>
-      </PostHogProvider>
+      </PostHogProviderInner>
     );
     expect(posthog.init).toHaveBeenCalledWith(
       expect.any(String),
