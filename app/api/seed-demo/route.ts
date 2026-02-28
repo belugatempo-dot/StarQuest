@@ -62,9 +62,41 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Look up existing family data
+      const { data: parentUser } = await (adminClient as any)
+        .from("users")
+        .select("id, family_id")
+        .eq("email", DEMO_PARENT_EMAIL)
+        .single();
+
+      if (!parentUser) {
+        return NextResponse.json(
+          { error: "Demo parent not found. Run a full seed first." },
+          { status: 400 }
+        );
+      }
+
+      const { data: children } = await (adminClient as any)
+        .from("users")
+        .select("id, name, email")
+        .eq("family_id", parentUser.family_id)
+        .eq("role", "child");
+
+      const existingFamily = {
+        familyId: parentUser.family_id,
+        parentId: parentUser.id,
+        children: (children ?? []).map((c: any) => ({
+          name: c.name,
+          email: c.email,
+          password: "", // not needed for extend
+          userId: c.id,
+        })),
+      };
+
       const result = await seedDemoFamily(adminClient as any, {
         startDate,
         endDate,
+        existingFamily,
       });
       await saveDemoSnapshot(adminClient as any, result.familyId);
 

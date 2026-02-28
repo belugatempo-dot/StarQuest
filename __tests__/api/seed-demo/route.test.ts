@@ -21,7 +21,32 @@ jest.mock("next/server", () => {
 });
 
 // ---- Mock @/lib/supabase/server ----
-const mockAdminClient = { mock: true };
+let mockUsersQueryResults: { parent: any; children: any } = {
+  parent: { data: null, error: null },
+  children: { data: [], error: null },
+};
+
+function createUsersChain() {
+  let queriedFields = "";
+  const chain: any = {
+    select: jest.fn((fields: string) => { queriedFields = fields; return chain; }),
+    eq: jest.fn(() => chain),
+    single: jest.fn(() => {
+      // Parent query uses .single()
+      return Promise.resolve(mockUsersQueryResults.parent);
+    }),
+    then: (resolve: any) => {
+      // Children query doesn't use .single() — resolves as thenable
+      return Promise.resolve(mockUsersQueryResults.children).then(resolve);
+    },
+  };
+  return chain;
+}
+
+const mockAdminClient = {
+  mock: true,
+  from: jest.fn(() => createUsersChain()),
+};
 jest.mock("@/lib/supabase/server", () => ({
   createAdminClient: () => mockAdminClient,
 }));
@@ -184,6 +209,13 @@ describe("POST /api/seed-demo", () => {
       mockGetSnapshotLatestDate.mockResolvedValue(
         new Date("2026-01-20T14:00:00Z")
       );
+      mockUsersQueryResults = {
+        parent: { data: { id: "parent-1", family_id: "fam-1" }, error: null },
+        children: { data: [
+          { id: "child-1", name: "Alisa", email: "alisa.demo@starquest.app" },
+          { id: "child-2", name: "Alexander", email: "alexander.demo@starquest.app" },
+        ], error: null },
+      };
       mockSeedDemoFamily.mockResolvedValue({
         familyId: "fam-1",
         parentId: "parent-1",
@@ -202,13 +234,21 @@ describe("POST /api/seed-demo", () => {
       expect(mockRestoreDemoData).toHaveBeenCalledWith(mockAdminClient);
       expect(mockGetSnapshotLatestDate).toHaveBeenCalledWith(mockAdminClient);
 
-      // Verify seed was called with startDate = latestDate + 1 day
+      // Verify seed was called with startDate, endDate, and existingFamily
       const seedCall = mockSeedDemoFamily.mock.calls[0];
       expect(seedCall[0]).toBe(mockAdminClient);
       expect(seedCall[1].startDate).toEqual(
         new Date("2026-01-21T14:00:00Z")
       );
       expect(seedCall[1].endDate).toBeInstanceOf(Date);
+      expect(seedCall[1].existingFamily).toEqual({
+        familyId: "fam-1",
+        parentId: "parent-1",
+        children: [
+          { name: "Alisa", email: "alisa.demo@starquest.app", password: "", userId: "child-1" },
+          { name: "Alexander", email: "alexander.demo@starquest.app", password: "", userId: "child-2" },
+        ],
+      });
 
       expect(mockSaveDemoSnapshot).toHaveBeenCalledWith(mockAdminClient, "fam-1");
     });
@@ -236,11 +276,31 @@ describe("POST /api/seed-demo", () => {
       expect(mockSeedDemoFamily).not.toHaveBeenCalled();
     });
 
+    it("returns 400 when demo parent not found", async () => {
+      mockRestoreDemoData.mockResolvedValue(undefined);
+      mockGetSnapshotLatestDate.mockResolvedValue(
+        new Date("2026-01-15T00:00:00Z")
+      );
+      mockUsersQueryResults = {
+        parent: { data: null, error: null },
+        children: { data: [], error: null },
+      };
+
+      const result = await POST(createRequest(AUTH_HEADER, extendUrl));
+
+      expect(result.status).toBe(400);
+      expect(result.body.error).toMatch(/demo parent not found/i);
+    });
+
     it("does not call cleanup in extend mode", async () => {
       mockRestoreDemoData.mockResolvedValue(undefined);
       mockGetSnapshotLatestDate.mockResolvedValue(
         new Date("2026-01-15T00:00:00Z")
       );
+      mockUsersQueryResults = {
+        parent: { data: { id: "p", family_id: "fam-1" }, error: null },
+        children: { data: [], error: null },
+      };
       mockSeedDemoFamily.mockResolvedValue({
         familyId: "fam-1",
         parentId: "p",

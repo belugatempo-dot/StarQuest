@@ -108,9 +108,17 @@ function pickRandom<T>(arr: T[], count: number, rand: () => number): T[] {
   return shuffled.slice(0, Math.min(count, arr.length));
 }
 
+export interface ExistingFamily {
+  familyId: string;
+  parentId: string;
+  children: Array<{ name: string; email: string; password: string; userId: string }>;
+}
+
 export interface SeedOptions {
   startDate?: Date;
   endDate?: Date;
+  /** For extend mode: skip user/family creation, use existing IDs */
+  existingFamily?: ExistingFamily;
 }
 
 /**
@@ -125,84 +133,100 @@ export async function seedDemoFamily(
   const endDate = options?.endDate ?? new Date();
   const rngSeed = options?.startDate ? startDate.getTime() : 42;
   const rng = createRng(rngSeed);
-  const parentPassword = process.env.DEMO_PARENT_PASSWORD;
-  if (!parentPassword) {
-    throw new Error("DEMO_PARENT_PASSWORD environment variable is required");
-  }
+  const isExtend = !!options?.existingFamily;
 
-  // 1. Create parent auth user
-  const { data: parentAuth, error: parentAuthError } =
-    await supabase.auth.admin.createUser({
-      email: DEMO_PARENT_EMAIL,
-      password: parentPassword,
-      email_confirm: true,
-    });
+  let parentId: string;
+  let familyId: string;
+  let childResults: SeedResult["children"];
 
-  if (parentAuthError || !parentAuth.user) {
-    throw new Error(
-      `Failed to create parent auth user: ${parentAuthError?.message ?? "unknown"}`
-    );
-  }
-
-  const parentId = parentAuth.user.id;
-
-  // 2. Create family with templates via RPC
-  const { data: familyId, error: familyError } = await supabase.rpc(
-    "create_family_with_templates",
-    {
-      p_user_id: parentId,
-      p_family_name: DEMO_FAMILY_NAME,
-      p_user_name: DEMO_PARENT_NAME,
-      p_user_email: DEMO_PARENT_EMAIL,
-      p_user_locale: "en",
+  if (options?.existingFamily) {
+    // Extend mode: reuse existing users
+    parentId = options.existingFamily.parentId;
+    familyId = options.existingFamily.familyId;
+    childResults = options.existingFamily.children;
+  } else {
+    // Full seed mode: create users from scratch
+    const parentPassword = process.env.DEMO_PARENT_PASSWORD;
+    if (!parentPassword) {
+      throw new Error("DEMO_PARENT_PASSWORD environment variable is required");
     }
-  );
 
-  if (familyError || !familyId) {
-    throw new Error(
-      `Failed to create family: ${familyError?.message ?? "no family_id returned"}`
-    );
-  }
-
-  // 3. Create children
-  const childResults: SeedResult["children"] = [];
-  for (const child of DEMO_CHILDREN) {
-    const { data: childAuth, error: childAuthError } =
+    // 1. Create parent auth user
+    const { data: parentAuth, error: parentAuthError } =
       await supabase.auth.admin.createUser({
-        email: child.email,
-        password: child.password,
+        email: DEMO_PARENT_EMAIL,
+        password: parentPassword,
         email_confirm: true,
       });
 
-    if (childAuthError || !childAuth.user) {
+    if (parentAuthError || !parentAuth.user) {
       throw new Error(
-        `Failed to create child auth user ${child.name}: ${childAuthError?.message ?? "unknown"}`
+        `Failed to create parent auth user: ${parentAuthError?.message ?? "unknown"}`
       );
     }
 
-    const childId = childAuth.user.id;
+    parentId = parentAuth.user.id;
 
-    const { error: insertError } = await supabase.from("users").insert({
-      id: childId,
-      family_id: familyId,
-      name: child.name,
-      role: "child",
-      email: child.email,
-      locale: child.locale,
-    });
+    // 2. Create family with templates via RPC
+    const { data: familyData, error: familyError } = await supabase.rpc(
+      "create_family_with_templates",
+      {
+        p_user_id: parentId,
+        p_family_name: DEMO_FAMILY_NAME,
+        p_user_name: DEMO_PARENT_NAME,
+        p_user_email: DEMO_PARENT_EMAIL,
+        p_user_locale: "en",
+      }
+    );
 
-    if (insertError) {
+    if (familyError || !familyData) {
       throw new Error(
-        `Failed to insert child user ${child.name}: ${insertError.message}`
+        `Failed to create family: ${familyError?.message ?? "no family_id returned"}`
       );
     }
 
-    childResults.push({
-      name: child.name,
-      email: child.email,
-      password: child.password,
-      userId: childId,
-    });
+    familyId = familyData;
+
+    // 3. Create children
+    childResults = [];
+    for (const child of DEMO_CHILDREN) {
+      const { data: childAuth, error: childAuthError } =
+        await supabase.auth.admin.createUser({
+          email: child.email,
+          password: child.password,
+          email_confirm: true,
+        });
+
+      if (childAuthError || !childAuth.user) {
+        throw new Error(
+          `Failed to create child auth user ${child.name}: ${childAuthError?.message ?? "unknown"}`
+        );
+      }
+
+      const childId = childAuth.user.id;
+
+      const { error: insertError } = await supabase.from("users").insert({
+        id: childId,
+        family_id: familyId,
+        name: child.name,
+        role: "child",
+        email: child.email,
+        locale: child.locale,
+      });
+
+      if (insertError) {
+        throw new Error(
+          `Failed to insert child user ${child.name}: ${insertError.message}`
+        );
+      }
+
+      childResults.push({
+        name: child.name,
+        email: child.email,
+        password: child.password,
+        userId: childId,
+      });
+    }
   }
 
   // 4. Fetch quests and rewards
@@ -382,8 +406,8 @@ export async function seedDemoFamily(
     }
     totalRedemptions += redemptions.length;
 
-    // 7. Set up credit for Alexander
-    if (childProfile.target.creditEnabled && childProfile.target.creditLimit) {
+    // 7. Set up credit for Alexander (skip in extend mode — already exists)
+    if (!isExtend && childProfile.target.creditEnabled && childProfile.target.creditLimit) {
       await supabase.rpc("initialize_default_interest_tiers", {
         p_family_id: familyId,
       });
@@ -502,31 +526,34 @@ export async function seedDemoFamily(
     totalRedemptions += 1;
   }
 
-  // 9. Mark all demo users as read-only (is_demo = true)
-  const allUserIds = [parentId, ...childResults.map((c) => c.userId)];
-  for (const userId of allUserIds) {
-    const { error: demoFlagError } = await supabase
-      .from("users")
-      .update({ is_demo: true })
-      .eq("id", userId);
+  // 9–10: Only in full seed mode (extend mode already has these)
+  if (!isExtend) {
+    // 9. Mark all demo users as read-only (is_demo = true)
+    const allUserIds = [parentId, ...childResults.map((c) => c.userId)];
+    for (const userId of allUserIds) {
+      const { error: demoFlagError } = await supabase
+        .from("users")
+        .update({ is_demo: true })
+        .eq("id", userId);
 
-    if (demoFlagError) {
-      throw new Error(
-        `Failed to set is_demo flag for user ${userId}: ${demoFlagError.message}`
-      );
+      if (demoFlagError) {
+        throw new Error(
+          `Failed to set is_demo flag for user ${userId}: ${demoFlagError.message}`
+        );
+      }
     }
-  }
 
-  // 10. Set up report preferences
-  await supabase.from("family_report_preferences").insert({
-    family_id: familyId,
-    report_email: DEMO_PARENT_EMAIL,
-    weekly_report_enabled: true,
-    monthly_report_enabled: true,
-    settlement_email_enabled: true,
-    timezone: "America/New_York",
-    report_locale: "en",
-  });
+    // 10. Set up report preferences
+    await supabase.from("family_report_preferences").insert({
+      family_id: familyId,
+      report_email: DEMO_PARENT_EMAIL,
+      weekly_report_enabled: true,
+      monthly_report_enabled: true,
+      settlement_email_enabled: true,
+      timezone: "America/New_York",
+      report_locale: "en",
+    });
+  }
 
   return {
     familyId: familyId,
