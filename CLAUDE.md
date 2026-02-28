@@ -27,6 +27,13 @@ npm test -- File.test.tsx  # Specific file
 # Database
 npm run db:backup [label]  # Manual pg_dump snapshot (requires SUPABASE_DB_URL)
 
+# E2E Testing (Playwright)
+npm run e2e              # Run all E2E tests (auto-starts dev server)
+npm run e2e:ui           # Interactive UI mode
+npm run e2e:headed       # Run with visible browser
+npm run e2e:report       # View HTML report
+E2E_BASE_URL=https://starquest-kappa.vercel.app npm run e2e  # Test against production
+
 # Deployment
 vercel --prod            # Production deploy
 vercel                   # Preview deploy
@@ -381,6 +388,31 @@ mockFetch.mockReturnValue(promise);
 resolvePromise!({ ok: true });
 await waitFor(() => { /* assert completion */ });
 ```
+
+### E2E Tests (Playwright)
+
+Browser-based tests against the running app using demo accounts (read-only via RLS).
+
+```
+e2e/
+├── playwright.config.ts          # Config: projects, webServer, storage state
+├── fixtures/auth.fixture.ts      # parentPage / alisaPage / alexanderPage fixtures
+├── page-objects/                 # 7 page objects (LoginPage, AppNavPage, etc.)
+├── tests/
+│   ├── global-setup.ts           # Authenticates 3 demo roles, saves storage state
+│   ├── auth/                     # Demo login, login page, logout (6 tests)
+│   ├── parent/                   # Activities, dashboard, quests, rewards, profile, report (13 tests)
+│   ├── child/                    # Activities, dashboard, quests, rewards, profile (8 tests)
+│   └── cross-cutting/            # Navigation, i18n, responsive, demo banner, write block (12 tests)
+└── .auth/                        # gitignored — stored auth states
+```
+
+**Key patterns:**
+- Global setup authenticates via DemoRolePicker UI, saves `storageState` per role
+- Tests use `parentPage`/`alisaPage`/`alexanderPage` fixtures (pre-authenticated)
+- Demo data is read-only — tests verify rendering/navigation, not write operations
+- `fullyParallel: true` — safe because demo data is immutable
+- Projects: `desktop-chrome` (all tests), `mobile-safari` + `tablet` (responsive only)
 
 ---
 
