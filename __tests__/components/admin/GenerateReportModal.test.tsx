@@ -212,6 +212,68 @@ describe("GenerateReportModal", () => {
     expect(fetchBody.periodEnd).toBeDefined();
   });
 
+  it("renders format toggle with Markdown and CSV options", () => {
+    render(<GenerateReportModal {...defaultProps} />);
+    expect(screen.getByRole("button", { name: "reports.formatMarkdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "reports.formatCsv" })).toBeInTheDocument();
+  });
+
+  it("defaults to Markdown format", () => {
+    render(<GenerateReportModal {...defaultProps} />);
+    const mdBtn = screen.getByRole("button", { name: "reports.formatMarkdown" });
+    expect(mdBtn.className).toContain("bg-indigo");
+  });
+
+  it("switches to CSV format when CSV button clicked", () => {
+    render(<GenerateReportModal {...defaultProps} />);
+    const csvBtn = screen.getByRole("button", { name: "reports.formatCsv" });
+    fireEvent.click(csvBtn);
+    expect(csvBtn.className).toContain("bg-indigo");
+  });
+
+  it("calls CSV endpoint when CSV format selected", async () => {
+    render(<GenerateReportModal {...defaultProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "reports.formatCsv" }));
+    fireEvent.click(screen.getByRole("button", { name: "reports.download" }));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/reports/generate-csv",
+        expect.objectContaining({ method: "POST" })
+      );
+    });
+  });
+
+  it("calls Markdown endpoint when Markdown format selected", async () => {
+    render(<GenerateReportModal {...defaultProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "reports.download" }));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/reports/generate-markdown",
+        expect.objectContaining({ method: "POST" })
+      );
+    });
+  });
+
+  it("shows .csv in filename preview when CSV selected", () => {
+    const { getReportFilename } = require("@/lib/reports/date-ranges");
+    getReportFilename.mockReturnValue("starquest-weekly-2026-02-09-to-2026-02-15.md");
+
+    render(<GenerateReportModal {...defaultProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "reports.formatCsv" }));
+
+    expect(screen.getByText(/\.csv/)).toBeInTheDocument();
+  });
+
+  it("shows .md in filename preview when Markdown selected", () => {
+    const { getReportFilename } = require("@/lib/reports/date-ranges");
+    getReportFilename.mockReturnValue("starquest-weekly-2026-02-09-to-2026-02-15.md");
+
+    render(<GenerateReportModal {...defaultProps} />);
+    expect(screen.getByText(/\.md/)).toBeInTheDocument();
+  });
+
   it("updates period dropdown when switching period type", () => {
     const { getAvailablePeriods } = require("@/lib/reports/date-ranges");
 

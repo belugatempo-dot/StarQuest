@@ -12,10 +12,13 @@ interface GenerateReportModalProps {
 
 const PERIOD_TYPES: PeriodType[] = ["daily", "weekly", "monthly", "quarterly", "yearly"];
 
+type ReportFormat = "markdown" | "csv";
+
 export default function GenerateReportModal({ locale, onClose }: GenerateReportModalProps) {
   const t = useTranslations();
   const [periodType, setPeriodType] = useState<PeriodType>("weekly");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [format, setFormat] = useState<ReportFormat>("markdown");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,9 +29,10 @@ export default function GenerateReportModal({ locale, onClose }: GenerateReportM
 
   const selectedPeriod = periods[selectedIndex] ?? periods[0];
 
-  const filename = selectedPeriod
+  const rawFilename = selectedPeriod
     ? getReportFilename(periodType, selectedPeriod.start, selectedPeriod.end)
     : "";
+  const filename = format === "csv" ? rawFilename.replace(/\.md$/, ".csv") : rawFilename;
 
   function handlePeriodTypeChange(pt: PeriodType) {
     setPeriodType(pt);
@@ -43,7 +47,10 @@ export default function GenerateReportModal({ locale, onClose }: GenerateReportM
     setError(null);
 
     try {
-      const res = await fetch("/api/reports/generate-markdown", {
+      const endpoint = format === "csv"
+        ? "/api/reports/generate-csv"
+        : "/api/reports/generate-markdown";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,6 +97,29 @@ export default function GenerateReportModal({ locale, onClose }: GenerateReportM
       }
     >
       <div className="px-6 pb-4 space-y-4">
+        {/* Format Selector */}
+        <div>
+          <label className="block text-sm text-slate-300 mb-2">
+            {t("reports.formatLabel")}
+          </label>
+          <div className="flex gap-2">
+            {(["markdown", "csv"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFormat(f)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  format === f
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20"
+                }`}
+              >
+                {t(`reports.format${f === "markdown" ? "Markdown" : "Csv"}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Period Type Selector */}
         <div>
           <label className="block text-sm text-slate-300 mb-2">
