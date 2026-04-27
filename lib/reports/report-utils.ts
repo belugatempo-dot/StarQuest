@@ -87,7 +87,7 @@ export async function fetchReportBaseData(
   // Get redemptions for the period
   const { data: redemptions, error: redemptionsError } = (await supabase
     .from("redemptions")
-    .select("child_id, stars_spent, status, created_at")
+    .select("child_id, stars_spent, status, created_at, rewards(name_en, name_zh)")
     .eq("family_id", familyId)
     .in("status", ["approved", "fulfilled"])
     .gte("created_at", startStr)
