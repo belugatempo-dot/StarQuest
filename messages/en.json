@@ -212,7 +212,7 @@
     "confirmApproval": "Confirm Approval",
     "adjustMultiplier": "Adjust Multiplier / Severity",
     "multiplierLabel": "Multiplier:",
-    "multiplierExample": "Example: 10 mins over = 1\u00d7, 20 mins over = 2\u00d7, etc.",
+    "multiplierExample": "Example: 10 mins over = 1×, 20 mins over = 2×, etc.",
     "actualStars": "Actual Stars:",
     "selectChildFirst": "Please select a child first",
     "selectQuestOrCustom": "Please select a quest or enter custom description",
@@ -429,7 +429,6 @@
     "availableCredit": "Available Credit",
     "used": "used",
     "editSettings": "Edit Settings",
-    "enableCredit": "Enable Credit",
     "interestTiers": "Interest Rate Tiers",
     "interestTiersDescription": "Configure tiered interest rates based on debt amount.",
     "addTier": "Add Tier",
@@ -501,6 +500,19 @@
     "weekly": "Weekly",
     "monthly": "Monthly",
     "quarterly": "Quarterly",
-    "yearly": "Yearly"
+    "yearly": "Yearly",
+    "formatLabel": "Format",
+    "formatMarkdown": "Markdown",
+    "formatCsv": "CSV"
+  },
+  "stats": {
+    "totalRecords": "Total number of star transactions and redemptions",
+    "positive": "Number of records where stars were earned",
+    "negative": "Number of records where stars were deducted",
+    "totalStarsPlus": "Total stars earned from all positive records",
+    "totalStarsMinus": "Total stars lost from deductions (not including redemptions)",
+    "starsRedeemed": "Stars spent on redeeming rewards",
+    "creditBorrowed": "Stars borrowed through the credit system",
+    "netStars": "Stars earned minus deducted minus redeemed (does not include credit)"
   }
 }
