@@ -121,7 +121,7 @@ app/[locale]/
 ### Component Organization
 ```
 components/
-├── ui/        # Shared UI (LanguageSwitcher, ModalFrame, DemoBanner, Starfield)
+├── ui/        # Shared UI (LanguageSwitcher, ModalFrame, DemoBanner, Starfield, StatCard)
 ├── auth/      # Login/register (use hard navigation!)
 ├── child/     # Child UI (bonus quests only)
 ├── admin/     # Parent UI (all quest types)
@@ -133,6 +133,7 @@ components/
 │   └── PostHogUserIdentify.tsx       # User identification + session recording control
 └── shared/    # Cross-role components
     ├── AppNav.tsx               # Unified navigation (5 tabs: Star Calendar first, role-aware badges + settings)
+    ├── StatCardGrid.tsx         # Dashboard stat cards with ⓘ info tooltips (8 cards)
     ├── UnifiedActivityList.tsx  # Main list orchestrator
     ├── ActivityItem.tsx         # Single activity row
     ├── ActivityDateGroup.tsx    # Date-grouped activity section
@@ -160,6 +161,7 @@ lib/
 ├── analytics/posthog.ts         # Server-side PostHog client (posthog-node) — DO NOT import from "use client"
 ├── analytics/events.ts          # Typed event capture helpers (ANALYTICS_EVENTS + trackXxx functions)
 ├── reports/report-utils.ts      # fetchReportBaseData(), buildChildrenStats()
+├── reports/csv-formatter.ts     # generateCsvReport() — row-level CSV export with bilingual names
 ├── reports/date-ranges.ts       # getAvailablePeriods(), getReportFilename(), getPreviousPeriodBounds()
 ├── reports/markdown-formatter.ts # generateMarkdownReport() — Markdown report with inline i18n
 └── demo/                        # Demo seed system
@@ -553,4 +555,4 @@ One-click demo access without exposing passwords to client bundle. Demo data is 
 
 ---
 
-**Last Updated:** 2026-02-25 | **Tests:** 3050 passing | **Coverage:** ~99%
+**Last Updated:** 2026-04-26 | **Tests:** 3110 passing | **Coverage:** ~99%
