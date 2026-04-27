@@ -57,6 +57,24 @@ jest.mock("@/components/shared/UnifiedActivityList", () => {
   };
 });
 
+jest.mock("@/components/shared/StatCardGrid", () => {
+  return function MockStatCardGrid(props: any) {
+    return (
+      <div data-testid="stat-card-grid">
+        <span data-testid="stat-totalRecords">{props.totalRecords}</span>
+        <span data-testid="stat-positiveRecords">{props.positiveRecords}</span>
+        <span data-testid="stat-negativeRecords">{props.negativeRecords}</span>
+        <span data-testid="stat-totalStarsGiven">{props.totalStarsGiven}</span>
+        <span data-testid="stat-totalStarsDeducted">{props.totalStarsDeducted}</span>
+        <span data-testid="stat-starsRedeemed">{props.starsRedeemed}</span>
+        <span data-testid="stat-totalCreditBorrowed">{props.totalCreditBorrowed}</span>
+        <span data-testid="stat-netStars">{props.netStars}</span>
+        <span data-testid="stat-locale">{props.locale}</span>
+      </div>
+    );
+  };
+});
+
 jest.mock("@/lib/activity-utils", () => ({
   transformStarTransaction: jest.fn().mockReturnValue({
     id: "tx-1",
@@ -106,43 +124,14 @@ describe("ActivitiesPage — Parent View", () => {
     expect(screen.getByText(/Star Calendar/)).toBeInTheDocument();
   });
 
-  it("renders statistics cards", async () => {
+  it("renders StatCardGrid with stats props", async () => {
     const jsx = await ActivitiesPage({
       params: Promise.resolve({ locale: "en" }),
     });
     render(jsx);
 
-    expect(screen.getByText("Total Records")).toBeInTheDocument();
-    expect(screen.getByText("Positive")).toBeInTheDocument();
-    expect(screen.getByText("Negative")).toBeInTheDocument();
-    expect(screen.getByText(/Net Stars/)).toBeInTheDocument();
-  });
-
-  it("renders stars redeemed card", async () => {
-    const jsx = await ActivitiesPage({
-      params: Promise.resolve({ locale: "en" }),
-    });
-    render(jsx);
-
-    expect(screen.getByText(/Stars Redeemed/)).toBeInTheDocument();
-  });
-
-  it("renders stars redeemed card in Chinese", async () => {
-    const jsx = await ActivitiesPage({
-      params: Promise.resolve({ locale: "zh-CN" }),
-    });
-    render(jsx);
-
-    expect(screen.getByText(/星星兑换/)).toBeInTheDocument();
-  });
-
-  it("renders credit borrowed card", async () => {
-    const jsx = await ActivitiesPage({
-      params: Promise.resolve({ locale: "en" }),
-    });
-    render(jsx);
-
-    expect(screen.getByText(/Credit Borrowed/)).toBeInTheDocument();
+    expect(screen.getByTestId("stat-card-grid")).toBeInTheDocument();
+    expect(screen.getByTestId("stat-locale")).toHaveTextContent("en");
   });
 
   it("renders unified activity list with parent role", async () => {
@@ -165,17 +154,13 @@ describe("ActivitiesPage — Parent View", () => {
     expect(screen.getByText(/星星日历/)).toBeInTheDocument();
   });
 
-  it("renders zh-CN stat labels for zh-CN locale", async () => {
+  it("passes zh-CN locale to StatCardGrid", async () => {
     const jsx = await ActivitiesPage({
       params: Promise.resolve({ locale: "zh-CN" }),
     });
     render(jsx);
 
-    expect(screen.getByText("总记录")).toBeInTheDocument();
-    expect(screen.getByText("加分记录")).toBeInTheDocument();
-    expect(screen.getByText("扣分记录")).toBeInTheDocument();
-    expect(screen.getByText(/信用借用/)).toBeInTheDocument();
-    expect(screen.getByText(/净值/)).toBeInTheDocument();
+    expect(screen.getByTestId("stat-locale")).toHaveTextContent("zh-CN");
   });
 
   it("transforms and passes transaction data to activity list", async () => {
@@ -345,7 +330,7 @@ describe("ActivitiesPage — Parent View", () => {
     render(jsx);
 
     // 15 + 10 = 25 (only credit_used, not repayment)
-    expect(screen.getByText("25")).toBeInTheDocument();
+    expect(screen.getByTestId("stat-totalCreditBorrowed")).toHaveTextContent("25");
   });
 
   it("displays stats with negative net stars", async () => {
@@ -367,7 +352,7 @@ describe("ActivitiesPage — Parent View", () => {
     });
     render(jsx);
 
-    expect(screen.getByText("-20")).toBeInTheDocument();
+    expect(screen.getByTestId("stat-netStars")).toHaveTextContent("-20");
   });
 
   it("displays stats with positive net stars", async () => {
@@ -389,12 +374,12 @@ describe("ActivitiesPage — Parent View", () => {
     });
     render(jsx);
 
-    expect(screen.getByText("10")).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("+50")).toBeInTheDocument();
-    expect(screen.getByText("-15")).toBeInTheDocument();
-    expect(screen.getByText("+35")).toBeInTheDocument();
+    expect(screen.getByTestId("stat-totalRecords")).toHaveTextContent("10");
+    expect(screen.getByTestId("stat-positiveRecords")).toHaveTextContent("7");
+    expect(screen.getByTestId("stat-negativeRecords")).toHaveTextContent("3");
+    expect(screen.getByTestId("stat-totalStarsGiven")).toHaveTextContent("50");
+    expect(screen.getByTestId("stat-totalStarsDeducted")).toHaveTextContent("-15");
+    expect(screen.getByTestId("stat-netStars")).toHaveTextContent("35");
   });
 
   it("passes pending approval data to UnifiedActivityList", async () => {

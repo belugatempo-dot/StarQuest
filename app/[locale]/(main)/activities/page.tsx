@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import UnifiedActivityList from "@/components/shared/UnifiedActivityList";
 import ActivityPageHeader from "@/components/admin/ActivityPageHeader";
+import StatCardGrid from "@/components/shared/StatCardGrid";
 import type { UnifiedActivityItem } from "@/types/activity";
 import {
   transformStarTransaction,
@@ -204,59 +205,17 @@ async function ParentActivities({
     <div className="space-y-6">
       <ActivityPageHeader locale={locale} />
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-star-glow mb-1 relative z-10">
-            {locale === "zh-CN" ? "总记录" : "Total Records"}
-          </div>
-          <div className="text-2xl font-bold text-white relative z-10">{totalRecords}</div>
-        </div>
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-slate-300 mb-1 relative z-10">
-            {locale === "zh-CN" ? "加分记录" : "Positive"}
-          </div>
-          <div className="text-2xl font-bold text-green-400 relative z-10">{positiveRecords}</div>
-        </div>
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-slate-300 mb-1 relative z-10">
-            {locale === "zh-CN" ? "扣分记录" : "Negative"}
-          </div>
-          <div className="text-2xl font-bold text-red-400 relative z-10">{negativeRecords}</div>
-        </div>
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-slate-300 mb-1 relative z-10">
-            {locale === "zh-CN" ? "总星星+" : "Total Stars +"}
-          </div>
-          <div className="text-2xl font-bold text-green-400 relative z-10">+{totalStarsGiven}</div>
-        </div>
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-slate-300 mb-1 relative z-10">
-            {locale === "zh-CN" ? "总星星-" : "Total Stars -"}
-          </div>
-          <div className="text-2xl font-bold text-red-400 relative z-10">{totalStarsDeducted}</div>
-        </div>
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-purple-300 mb-1 relative z-10">
-            🎁 {locale === "zh-CN" ? "星星兑换" : "Stars Redeemed"}
-          </div>
-          <div className="text-2xl font-bold text-purple-300 relative z-10">{starsRedeemed}</div>
-        </div>
-        <div className="stat-night-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-blue-300 mb-1 relative z-10">
-            💳 {locale === "zh-CN" ? "信用借用" : "Credit Borrowed"}
-          </div>
-          <div className="text-2xl font-bold text-blue-300 relative z-10">{totalCreditBorrowed}</div>
-        </div>
-        <div className="net-stars-card rounded-lg shadow-lg p-4">
-          <div className="text-sm text-star-glow mb-1 relative z-10">
-            ⭐ {locale === "zh-CN" ? "净值" : "Net Stars"}
-          </div>
-          <div className={`text-2xl font-bold relative z-10 star-glow ${netStars >= 0 ? "text-green-400" : "text-red-400"}`}>
-            {netStars >= 0 ? `+${netStars}` : netStars}
-          </div>
-        </div>
-      </div>
+      <StatCardGrid
+        locale={locale}
+        totalRecords={totalRecords}
+        positiveRecords={positiveRecords}
+        negativeRecords={negativeRecords}
+        totalStarsGiven={totalStarsGiven}
+        totalStarsDeducted={totalStarsDeducted}
+        starsRedeemed={starsRedeemed}
+        totalCreditBorrowed={totalCreditBorrowed}
+        netStars={netStars}
+      />
 
       <UnifiedActivityList
         activities={sortedActivities}
