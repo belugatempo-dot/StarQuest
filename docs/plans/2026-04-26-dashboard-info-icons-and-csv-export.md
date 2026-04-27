@@ -539,6 +539,45 @@ git commit -m "refactor: extract stat cards to StatCardGrid client component"
 
 ---
 
+### Task 4.5: Extend fetchReportBaseData to include reward names in redemptions
+
+**Files:**
+- Modify: `lib/reports/report-utils.ts`
+- Modify: `__tests__/lib/reports/report-utils.test.ts`
+
+**Context:** The existing `fetchReportBaseData` queries redemptions with only `child_id, stars_spent, status, created_at` — no reward names. The CSV formatter needs `rewards(name_en, name_zh)` to show meaningful names.
+
+**Step 1: Update the redemptions select in `fetchReportBaseData`**
+
+Change:
+```ts
+.select("child_id, stars_spent, status, created_at")
+```
+To:
+```ts
+.select("child_id, stars_spent, status, created_at, rewards(name_en, name_zh)")
+```
+
+**Step 2: Update report-utils tests if any mock the redemptions select chain**
+
+Check `__tests__/lib/reports/report-utils.test.ts` — update mock redemption data to include `rewards` field. Existing consumers (`buildChildrenStats`) don't use `rewards` on redemptions so no logic changes needed.
+
+**Step 3: Run tests**
+
+```bash
+npm test -- __tests__/lib/reports/report-utils.test.ts
+```
+Expected: ALL PASS
+
+**Step 4: Commit**
+
+```bash
+git add lib/reports/report-utils.ts __tests__/lib/reports/report-utils.test.ts
+git commit -m "feat: include reward names in fetchReportBaseData redemptions query"
+```
+
+---
+
 ### Task 5: Create CSV formatter utility
 
 **Files:**
@@ -1219,13 +1258,9 @@ git commit -m "feat: add Markdown/CSV format toggle to GenerateReportModal"
 
 ---
 
-### Task 8: Update date-ranges to support CSV filenames
+### Task 8: (no-op — removed)
 
-**Files:**
-- Modify: `lib/reports/date-ranges.ts` — add `getReportFilenameCsv()` or ensure filename helper works for CSV
-- No change needed if we just do `.replace(/\.md$/, ".csv")` in the API route and modal (already done above)
-
-**This task is a no-op** — the `.md → .csv` replacement is already handled in both the API route (Task 6) and the modal (Task 7). Skip this task.
+Filename `.md → .csv` replacement is handled in both the API route (Task 6) and the modal (Task 7).
 
 ---
 
@@ -1267,6 +1302,7 @@ git commit -m "docs: update CLAUDE.md with stat card tooltips and CSV export"
 | 2 | StatCard component | `components/ui/StatCard.tsx`, test | — |
 | 3 | StatCardGrid component | `components/shared/StatCardGrid.tsx`, test | — |
 | 4 | Replace inline cards | — | `activities/page.tsx`, test |
+| 4.5 | Extend redemptions query with reward names | — | `report-utils.ts`, test |
 | 5 | CSV formatter | `lib/reports/csv-formatter.ts`, test | — |
 | 6 | CSV API route | `app/api/reports/generate-csv/route.ts`, test | — |
 | 7 | Format toggle in modal | — | `GenerateReportModal.tsx`, test |
