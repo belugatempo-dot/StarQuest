@@ -50,12 +50,16 @@ export async function updateSession(
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
+  // Use getSession() instead of getUser() in middleware.
+  // getSession() only reads the JWT from cookies (no network call),
+  // while getUser() makes a round-trip to Supabase's auth server.
+  // This prevents MIDDLEWARE_INVOCATION_TIMEOUT (504) on Vercel
+  // when Supabase has cold starts or network latency.
+  // Actual auth verification (getUser) happens in server components/routes.
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    await supabase.auth.getSession();
   } catch (error) {
-    console.error('Error getting user in middleware:', error);
+    console.error('Error getting session in middleware:', error);
     // Continue without user session
   }
 

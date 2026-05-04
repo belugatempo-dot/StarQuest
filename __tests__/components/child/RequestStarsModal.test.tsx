@@ -216,7 +216,7 @@ describe("RequestStarsModal", () => {
     it("should display close button", () => {
       render(<RequestStarsModal {...defaultProps} />);
 
-      const closeButton = screen.getByRole("button", { name: "✕" });
+      const closeButton = screen.getByRole("button", { name: "Close" });
       expect(closeButton).toBeInTheDocument();
     });
 
@@ -602,7 +602,7 @@ describe("RequestStarsModal", () => {
       const user = userEvent.setup();
       render(<RequestStarsModal {...defaultProps} />);
 
-      const closeButton = screen.getByRole("button", { name: "✕" });
+      const closeButton = screen.getByRole("button", { name: "Close" });
       await user.click(closeButton);
 
       expect(defaultProps.onClose).toHaveBeenCalled();

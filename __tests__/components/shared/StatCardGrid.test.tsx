@@ -25,7 +25,7 @@ describe("StatCardGrid", () => {
     expect(screen.getByText("Total Stars +")).toBeInTheDocument();
     expect(screen.getByText("Total Stars -")).toBeInTheDocument();
     expect(screen.getByText(/Stars Redeemed/)).toBeInTheDocument();
-    expect(screen.getByText(/Credit Borrowed/)).toBeInTheDocument();
+    expect(screen.getByText(/Outstanding Debt/)).toBeInTheDocument();
     expect(screen.getByText(/Net Stars/)).toBeInTheDocument();
   });
 
@@ -37,7 +37,7 @@ describe("StatCardGrid", () => {
     expect(screen.getByText("总星星+")).toBeInTheDocument();
     expect(screen.getByText("总星星-")).toBeInTheDocument();
     expect(screen.getByText(/星星兑换/)).toBeInTheDocument();
-    expect(screen.getByText(/信用借用/)).toBeInTheDocument();
+    expect(screen.getByText(/欠款/)).toBeInTheDocument();
     expect(screen.getByText(/净值/)).toBeInTheDocument();
   });
 

@@ -734,7 +734,7 @@ describe("QuestFormModal", () => {
         />
       );
 
-      const closeButton = screen.getByRole("button", { name: "✕" });
+      const closeButton = screen.getByRole("button", { name: "Close" });
       await user.click(closeButton);
 
       expect(mockOnClose).toHaveBeenCalled();

@@ -162,7 +162,7 @@ describe("RewardFormModal", () => {
     it("should display close button", () => {
       render(<RewardFormModal {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: "✕" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });
 
     it("should display all category buttons", () => {
@@ -666,7 +666,7 @@ describe("RewardFormModal", () => {
       const user = userEvent.setup();
       render(<RewardFormModal {...defaultProps} />);
 
-      const closeButton = screen.getByRole("button", { name: "✕" });
+      const closeButton = screen.getByRole("button", { name: "Close" });
       await user.click(closeButton);
 
       expect(defaultProps.onClose).toHaveBeenCalled();

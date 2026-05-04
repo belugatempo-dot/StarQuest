@@ -512,7 +512,7 @@
     "totalStarsPlus": "Total stars earned from all positive records",
     "totalStarsMinus": "Total stars lost from deductions (not including redemptions)",
     "starsRedeemed": "Stars spent on redeeming rewards",
-    "creditBorrowed": "Stars borrowed through the credit system",
+    "creditBorrowed": "Current credit debt (0 when balance is positive, credit is only used when stars run out)",
     "netStars": "Stars earned minus deducted minus redeemed (does not include credit)"
   }
 }

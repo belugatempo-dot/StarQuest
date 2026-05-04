@@ -118,18 +118,46 @@ CREATE TABLE levels (
 
 -- Child balances view (computed from transactions and redemptions)
 CREATE VIEW child_balances AS
+WITH base_balance AS (
+  SELECT
+    u.id AS child_id,
+    u.family_id,
+    u.name,
+    COALESCE(SUM(st.stars) FILTER (WHERE st.status = 'approved'), 0)
+      - COALESCE(
+          (SELECT SUM(r.stars_spent)
+           FROM redemptions r
+           WHERE r.child_id = u.id AND r.status IN ('approved', 'fulfilled')),
+          0
+        ) AS current_stars,
+    COALESCE(SUM(st.stars) FILTER (WHERE st.status = 'approved' AND st.stars > 0), 0) AS lifetime_stars
+  FROM users u
+  LEFT JOIN star_transactions st ON st.child_id = u.id
+  WHERE u.role = 'child'
+  GROUP BY u.id, u.family_id, u.name
+)
 SELECT
-  u.id AS child_id,
-  u.family_id,
-  u.name,
-  COALESCE(SUM(CASE WHEN st.status = 'approved' THEN st.stars ELSE 0 END), 0) -
-  COALESCE(SUM(CASE WHEN r.status = 'approved' THEN r.stars_spent ELSE 0 END), 0) AS current_stars,
-  COALESCE(SUM(CASE WHEN st.status = 'approved' AND st.stars > 0 THEN st.stars ELSE 0 END), 0) AS lifetime_stars
-FROM users u
-LEFT JOIN star_transactions st ON u.id = st.child_id
-LEFT JOIN redemptions r ON u.id = r.child_id
-WHERE u.role = 'child'
-GROUP BY u.id, u.family_id, u.name;
+  bb.child_id,
+  bb.family_id,
+  bb.name,
+  bb.current_stars,
+  bb.lifetime_stars,
+  COALESCE(ccs.credit_enabled, false) AS credit_enabled,
+  COALESCE(ccs.credit_limit, 0) AS credit_limit,
+  COALESCE(ccs.original_credit_limit, 0) AS original_credit_limit,
+  CASE WHEN bb.current_stars < 0 THEN ABS(bb.current_stars) ELSE 0 END AS credit_used,
+  CASE
+    WHEN COALESCE(ccs.credit_enabled, false) = true
+    THEN GREATEST(COALESCE(ccs.credit_limit, 0) - CASE WHEN bb.current_stars < 0 THEN ABS(bb.current_stars) ELSE 0 END, 0)
+    ELSE 0
+  END AS available_credit,
+  CASE
+    WHEN COALESCE(ccs.credit_enabled, false) = true
+    THEN GREATEST(bb.current_stars, 0) + GREATEST(COALESCE(ccs.credit_limit, 0) - CASE WHEN bb.current_stars < 0 THEN ABS(bb.current_stars) ELSE 0 END, 0)
+    ELSE GREATEST(bb.current_stars, 0)
+  END AS spendable_stars
+FROM base_balance bb
+LEFT JOIN child_credit_settings ccs ON ccs.child_id = bb.child_id;
 
 -- =============================================
 -- INDEXES

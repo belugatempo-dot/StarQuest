@@ -1,5 +1,5 @@
 // Use jest.fn at module scope properly
-const mockGetUser = jest.fn();
+const mockGetSession = jest.fn();
 const mockCreateServerClient = jest.fn();
 
 jest.mock("@supabase/ssr", () => ({
@@ -35,9 +35,9 @@ describe("lib/supabase/middleware", () => {
       NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
     };
-    mockGetUser.mockResolvedValue({ data: { user: null } });
+    mockGetSession.mockResolvedValue({ data: { session: null } });
     mockCreateServerClient.mockReturnValue({
-      auth: { getUser: mockGetUser },
+      auth: { getSession: mockGetSession },
     });
   });
 
@@ -99,14 +99,14 @@ describe("lib/supabase/middleware", () => {
     consoleSpy.mockRestore();
   });
 
-  it("calls getUser to refresh session", async () => {
+  it("calls getSession to refresh session", async () => {
     const request = makeMockRequest();
     await updateSession(request);
-    expect(mockGetUser).toHaveBeenCalled();
+    expect(mockGetSession).toHaveBeenCalled();
   });
 
-  it("handles getUser error gracefully", async () => {
-    mockGetUser.mockRejectedValue(new Error("Network error"));
+  it("handles getSession error gracefully", async () => {
+    mockGetSession.mockRejectedValue(new Error("Network error"));
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
     const request = makeMockRequest();
 
@@ -146,7 +146,7 @@ describe("lib/supabase/middleware", () => {
           // Call getAll to exercise line 28
           const cookies = config.cookies.getAll();
           expect(cookies).toEqual(mockCookies);
-          return { auth: { getUser: mockGetUser } };
+          return { auth: { getSession: mockGetSession } };
         }
       );
 
@@ -166,7 +166,7 @@ describe("lib/supabase/middleware", () => {
           config.cookies.setAll([
             { name: "sb-token", value: "abc123", options: { path: "/" } },
           ]);
-          return { auth: { getUser: mockGetUser } };
+          return { auth: { getSession: mockGetSession } };
         }
       );
 
@@ -183,7 +183,7 @@ describe("lib/supabase/middleware", () => {
           config.cookies.setAll([
             { name: "token", value: "val", options: {} },
           ]);
-          return { auth: { getUser: mockGetUser } };
+          return { auth: { getSession: mockGetSession } };
         }
       );
 
@@ -207,7 +207,7 @@ describe("lib/supabase/middleware", () => {
           config.cookies.setAll([
             { name: "token", value: "val", options: { path: "/" } },
           ]);
-          return { auth: { getUser: mockGetUser } };
+          return { auth: { getSession: mockGetSession } };
         }
       );
 
@@ -230,7 +230,7 @@ describe("lib/supabase/middleware", () => {
             { name: "sb-access-token", value: "access123", options: { path: "/" } },
             { name: "sb-refresh-token", value: "refresh456", options: { path: "/", httpOnly: true } },
           ]);
-          return { auth: { getUser: mockGetUser } };
+          return { auth: { getSession: mockGetSession } };
         }
       );
 
@@ -260,7 +260,7 @@ describe("lib/supabase/middleware", () => {
             { name: "sb-token", value: "value1", options: { path: "/" } },
           ]);
           setAllCalled = true;
-          return { auth: { getUser: mockGetUser } };
+          return { auth: { getSession: mockGetSession } };
         }
       );
 

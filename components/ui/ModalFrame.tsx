@@ -53,8 +53,9 @@ export default function ModalFrame({
           </div>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-white text-2xl cursor-pointer"
+            className="text-slate-400 hover:text-white text-2xl cursor-pointer ml-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition"
             type="button"
+            aria-label="Close"
           >
             ✕
           </button>

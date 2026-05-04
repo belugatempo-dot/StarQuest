@@ -3,13 +3,13 @@ import { requireAuth } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import UnifiedActivityList from "@/components/shared/UnifiedActivityList";
 import ActivityPageHeader from "@/components/admin/ActivityPageHeader";
-import StatCardGrid from "@/components/shared/StatCardGrid";
+import PerChildStatCards from "@/components/shared/PerChildStatCards";
+import type { ChildStat } from "@/components/shared/PerChildStatCards";
 import type { UnifiedActivityItem } from "@/types/activity";
 import {
   transformStarTransaction,
   transformRedemption,
   sortActivitiesByDate,
-  calculateActivityStats,
 } from "@/lib/activity-utils";
 
 export default async function ActivitiesPage({
@@ -42,7 +42,6 @@ async function ParentActivities({
   const [
     txResult,
     redemptionResult,
-    creditResult,
     childrenResult,
     questsResult,
     rewardsResult,
@@ -66,8 +65,7 @@ async function ParentActivities({
         )
       `)
       .eq("family_id", user.family_id!)
-      .order("created_at", { ascending: false })
-      .limit(100) as unknown as Promise<{ data: any[] | null; error: any }>,
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
     adminClient
       .from("redemptions")
       .select(`
@@ -84,20 +82,7 @@ async function ParentActivities({
         )
       `)
       .eq("family_id", user.family_id!)
-      .order("created_at", { ascending: false })
-      .limit(100) as unknown as Promise<{ data: any[] | null; error: any }>,
-    adminClient
-      .from("credit_transactions")
-      .select(`
-        *,
-        children:users!credit_transactions_child_id_fkey (
-          name,
-          avatar_url
-        )
-      `)
-      .eq("family_id", user.family_id!)
-      .order("created_at", { ascending: false })
-      .limit(100) as unknown as Promise<{ data: any[] | null; error: any }>,
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>,
     adminClient
       .from("users")
       .select("*")
@@ -115,7 +100,7 @@ async function ParentActivities({
       .eq("is_active", true),
     adminClient
       .from("child_balances")
-      .select("child_id, current_stars, spendable_stars")
+      .select("child_id, current_stars, spendable_stars, credit_used, credit_enabled, credit_limit, available_credit")
       .eq("family_id", user.family_id!) as unknown as Promise<{ data: any[] | null; error: any }>,
     supabase
       .from("star_transactions")
@@ -160,7 +145,6 @@ async function ParentActivities({
 
   const { data: transactions, error: txError } = txResult;
   const { data: redemptions, error: redemptionError } = redemptionResult;
-  const { data: creditTransactions, error: creditError } = creditResult;
   const { data: familyChildren } = childrenResult;
   const { data: activeQuests } = questsResult;
   const { data: activeRewards } = rewardsResult;
@@ -174,9 +158,6 @@ async function ParentActivities({
   if (redemptionError) {
     console.error("Error fetching redemptions:", redemptionError);
   }
-  if (creditError) {
-    console.error("Error fetching credit transactions:", creditError);
-  }
 
   // Convert to unified activity items
   const unifiedActivities: UnifiedActivityItem[] = [
@@ -184,38 +165,51 @@ async function ParentActivities({
     ...(redemptions || []).map((r: any) => transformRedemption(r, true)),
   ];
 
-  // Calculate total credit borrowed
-  const totalCreditBorrowed = (creditTransactions || [])
-    .filter((ct: any) => ct.transaction_type === "credit_used")
-    .reduce((sum: number, ct: any) => sum + ct.amount, 0);
-
   const sortedActivities = sortActivitiesByDate(unifiedActivities);
-  const stats = calculateActivityStats(sortedActivities);
-  const {
-    totalRecords,
-    positiveRecords,
-    negativeRecords,
-    totalStarsGiven,
-    totalStarsDeducted,
-    starsRedeemed,
-    netStars,
-  } = stats;
+
+  // Build per-child stats
+  const childStats: ChildStat[] = (familyChildren || []).map((child: any) => {
+    const balance = (childBalances || []).find((b: any) => b.child_id === child.id);
+    const childApproved = sortedActivities.filter(
+      (a) =>
+        a.childId === child.id &&
+        (a.status === "approved" || a.status === "fulfilled")
+    );
+
+    const totalEarned = childApproved.reduce(
+      (sum, a) => sum + (a.type === "star_transaction" && a.stars > 0 ? a.stars : 0),
+      0
+    );
+    const totalDeducted = childApproved.reduce(
+      (sum, a) => sum + (a.type === "star_transaction" && a.stars < 0 ? a.stars : 0),
+      0
+    );
+    const totalRedeemed = childApproved.reduce(
+      (sum, a) => sum + (a.type === "redemption" ? Math.abs(a.stars) : 0),
+      0
+    );
+
+    return {
+      childId: child.id,
+      childName: child.name,
+      childAvatar: child.avatar_url,
+      currentStars: balance?.current_stars || 0,
+      spendableStars: balance?.spendable_stars || 0,
+      creditEnabled: balance?.credit_enabled || false,
+      creditLimit: balance?.credit_limit || 0,
+      creditUsed: balance?.credit_used || 0,
+      availableCredit: balance?.available_credit || 0,
+      totalEarned,
+      totalDeducted,
+      totalRedeemed,
+    };
+  });
 
   return (
     <div className="space-y-6">
       <ActivityPageHeader locale={locale} />
 
-      <StatCardGrid
-        locale={locale}
-        totalRecords={totalRecords}
-        positiveRecords={positiveRecords}
-        negativeRecords={negativeRecords}
-        totalStarsGiven={totalStarsGiven}
-        totalStarsDeducted={totalStarsDeducted}
-        starsRedeemed={starsRedeemed}
-        totalCreditBorrowed={totalCreditBorrowed}
-        netStars={netStars}
-      />
+      <PerChildStatCards locale={locale} childStats={childStats} />
 
       <UnifiedActivityList
         activities={sortedActivities}
@@ -259,8 +253,7 @@ async function ChildActivities({
         )
       `)
       .eq("child_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100),
+      .order("created_at", { ascending: false }),
     supabase
       .from("quests")
       .select("*")

@@ -57,19 +57,19 @@ jest.mock("@/components/shared/UnifiedActivityList", () => {
   };
 });
 
-jest.mock("@/components/shared/StatCardGrid", () => {
-  return function MockStatCardGrid(props: any) {
+jest.mock("@/components/shared/PerChildStatCards", () => {
+  return function MockPerChildStatCards(props: any) {
     return (
-      <div data-testid="stat-card-grid">
-        <span data-testid="stat-totalRecords">{props.totalRecords}</span>
-        <span data-testid="stat-positiveRecords">{props.positiveRecords}</span>
-        <span data-testid="stat-negativeRecords">{props.negativeRecords}</span>
-        <span data-testid="stat-totalStarsGiven">{props.totalStarsGiven}</span>
-        <span data-testid="stat-totalStarsDeducted">{props.totalStarsDeducted}</span>
-        <span data-testid="stat-starsRedeemed">{props.starsRedeemed}</span>
-        <span data-testid="stat-totalCreditBorrowed">{props.totalCreditBorrowed}</span>
-        <span data-testid="stat-netStars">{props.netStars}</span>
+      <div data-testid="per-child-stats">
         <span data-testid="stat-locale">{props.locale}</span>
+        {(props.childStats || []).map((child: any) => (
+          <div key={child.childId} data-testid={`child-stat-${child.childId}`}>
+            <span data-testid="child-name">{child.childName}</span>
+            <span data-testid="current-stars">{child.currentStars}</span>
+            <span data-testid="spendable-stars">{child.spendableStars}</span>
+            <span data-testid="credit-used">{child.creditUsed}</span>
+          </div>
+        ))}
       </div>
     );
   };
@@ -89,15 +89,6 @@ jest.mock("@/lib/activity-utils", () => ({
     stars: -10,
   }),
   sortActivitiesByDate: jest.fn().mockReturnValue([]),
-  calculateActivityStats: jest.fn().mockReturnValue({
-    totalRecords: 0,
-    positiveRecords: 0,
-    negativeRecords: 0,
-    totalStarsGiven: 0,
-    totalStarsDeducted: 0,
-    starsRedeemed: 0,
-    netStars: 0,
-  }),
 }));
 
 import ActivitiesPage from "@/app/[locale]/(main)/activities/page";
@@ -124,13 +115,13 @@ describe("ActivitiesPage — Parent View", () => {
     expect(screen.getByText(/Star Calendar/)).toBeInTheDocument();
   });
 
-  it("renders StatCardGrid with stats props", async () => {
+  it("renders PerChildStatCards with locale", async () => {
     const jsx = await ActivitiesPage({
       params: Promise.resolve({ locale: "en" }),
     });
     render(jsx);
 
-    expect(screen.getByTestId("stat-card-grid")).toBeInTheDocument();
+    expect(screen.getByTestId("per-child-stats")).toBeInTheDocument();
     expect(screen.getByTestId("stat-locale")).toHaveTextContent("en");
   });
 
@@ -154,7 +145,7 @@ describe("ActivitiesPage — Parent View", () => {
     expect(screen.getByText(/星星日历/)).toBeInTheDocument();
   });
 
-  it("passes zh-CN locale to StatCardGrid", async () => {
+  it("passes zh-CN locale to PerChildStatCards", async () => {
     const jsx = await ActivitiesPage({
       params: Promise.resolve({ locale: "zh-CN" }),
     });
@@ -271,41 +262,32 @@ describe("ActivitiesPage — Parent View", () => {
     consoleSpy.mockRestore();
   });
 
-  it("logs error when credit_transactions query fails", async () => {
+
+  it("builds per-child stats from balances and activities", async () => {
     const { createAdminClient } = require("@/lib/supabase/server");
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const { sortActivitiesByDate } = require("@/lib/activity-utils");
 
     const mockFrom = jest.fn().mockImplementation((table: string) => {
-      if (table === "credit_transactions") {
-        return buildChainMock({ data: null, error: { message: "Credit DB error" } });
-      }
-      return buildChainMock({ data: [], error: null });
-    });
-    createAdminClient.mockReturnValue({ from: mockFrom });
-
-    const jsx = await ActivitiesPage({
-      params: Promise.resolve({ locale: "en" }),
-    });
-    render(jsx);
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "Error fetching credit transactions:",
-      { message: "Credit DB error" }
-    );
-    consoleSpy.mockRestore();
-  });
-
-  it("calculates total credit borrowed from credit_used transactions", async () => {
-    const { createAdminClient } = require("@/lib/supabase/server");
-    const { calculateActivityStats, sortActivitiesByDate } = require("@/lib/activity-utils");
-
-    const mockFrom = jest.fn().mockImplementation((table: string) => {
-      if (table === "credit_transactions") {
+      if (table === "child_balances") {
         return buildChainMock({
           data: [
-            { id: "ct-1", transaction_type: "credit_used", amount: 15 },
-            { id: "ct-2", transaction_type: "credit_used", amount: 10 },
-            { id: "ct-3", transaction_type: "repayment", amount: 5 },
+            {
+              child_id: "child-1",
+              current_stars: -30,
+              spendable_stars: 70,
+              credit_used: 30,
+              credit_enabled: true,
+              credit_limit: 100,
+              available_credit: 70,
+            },
+          ],
+          error: null,
+        });
+      }
+      if (table === "users") {
+        return buildChainMock({
+          data: [
+            { id: "child-1", name: "Lucas", avatar_url: "👦", role: "child" },
           ],
           error: null,
         });
@@ -314,72 +296,16 @@ describe("ActivitiesPage — Parent View", () => {
     });
     createAdminClient.mockReturnValue({ from: mockFrom });
     sortActivitiesByDate.mockReturnValue([]);
-    calculateActivityStats.mockReturnValue({
-      totalRecords: 0,
-      positiveRecords: 0,
-      negativeRecords: 0,
-      totalStarsGiven: 0,
-      totalStarsDeducted: 0,
-      starsRedeemed: 0,
-      netStars: 0,
-    });
 
     const jsx = await ActivitiesPage({
       params: Promise.resolve({ locale: "en" }),
     });
     render(jsx);
 
-    // 15 + 10 = 25 (only credit_used, not repayment)
-    expect(screen.getByTestId("stat-totalCreditBorrowed")).toHaveTextContent("25");
-  });
-
-  it("displays stats with negative net stars", async () => {
-    const { calculateActivityStats, sortActivitiesByDate } = require("@/lib/activity-utils");
-
-    sortActivitiesByDate.mockReturnValue([]);
-    calculateActivityStats.mockReturnValue({
-      totalRecords: 5,
-      positiveRecords: 1,
-      negativeRecords: 4,
-      totalStarsGiven: 10,
-      totalStarsDeducted: -30,
-      starsRedeemed: 0,
-      netStars: -20,
-    });
-
-    const jsx = await ActivitiesPage({
-      params: Promise.resolve({ locale: "en" }),
-    });
-    render(jsx);
-
-    expect(screen.getByTestId("stat-netStars")).toHaveTextContent("-20");
-  });
-
-  it("displays stats with positive net stars", async () => {
-    const { calculateActivityStats, sortActivitiesByDate } = require("@/lib/activity-utils");
-
-    sortActivitiesByDate.mockReturnValue([]);
-    calculateActivityStats.mockReturnValue({
-      totalRecords: 10,
-      positiveRecords: 7,
-      negativeRecords: 3,
-      totalStarsGiven: 50,
-      totalStarsDeducted: -15,
-      starsRedeemed: 0,
-      netStars: 35,
-    });
-
-    const jsx = await ActivitiesPage({
-      params: Promise.resolve({ locale: "en" }),
-    });
-    render(jsx);
-
-    expect(screen.getByTestId("stat-totalRecords")).toHaveTextContent("10");
-    expect(screen.getByTestId("stat-positiveRecords")).toHaveTextContent("7");
-    expect(screen.getByTestId("stat-negativeRecords")).toHaveTextContent("3");
-    expect(screen.getByTestId("stat-totalStarsGiven")).toHaveTextContent("50");
-    expect(screen.getByTestId("stat-totalStarsDeducted")).toHaveTextContent("-15");
-    expect(screen.getByTestId("stat-netStars")).toHaveTextContent("35");
+    expect(screen.getByTestId("per-child-stats")).toBeInTheDocument();
+    expect(screen.getByTestId("child-stat-child-1")).toBeInTheDocument();
+    expect(screen.getByTestId("current-stars")).toHaveTextContent("-30");
+    expect(screen.getByTestId("credit-used")).toHaveTextContent("30");
   });
 
   it("passes pending approval data to UnifiedActivityList", async () => {

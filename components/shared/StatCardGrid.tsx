@@ -70,12 +70,12 @@ export default function StatCardGrid({
         valueColor="text-purple-300"
       />
       <StatCard
-        label={isZh ? "信用借用" : "Credit Borrowed"}
+        label={isZh ? "欠款" : "Outstanding Debt"}
         value={totalCreditBorrowed}
         tooltip={t("creditBorrowed")}
         icon="💳"
         labelColor="text-blue-300"
-        valueColor="text-blue-300"
+        valueColor={totalCreditBorrowed > 0 ? "text-red-400" : "text-blue-300"}
       />
       <StatCard
         label={isZh ? "净值" : "Net Stars"}

@@ -123,10 +123,55 @@ export default function ParentRedeemSection({
 
       {/* Selected Child Balance Info */}
       {selectedChild && (
-        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 space-y-2">
+          {currentStars >= 0 ? (
+            <>
+              {/* Positive balance: child has real stars, credit available as safety net */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-300">
+                  {locale === "zh-CN" ? "⭐ 当前星星：" : "⭐ Current Stars:"}
+                </span>
+                <span className="text-lg font-bold text-yellow-300">
+                  {currentStars}
+                </span>
+              </div>
+              {spendableStars > currentStars && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-400 text-xs">
+                    {locale === "zh-CN" ? "💳 信用额度（星星用完后可透支）：" : "💳 Credit Limit (overdraft if stars run out):"}
+                  </span>
+                  <span className="text-sm text-blue-300">
+                    {spendableStars - currentStars}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Negative balance: child IS using credit */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-300">
+                  {locale === "zh-CN" ? "⚠️ 欠款：" : "⚠️ Outstanding Debt:"}
+                </span>
+                <span className="text-lg font-bold text-red-400">
+                  {Math.abs(currentStars)}
+                </span>
+              </div>
+              {spendableStars > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-300">
+                    {locale === "zh-CN" ? "💳 剩余信用：" : "💳 Remaining Credit:"}
+                  </span>
+                  <span className="text-lg font-bold text-blue-300">
+                    {spendableStars}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+          <div className="border-t border-white/10 pt-2 flex items-center justify-between">
             <span className="text-sm font-medium text-slate-300">
-              {locale === "zh-CN" ? "可用星星：" : "Available Stars:"}
+              {locale === "zh-CN" ? "🛒 可消费：" : "🛒 Can Spend:"}
             </span>
             <span className="text-2xl font-bold text-primary">
               {spendableStars} ⭐

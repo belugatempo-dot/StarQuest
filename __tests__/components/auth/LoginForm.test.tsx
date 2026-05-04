@@ -692,5 +692,286 @@ describe('LoginForm', () => {
         expect(screen.getByText('common.loading')).toBeInTheDocument()
       })
     })
+
+    it('redirects alexander role to /activities', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ token_hash: 'tok_alexander', email: 'alexander.demo@starquest.app' }),
+      })
+      mockVerifyOtp.mockResolvedValue({ error: null })
+
+      render(<LoginForm />)
+
+      const alexanderButton = screen.getByRole('button', { name: /Alexander/i })
+      fireEvent.click(alexanderButton)
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/demo-login', expect.objectContaining({
+          body: JSON.stringify({ role: 'alexander' }),
+        }))
+      })
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/en/activities')
+      })
+    })
+
+    it('uses Chinese locale path when pathname is zh-CN', async () => {
+      mockPathname = '/zh-CN/login'
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ token_hash: 'tok_zh', email: 'demo@starquest.app' }),
+      })
+      mockVerifyOtp.mockResolvedValue({ error: null })
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /家长/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/zh-CN/activities')
+      })
+    })
+
+    it('shows Chinese role names when locale is zh-CN', () => {
+      mockPathname = '/zh-CN/login'
+      render(<LoginForm />)
+
+      expect(screen.getByText('家长')).toBeInTheDocument()
+      expect(screen.getByText('管理任务、审批星星、查看报告')).toBeInTheDocument()
+    })
+
+    it('handles network error during demo login', async () => {
+      mockFetch.mockRejectedValue(new Error('Network error'))
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Network error')).toBeInTheDocument()
+      })
+    })
+
+    it('shows fallback error when API returns ok:false with empty error', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: '' }),
+      })
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Demo login failed')).toBeInTheDocument()
+      })
+    })
+
+    it('shows fallback error when non-Error is thrown', async () => {
+      mockFetch.mockRejectedValue('string error')
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Demo login failed')).toBeInTheDocument()
+      })
+    })
+
+    it('re-enables buttons after error', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'Some error' }),
+      })
+
+      render(<LoginForm />)
+
+      const parentButton = screen.getByRole('button', { name: /Parent/i })
+      fireEvent.click(parentButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Some error')).toBeInTheDocument()
+      })
+
+      // Buttons should be re-enabled after error
+      await waitFor(() => {
+        expect(parentButton).not.toBeDisabled()
+      })
+    })
+  })
+
+  describe('Form Input Attributes', () => {
+    it('email input has correct type and required attribute', () => {
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      expect(emailInput).toHaveAttribute('type', 'email')
+      expect(emailInput).toHaveAttribute('required')
+      expect(emailInput).toHaveAttribute('placeholder', 'you@example.com')
+    })
+
+    it('password input has correct type and required attribute', () => {
+      render(<LoginForm />)
+
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      expect(passwordInput).toHaveAttribute('type', 'password')
+      expect(passwordInput).toHaveAttribute('required')
+      expect(passwordInput).toHaveAttribute('placeholder', '••••••••')
+    })
+
+    it('labels are properly associated with inputs', () => {
+      render(<LoginForm />)
+
+      const emailLabel = screen.getByText(/auth.email/i)
+      const passwordLabel = screen.getByText(/auth.password/i)
+
+      expect(emailLabel).toHaveAttribute('for', 'email')
+      expect(passwordLabel).toHaveAttribute('for', 'password')
+    })
+  })
+
+  describe('Error State Management', () => {
+    it('clears error when starting new login attempt', async () => {
+      const user = userEvent.setup()
+
+      // First attempt - fail
+      mockSignIn.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'First error' },
+      })
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'test@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('First error')).toBeInTheDocument()
+      })
+
+      // Second attempt - error should clear immediately
+      mockSignIn.mockImplementation(() => new Promise(() => {})) // Never resolves
+
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('First error')).not.toBeInTheDocument()
+      })
+    })
+
+    it('clears showRegistrationLink on new login attempt', async () => {
+      const user = userEvent.setup()
+
+      mockSignIn.mockResolvedValue({
+        data: { user: { id: 'orphan-user-id' } },
+        error: null,
+      })
+
+      const mockChain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValueOnce({
+          data: null,
+          error: { message: 'User not found' },
+        }),
+      }
+
+      mockFrom.mockReturnValue(mockChain)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'orphan@example.com')
+      await user.type(passwordInput, 'password123')
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'auth.completeRegistration' })).toBeInTheDocument()
+      })
+
+      // On second attempt, registration link should clear
+      mockSignIn.mockImplementation(() => new Promise(() => {}))
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.queryByRole('link', { name: 'auth.completeRegistration' })).not.toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Double Submit Prevention', () => {
+    it('prevents multiple submissions while loading', async () => {
+      const user = userEvent.setup()
+
+      let resolvePromise: (value: any) => void
+      const pendingPromise = new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+      mockSignIn.mockReturnValue(pendingPromise)
+
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i)
+      const passwordInput = screen.getByLabelText(/auth.password/i)
+      const submitButton = screen.getByRole('button', { name: /common.login/i })
+
+      await user.type(emailInput, 'test@example.com')
+      await user.type(passwordInput, 'password123')
+
+      // First click
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(submitButton).toBeDisabled()
+      })
+
+      // Additional clicks while disabled
+      fireEvent.click(submitButton)
+      fireEvent.click(submitButton)
+
+      // Should only be called once
+      expect(mockSignIn).toHaveBeenCalledTimes(1)
+
+      // Cleanup
+      resolvePromise!({ data: null, error: { message: 'Error' } })
+    })
+  })
+
+  describe('Controlled Input Behavior', () => {
+    it('updates email state on input change', async () => {
+      const user = userEvent.setup()
+      render(<LoginForm />)
+
+      const emailInput = screen.getByLabelText(/auth.email/i) as HTMLInputElement
+
+      await user.type(emailInput, 'new@email.com')
+
+      expect(emailInput.value).toBe('new@email.com')
+    })
+
+    it('updates password state on input change', async () => {
+      const user = userEvent.setup()
+      render(<LoginForm />)
+
+      const passwordInput = screen.getByLabelText(/auth.password/i) as HTMLInputElement
+
+      await user.type(passwordInput, 'secret123')
+
+      expect(passwordInput.value).toBe('secret123')
+    })
   })
 })

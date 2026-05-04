@@ -428,6 +428,7 @@ export default function RedeemRewardModal({
         isParent ? t("admin.redeemForChild") : t("rewards.requestRedemption")
       }
       onClose={onClose}
+      maxWidth="lg"
     >
       <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
         <RewardInfoCard reward={reward} locale={locale} />

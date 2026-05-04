@@ -512,7 +512,7 @@
     "totalStarsPlus": "所有加分记录的星星总和",
     "totalStarsMinus": "所有扣分记录的星星总和（不含兑换）",
     "starsRedeemed": "兑换奖励花费的星星",
-    "creditBorrowed": "通过信用系统借用的星星",
+    "creditBorrowed": "当前信用欠款（余额为正时为0，仅在星星用完后透支）",
     "netStars": "获得 − 扣除 − 兑换（不含信用）"
   }
 }

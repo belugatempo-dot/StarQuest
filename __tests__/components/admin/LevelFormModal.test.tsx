@@ -69,7 +69,7 @@ describe("LevelFormModal", () => {
     it("should display close button", () => {
       render(<LevelFormModal {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: "✕" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });
 
     it("should display info notice about level system", () => {
@@ -478,7 +478,7 @@ describe("LevelFormModal", () => {
       const user = userEvent.setup();
       render(<LevelFormModal {...defaultProps} />);
 
-      const closeButton = screen.getByRole("button", { name: "✕" });
+      const closeButton = screen.getByRole("button", { name: "Close" });
       await user.click(closeButton);
 
       expect(defaultProps.onClose).toHaveBeenCalled();
