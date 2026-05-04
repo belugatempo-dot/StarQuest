@@ -57,7 +57,7 @@ export default function RedeemFromCalendarModal({
     <ModalFrame
       title={t("activity.redeemReward")}
       onClose={onClose}
-      maxWidth="lg"
+      maxWidth="xl"
       stickyHeader
     >
       <div className="px-6 pb-6 space-y-4">
