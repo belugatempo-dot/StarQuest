@@ -198,10 +198,32 @@ export default function AddRecordModal({
       title={title}
       onClose={onClose}
       error={error}
-      maxWidth="lg"
+      maxWidth="xl"
       stickyHeader
     >
       <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+        {/* Actions (top) */}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-slate-300 hover:bg-white/5 transition"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !canSubmit}
+            className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+          >
+            {loading
+              ? t("common.loading")
+              : isParent
+                ? t("activity.addRecord")
+                : t("activity.requestStars")}
+          </button>
+        </div>
+
         {/* Child Selector (parent mode only) */}
         {isParent && children && children.length > 0 && (
           <div>
@@ -407,27 +429,7 @@ export default function AddRecordModal({
           />
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-slate-300 hover:bg-white/5 transition"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={loading || !canSubmit}
-            className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading
-              ? t("common.loading")
-              : isParent
-                ? t("activity.addRecord")
-                : t("activity.requestStars")}
-          </button>
-        </div>
+
       </form>
     </ModalFrame>
   );

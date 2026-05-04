@@ -9,7 +9,7 @@ interface ModalFrameProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
-  maxWidth?: "sm" | "md" | "lg";
+  maxWidth?: "sm" | "md" | "lg" | "xl";
   stickyHeader?: boolean;
 }
 
@@ -17,6 +17,7 @@ const MAX_WIDTH_CLASSES = {
   sm: "max-w-sm",
   md: "max-w-md",
   lg: "max-w-2xl",
+  xl: "max-w-4xl",
 } as const;
 
 export default function ModalFrame({
